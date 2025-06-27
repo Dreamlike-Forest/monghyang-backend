@@ -4,8 +4,26 @@
 
 ---
 ## ✍🏻 규칙
-> **GIT 커밋 메시지 규칙** : [참고 블로그 링크](https://velog.io/@chojs28/Git-%EC%BB%A4%EB%B0%8B-%EB%A9%94%EC%8B%9C%EC%A7%80-%EA%B7%9C%EC%B9%99) <br>
-> **변수/메소드 네이밍 규칙** : 카멜 표기(구분되는 글자마다 첫글자를 대문자로 작성, ex: veryFunnyCoding)
+> **0. ddl-auto 옵션** <br> - 로컬 개발 환경: create, update <br> - 배포 환경: validate, none <br>
+> **1. GIT 커밋 메시지 규칙** : [참고 블로그 링크](https://velog.io/@chojs28/Git-%EC%BB%A4%EB%B0%8B-%EB%A9%94%EC%8B%9C%EC%A7%80-%EA%B7%9C%EC%B9%99) <br>
+> **2. 변수/메소드 네이밍 규칙** : 카멜 표기(구분되는 글자마다 첫글자를 대문자로 작성, ex: veryFunnyCoding) <br>
+> **3. 로컬 데이터베이스 연결** : application-local.yml의 datasource란을 자신의 로컬 환경에 맞게 수정 <br>
+> **4. 필드 타입** : boolean을 제외한 모든 필드 타입은 wrapper 객체 타입을 사용합니다. <br>
+> **5. 날짜 객체 타입** : LocalDate(yyyy-mm-dd), LocalDateTime(밀리초 단위까지 표현)만 사용 <br>
+> **6. 개발 시 기본키 네이밍 규칙** : 객체 기본키 필드 이름은 'id'로 하되, @Column(name = "ERDCloud상 기본키 이름") 설정 // 개발 편의성 위함 <br>
+> **7. Setter 생성 규칙** : 기본키 필드의 Setter는 생성하지 않습니다. <br>
+> **8. 연관관계 설정** : 모든 연관관계(@ManyToOne 등)는 지연로딩(LAZY) 전략을 사용합니다.
+## ▶️ 실행 가이드
+### IntelliJ 환경 변수 주입
+1. 팀원으로부터 환경변수 파일(setting.env) 전달받기
+2. 환경변수 파일을 ./src/main/resources 디렉토리에 넣기(위치 중요)
+3. IDE를 통한 로컬 빌드 시 application-local.yml의 datasource 수정하기
+4. 빌드
+### JVM: 프로파일 지정하여 jar 파일 실행 예시
+- !!주의사항!! 'setting.env', jar 파일은 **반드시 동일한 경로**에 위치해야 합니다.
+```bash
+java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
+```
 
 ---
 ## 패키지 구조

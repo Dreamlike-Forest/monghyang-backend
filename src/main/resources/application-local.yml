@@ -1,0 +1,16 @@
+# 로컬 데이터베이스에서 개발 시 사용(datasource의 요소를 자신의 로컬 환경에 맞게 수정하세요.)
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/monghyang?useUnicode=true&characterEncoding=utf8
+    username: monghyang
+    password: Query1234!
+  config:
+    activate:
+      on-profile: local
+    import: optional:classpath:/setting.env[.properties] # .env 파일의 환경변수를 주입하여 빌드(실행)
+
+app:
+  client-url: http://localhost:3000 # 클라이언트 url
+#  storage-path:  # 스토리지 '시작' 경로
+  cookie-samesite: None
+  cookie-domain: localhost

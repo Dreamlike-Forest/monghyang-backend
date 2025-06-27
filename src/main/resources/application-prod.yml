@@ -1,0 +1,16 @@
+# 정식 배포 시 사용
+spring:
+  datasource:
+    url: ${RDS_URL}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  config:
+    activate:
+      on-profile: prod
+    import: optional:file:./setting.env[.properties] # .env 파일의 환경변수를 주입하여 jar 실행
+
+app:
+  client-url: https://www.example.com # 실제 운영 도메인 url origin
+  #  storage-path:  # 스토리지 '시작' 경로
+  cookie-samesite: Lax # 서드파티 쿠키 전송받지 않도록 하는 설정
+  cookie-domain: www.example.com # 실제 운영 도메인

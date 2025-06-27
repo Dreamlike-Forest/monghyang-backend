@@ -1,0 +1,16 @@
+# FE 팀 로컬 테스트 시 사용
+spring:
+  datasource:
+    url: ${RDS_URL}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+  config:
+    activate:
+      on-profile: test
+    import: optional:file:./setting.env[.properties] # .env 파일의 환경변수를 주입하여 jar 실행
+
+app:
+  client-url: http://localhost:3000 # 클라이언트 url
+  #  storage-path:  # 스토리지 '시작' 경로
+  cookie-samesite: None
+  cookie-domain: localhost
