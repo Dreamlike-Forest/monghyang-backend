@@ -26,7 +26,26 @@ java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
 ```
 
 ---
-## 패키지 구조
+## 📚 STACKS
+
+<div>
+  <img src="https://img.shields.io/badge/Java%2021-007396?style=for-the-badge&logo=Java&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot%203.5.3-6DB33F?style=for-the-badge&logo=SpringBoot&logoColor=white" alt="Spring Boot 3.5.3"><br>
+  <img src="https://img.shields.io/badge/MariaDB%2010-003545?style=for-the-badge&logo=MariaDB&logoColor=white" alt="MariaDB 10"><br>
+  <img src="https://img.shields.io/badge/Nginx%20-339900?style=for-the-badge&logo=Nginx&logoColor=white" alt="nginx"><br>
+  <img src="https://img.shields.io/badge/Aws%20-A22846?style=for-the-badge&logo=Aws&logoColor=white" alt="Aws">
+</div>
+
+### STACK VERSION
+
+- Spring Boot 3.5.3
+- Spring Dependency Management 1.1.7
+---
+## 📝 API 명세서 및 ERD
+> **ERD** : [ERD Cloud](https://www.erdcloud.com/d/XQDRHTfgwSz4uP8mv) <br>
+
+---
+## 📎 패키지 구조
 > **도메인 위주 설계** : 패키지명 첫글자는 소문자
 ### 예시
 ```bash
@@ -59,7 +78,7 @@ java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
     ├── static
     └── templates
 ```
-### 전체적인 디렉토리 구조
+### ▶️ 전체 패키지 구조
 ```bash
 .
 ├── java
@@ -127,22 +146,3 @@ java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
     ├── static
     └── templates
 ```
-
----
-## 📚 STACKS
-
-<div>
-  <img src="https://img.shields.io/badge/Java%2021-007396?style=for-the-badge&logo=Java&logoColor=white" alt="Java 21">
-  <img src="https://img.shields.io/badge/Spring%20Boot%203.5.3-6DB33F?style=for-the-badge&logo=SpringBoot&logoColor=white" alt="Spring Boot 3.5.3"><br>
-  <img src="https://img.shields.io/badge/MariaDB%2010-003545?style=for-the-badge&logo=MariaDB&logoColor=white" alt="MariaDB 10"><br>
-  <img src="https://img.shields.io/badge/Nginx%20-339900?style=for-the-badge&logo=Nginx&logoColor=white" alt="nginx"><br>
-  <img src="https://img.shields.io/badge/Aws%20-A22846?style=for-the-badge&logo=Aws&logoColor=white" alt="Aws">
-</div>
-
-### STACK VERSION
-
-- Spring Boot 3.5.3
-- Spring Dependency Management 1.1.7
----
-## 📝 API 명세서 및 ERD
-> **ERD** : [ERD Cloud](https://www.erdcloud.com/d/XQDRHTfgwSz4uP8mv) <br>
