@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Role {
-    @Id @GeneratedValue @Column(name = "ROLE_ID")
+    @Id @GeneratedValue
     private Integer id;
     @Column(nullable = false, unique = true)
     @Enumerated(EnumType.STRING) // Role 종류는 Enum으로 관리

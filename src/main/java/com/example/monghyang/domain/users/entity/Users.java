@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Users {
-    @Id @GeneratedValue @Column(name = "USER_ID")
+    @Id @GeneratedValue
     private Long id;
 
     @JoinColumn(name = "ROLE_ID", nullable = false)

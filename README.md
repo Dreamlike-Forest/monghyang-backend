@@ -28,6 +28,7 @@ java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
 ---
 ## 패키지 구조
 > **도메인 위주 설계** : 패키지명 첫글자는 소문자
+### 예시
 ```bash
 .
 ├── java
@@ -58,6 +59,75 @@ java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
     ├── static
     └── templates
 ```
+### 전체적인 디렉토리 구조
+```bash
+.
+├── java
+│   └── com
+│       └── example
+│           └── monghyang
+│               ├── MonghyangApplication.java
+│               └── domain
+│                   ├── admin
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   └── service
+│                   ├── brewery # 양조장은 양조장, 체험프로그램으로 하위 패키지 분리
+│                   │   ├── joy # 체험 프로그램
+│                   │   │   ├── controller
+│                   │   │   ├── dto
+│                   │   │   ├── entity
+│                   │   │   ├── repository
+│                   │   │   └── service
+│                   │   └── main # 양조장
+│                   │       ├── controller
+│                   │       ├── dto
+│                   │       ├── entity
+│                   │       ├── repository
+│                   │       └── service
+│                   ├── config
+│                   ├── follow
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   ├── entity
+│                   │   ├── repository
+│                   │   └── service
+│                   ├── global
+│                   ├── product
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   ├── entity
+│                   │   ├── repository
+│                   │   └── service
+│                   ├── qna
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   ├── entity
+│                   │   ├── repository
+│                   │   └── service
+│                   ├── seller
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   ├── entity
+│                   │   ├── repository
+│                   │   └── service
+│                   ├── users
+│                   │   ├── controller
+│                   │   ├── dto
+│                   │   ├── entity
+│                   │   ├── repository
+│                   │   └── service
+│                   └── util
+└── resources
+    ├── application-local.yml # BE 로컬 개발용 프로파일(로컬DB)
+    ├── application-prod.yml # 배포: 정식 배포용 프로파일
+    ├── application-test.yml # 배포: FE API 테스트용 프로파일
+    ├── application.yml
+    ├── setting.env # 환경변수 파일(커밋 절대 금지)
+    ├── static
+    └── templates
+```
+
 ---
 ## 📚 STACKS
 
