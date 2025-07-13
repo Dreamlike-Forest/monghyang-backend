@@ -28,12 +28,17 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // API 정의 제공. jjwt 모듈 사용 시 기본적으로 필요
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT의 실제 구현을 포함
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Jackson을 통한 JWT의 직렬화 및 역직렬화 지원
+	implementation 'org.springframework.boot:spring-boot-starter-validation' // Validation
 }
 
 tasks.named('test') {
