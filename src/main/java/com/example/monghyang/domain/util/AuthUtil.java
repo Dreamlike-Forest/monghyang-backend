@@ -36,4 +36,5 @@ public class AuthUtil {
                 .map(GrantedAuthority::getAuthority)
                 .orElse(null);
     }
+
 }
