@@ -1,10 +1,13 @@
 package com.example.monghyang.domain.filter;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.users.details.JwtUserDetails;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
+import com.example.monghyang.domain.users.details.LoginUserDetails;
 import com.example.monghyang.domain.users.service.UsersService;
+import com.example.monghyang.domain.util.AuthUtil;
 import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,11 +35,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final UsersService usersService;
     @Value("${app.client-url}")
     private String clientUrl;
+    private final ObjectMapper objectMapper;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UsersService usersService) {
+    public LoginFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UsersService usersService, ObjectMapper objectMapper) {
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.usersService = usersService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -52,12 +57,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication auth) throws IOException {
-        JwtUserDetails jwtUserDetails = (JwtUserDetails) auth.getPrincipal();
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication auth) {
+        LoginUserDetails loginUserDetails = (LoginUserDetails) auth.getPrincipal();
 
-        Long userId = jwtUserDetails.getUserId();
+        Long userId = loginUserDetails.getUserId();
 
-        Collection<? extends GrantedAuthority> authorities = jwtUserDetails.getAuthorities();
+        Collection<? extends GrantedAuthority> authorities = loginUserDetails.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority grantedAuthority = iterator.next();
         String role = grantedAuthority.getAuthority();
@@ -71,14 +76,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // 이미 로그인 시 유저 정보를 검증했으니, 이 메소드에서는 '업데이트' 쿼리만 호출한다.
         usersService.setRefreshToken(userId, refreshToken.getValue());
 
-        response.setHeader("Auth-Role", role); // 유저 권한
-        response.setHeader("Auth-User-Id", String.valueOf(jwtUserDetails.getUserId())); // 유저 식별자
-//        response.sendRedirect(clientUrl); // 홈페이지로 리다이렉션
+        try{
+            response.setContentType("application/json;charset=utf-8");
+            objectMapper.writeValue(response.getWriter(), LoginDto.nicknameRoleOf(loginUserDetails.getNickname(), role));
+        } catch (IOException e) {
+            log.error(e.getMessage() + "\n 로그인 성공 후 응답할 http body 생성 중 에러가 발생했습니다.");
+            ExceptionUtil.filterExceptionHandler(response, ApplicationError.LOGIN_RESPONSE_ERROR);
+        }
     }
 
     @Override // 로그인 실패 시 수행되는 메소드
     protected void unsuccessfulAuthentication(HttpServletRequest req, HttpServletResponse res, AuthenticationException failed) {
-//        res.setStatus(401);
         ExceptionUtil.filterExceptionHandler(res, ApplicationError.USER_UNAUTHORIZED);
     }
 

@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.filter;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.details.JwtUserDetails;
 import com.example.monghyang.domain.users.dto.AuthDto;
 import com.example.monghyang.domain.util.ExceptionUtil;
@@ -53,23 +53,28 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 토큰이 만료된 경우
-        if(jwtUtil.isExpired(accessToken)) {
-            filterChain.doFilter(request, response);
-//            response.sendRedirect(request.getContextPath() + "/api/user/refresh"); // refresh token을 이용한 토큰 재발급 요청을 하도록 리다이렉션 응답
-            ExceptionUtil.filterExceptionHandler(response, ApplicationError.ACCESS_TOKEN_EXPIRED);
+        AuthDto authDto = new AuthDto();
+        try {
+            // 토큰이 만료된 경우
+            if(jwtUtil.isExpired(accessToken)) {
+                // response.sendRedirect(request.getContextPath() + "/api/user/refresh"); // refresh token을 이용한 토큰 재발급 요청을 하도록 리다이렉션 응답
+                ExceptionUtil.filterExceptionHandler(response, ApplicationError.TOKEN_EXPIRED);
+                response.flushBuffer(); // 응답 커밋(후속 작업 x)
+                return;
+            }
+
+            // 토큰에서 유저 식별자와 권한 정보 추출
+            Long userId = jwtUtil.getUserId(accessToken);
+            String role = jwtUtil.getRole(accessToken);
+            // 추출한 정보를 AuthDto에 담는다.
+            authDto.setUserId(userId);
+            authDto.setRoleType(role);
+        } catch (ApplicationException e) {
+            // jwt 파싱 도중 예외 발생 시 처리: 토큰 훼손으로 간주
+            ExceptionUtil.filterExceptionHandler(response, e.getApplicationError());
+            response.flushBuffer(); // 응답 커밋
             return;
         }
-
-        // 토큰에서 유저 식별자와 권한 정보 추출
-        Long userId = jwtUtil.getUserId(accessToken);
-        String role = jwtUtil.getRole(accessToken);
-
-        // 추출한 정보를 AuthDto에 담는다.
-        AuthDto authDto = new AuthDto();
-        authDto.setUserId(userId);
-        authDto.setRoleType(role);
-        authDto.setPassword("");
 
         // AuthDto를 JwtUserDetails에 담아 인증 토큰을 생성하기 위한 준비물을 만든다.
         JwtUserDetails jwtUserDetails = new JwtUserDetails(authDto);
