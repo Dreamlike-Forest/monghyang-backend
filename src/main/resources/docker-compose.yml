@@ -1,0 +1,21 @@
+# docker-compose.yml
+services:
+  redis:
+    image: redis:8.0.3-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --save 900 100
+      --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"                        # 호스트 접속용 (원격 노출 불필요하면 제거)
+    volumes:
+      - redis-data:/data                   # RDB / AOF 영속화
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 5s
+      retries: 5
+
+volumes:
+  redis-data: {}

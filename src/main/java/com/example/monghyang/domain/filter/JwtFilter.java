@@ -26,27 +26,16 @@ public class JwtFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
-    @Override
-    protected boolean shouldNotFilterAsyncDispatch() {
-        return false; // Async-Dispatch 에도 필터를 수행하여 HTTP 헤더를 파싱하도록 설정
-    }
+//    @Override
+//    protected boolean shouldNotFilterAsyncDispatch() {
+//        return false; // Async-Dispatch 에도 필터를 수행하여 HTTP 헤더를 파싱하도록 설정
+//    }
 
 
     @Override // access token을 검증하는 메소드. refresh token에 대한 검증 요청은 AuthController가 처리
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String accessToken = null;
-
-        // 요청에 쿠키가 존재하는지 확인
-        if(request.getCookies() != null) {
-            // 쿠키에서 access token을 찾는 과정
-            for(Cookie cookie : request.getCookies()) {
-                if(cookie.getName().equals("access_token")) {
-                    accessToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
+        // 요청의 access token 추출
+        String accessToken = jwtUtil.getTokenFromRequest(request, jwtUtil.getAccessTokenCookieName());
         // access token을 발견하지 못한 경우, 다음 필터로 요청을 넘긴다: 로그인하는 경우
         if(accessToken == null) {
             filterChain.doFilter(request, response);

@@ -2,8 +2,7 @@ package com.example.monghyang.domain.util;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.users.entity.Users;
-import com.example.monghyang.domain.users.repository.UsersRepository;
+import com.example.monghyang.domain.redis.RedisService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -26,16 +25,21 @@ import java.util.UUID;
 @Slf4j
 public class JwtUtil {
     // jwt 토큰 생성 및 파싱을 담당하는 유틸 클래스
-    private final SecretKey secretKey;
-    private final Long expiration;
-    private final SecretKey refreshKey;
-    private final Long refreshExpiration;
-    private final String cookieSamesite;
-    private final String cookieDomain;
+    private final SecretKey secretKey; // access token 암호화 키
+    private final Long expiration; // access token 수명
+    private final SecretKey refreshKey; // refresh token 암호화 키
+    private final Long refreshExpiration; // refresh token 수명
+    private final String cookieSamesite; // 쿠키의 same site 설정
+    private final String cookieDomain; // 쿠키의 domain 설정
+    private final String accessTokenCookieName; // access token 쿠키 이름
+    private final String refreshTokenCookieName; // refresh token 쿠키 이름
+    private final RedisService redisService;
 
     public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") Long expiration
             , @Value("${jwt.refresh-secret}") String refreshSecret, @Value("${jwt.refresh-expiration}") Long refreshExpiration
-            , @Value("${app.cookie-samesite}") String cookieSamesite, @Value("${app.cookie-domain}") String cookieDomain) {
+            , @Value("${app.cookie-samesite}") String cookieSamesite, @Value("${app.cookie-domain}") String cookieDomain
+            , @Value("${jwt.access-token-cookie-name}") String accessTokenCookieName , @Value("${jwt.refresh-token-cookie-name}") String refreshTokenCookieName
+            , RedisService redisService) {
 
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
         this.refreshKey = new SecretKeySpec(refreshSecret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
@@ -43,6 +47,9 @@ public class JwtUtil {
         this.refreshExpiration = refreshExpiration;
         this.cookieSamesite = cookieSamesite;
         this.cookieDomain = cookieDomain;
+        this.accessTokenCookieName = accessTokenCookieName;
+        this.refreshTokenCookieName = refreshTokenCookieName;
+        this.redisService = redisService;
     }
 
     // 토큰을 SecretKey로 파싱하여 Claims를 얻어내는 메소드
@@ -125,15 +132,17 @@ public class JwtUtil {
 
     // access token 발급
     public ResponseCookie createAccessToken(Long userId, String role) {
+        String accessTokenId = UUID.randomUUID().toString();
         String access = Jwts.builder()
                 .claim("userId", userId) // userId
                 .claim("role", role)
-                .setId(UUID.randomUUID().toString())
+                .setId(accessTokenId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
-        return ResponseCookie.from("access_token", access)
+        redisService.saveAccessTokenTid(userId, accessTokenId); // redis에 access token tid 저장
+        return ResponseCookie.from(accessTokenCookieName, access)
                 .httpOnly(true).secure(true).sameSite(cookieSamesite)
                 .domain(cookieDomain).path("/")
                 .maxAge(expiration/1000).build();
@@ -150,7 +159,7 @@ public class JwtUtil {
                 .signWith(refreshKey, SignatureAlgorithm.HS256)
                 .compact();
 
-        return ResponseCookie.from("refresh_token", refresh)
+        return ResponseCookie.from(refreshTokenCookieName, refresh)
                 .httpOnly(true).secure(true).sameSite(cookieSamesite)
                 .domain(cookieDomain).path("/api/auth/refresh")
                 .maxAge(refreshExpiration/1000).build();
@@ -159,18 +168,8 @@ public class JwtUtil {
     // 특정 유저가 서버로 전송한 refresh token의 tid값이 해당 유저의 테이블의 refresh token tid 값과 일치하는지 검증
     // 만료 여부 검증
     public boolean verifyRefreshToken(HttpServletRequest request, String prevRefreshTokenId) {
-        String refreshToken = null;
-
-        // 요청에 쿠키가 존재하는지 확인
-        if(request.getCookies() != null) {
-            // 쿠키에서 refresh token을 찾는 과정
-            for(Cookie cookie : request.getCookies()) {
-                if(cookie.getName().equals("refresh_token")) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
+        // 요청의 refresh token 추출
+        String refreshToken = getTokenFromRequest(request, refreshTokenCookieName);
         if(refreshToken == null) {
             // refresh token 존재하지 않을 시 예외 발생
             throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
@@ -190,17 +189,38 @@ public class JwtUtil {
     }
 
     public ResponseCookie createMax0AccessToken() { // 수명이 0인 access token 발급: 로그아웃 용
-        return ResponseCookie.from("access_token", "")
+        return ResponseCookie.from(accessTokenCookieName, "")
                 .httpOnly(true).secure(true).sameSite(cookieSamesite)
                 .domain(cookieDomain).path("/")
                 .maxAge(Duration.ZERO).build();
     }
 
     public ResponseCookie createMax0RefreshToken() { // 수명이 0인 refresh token 발급: 로그아웃 용
-        return ResponseCookie.from("refresh_token", "")
+        return ResponseCookie.from(refreshTokenCookieName, "")
                 .httpOnly(true).secure(true).sameSite(cookieSamesite)
                 .domain(cookieDomain).path("/api/auth/refresh")
                 .maxAge(Duration.ZERO).build();
     }
 
+    // Http Request에서 특정 토큰을 찾아주는 메소드
+    public String getTokenFromRequest(HttpServletRequest request, String tokenName) {
+        String token = null;
+
+        // 요청에 쿠키가 존재하는지 확인
+        if(request.getCookies() != null) {
+            // 쿠키에서 token을 찾는 과정
+            for(Cookie cookie : request.getCookies()) {
+                if(cookie.getName().equals(tokenName)) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        return token;
+    }
+
+    public String getAccessTokenCookieName() {
+        return accessTokenCookieName;
+    }
 }
