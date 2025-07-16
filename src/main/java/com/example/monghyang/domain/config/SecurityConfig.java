@@ -2,9 +2,12 @@ package com.example.monghyang.domain.config;
 
 import com.example.monghyang.domain.filter.JwtFilter;
 import com.example.monghyang.domain.filter.LoginFilter;
+import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
 import com.example.monghyang.domain.users.service.UsersService;
+import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +46,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public LoginFilter loginFilter(AuthenticationManager authenticationManager, UsersService usersService, JwtUtil jwtUtil) {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager, jwtUtil, usersService);
+    public LoginFilter loginFilter(AuthenticationManager authenticationManager, UsersService usersService, JwtUtil jwtUtil, ObjectMapper objectMapper) {
+        LoginFilter loginFilter = new LoginFilter(authenticationManager, jwtUtil, usersService, objectMapper);
         loginFilter.setFilterProcessesUrl("/api/auth/login");
         loginFilter.setAuthenticationManager(authenticationManager); // loginFilter의 상위 부모 필터의 필드를 초기화하는 상위 클래스의 메소드
         return loginFilter;
@@ -56,7 +59,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter, JwtFilter jwtFilter, AuthenticationSuccessHandler authenticationSuccessHandler, AuthenticationFailureHandler authenticationFailureHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter, JwtFilter jwtFilter, AuthenticationSuccessHandler authenticationSuccessHandler, AuthenticationFailureHandler authenticationFailureHandler, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -88,9 +91,9 @@ public class SecurityConfig {
                         return config;
                     }
                 }))
-                .exceptionHandling(ex -> ex // 인증 실패 시 403 메시지 반환
-                        .authenticationEntryPoint((req, res, authEx) ->
-                                res.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint) // 인증 실패 시 401 반환
+                        .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
                 .authorizeHttpRequests((auth) ->
                         auth.requestMatchers("/api/auth/**", "/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
