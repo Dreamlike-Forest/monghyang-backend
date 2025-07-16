@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.users.service;
 
 import com.example.monghyang.domain.users.details.JwtUserDetails;
+import com.example.monghyang.domain.users.details.LoginUserDetails;
 import com.example.monghyang.domain.users.dto.AuthDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -15,25 +16,23 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class JwtUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
     private final UsersRepository usersRepository;
     @Autowired
-    public JwtUserDetailsService(UsersRepository usersRepository) {
+    public CustomUserDetailsService(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
 
 
-    @Override // 이메일을 통해 유저를 조회한 결과를 AuthDto 인스턴스에 담고, JwtUserDetails 생성자의 매개변수로 담아 반환
+    @Override // 이메일을 통해 유저를 조회한 결과를 AuthDto 인스턴스에 담고, LoginUserDetails 생성자의 매개변수로 담아 반환
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Optional<Users> user = usersRepository.findByEmail(email);
 
         if(user.isPresent()) {
             AuthDto authDto = new AuthDto();
             authDto.setUserId(user.get().getId());
-            authDto.setEmail(user.get().getEmail());
-            authDto.setPassword(user.get().getPassword());
-            authDto.setRoleType(user.get().getRole().toString());
-            return new JwtUserDetails(authDto);
+            authDto.setRoleType(user.get().getRole().getName().toString());
+            return new LoginUserDetails(authDto, user.get().getNickname(), user.get().getPassword());
         } else {
             return null;
         }
