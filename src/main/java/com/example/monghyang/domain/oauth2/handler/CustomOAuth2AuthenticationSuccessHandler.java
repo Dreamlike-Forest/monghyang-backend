@@ -2,6 +2,7 @@ package com.example.monghyang.domain.oauth2.handler;
 
 import com.example.monghyang.domain.oauth2.details.CustomOAuth2UserDetails;
 import com.example.monghyang.domain.users.entity.Users;
+import com.example.monghyang.domain.users.service.UsersService;
 import com.example.monghyang.domain.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +24,12 @@ import java.util.Iterator;
 public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final JwtUtil jwtUtil;
     private final String clientUrl;
+    private final UsersService usersService;
 
-    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl) {
+    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl, UsersService usersService) {
         this.jwtUtil = jwtUtil;
         this.clientUrl = clientUrl;
+        this.usersService = usersService;
     }
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -49,9 +52,8 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
             ResponseCookie accessCookie = jwtUtil.createAccessToken(userId, role);
             ResponseCookie refreshCookie = jwtUtil.createRefreshToken(userId, role);
+            usersService.setRefreshToken(userId, refreshCookie.getValue());
 
-//            response.addCookie(accessCookie);
-//            response.addCookie(refreshCookie);
             response.setHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
             response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
             response.sendRedirect(clientUrl);

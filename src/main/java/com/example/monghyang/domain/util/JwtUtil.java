@@ -3,6 +3,7 @@ package com.example.monghyang.domain.util;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
+import com.example.monghyang.domain.users.repository.UsersRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -34,12 +35,13 @@ public class JwtUtil {
     private final String accessTokenCookieName; // access token 쿠키 이름
     private final String refreshTokenCookieName; // refresh token 쿠키 이름
     private final RedisService redisService;
+    private final UsersRepository usersRepository;
 
     public JwtUtil(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") Long expiration
             , @Value("${jwt.refresh-secret}") String refreshSecret, @Value("${jwt.refresh-expiration}") Long refreshExpiration
             , @Value("${app.cookie-samesite}") String cookieSamesite, @Value("${app.cookie-domain}") String cookieDomain
             , @Value("${jwt.access-token-cookie-name}") String accessTokenCookieName , @Value("${jwt.refresh-token-cookie-name}") String refreshTokenCookieName
-            , RedisService redisService) {
+            , RedisService redisService, UsersRepository usersRepository) {
 
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
         this.refreshKey = new SecretKeySpec(refreshSecret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
@@ -50,6 +52,7 @@ public class JwtUtil {
         this.accessTokenCookieName = accessTokenCookieName;
         this.refreshTokenCookieName = refreshTokenCookieName;
         this.redisService = redisService;
+        this.usersRepository = usersRepository;
     }
 
     // 토큰을 SecretKey로 파싱하여 Claims를 얻어내는 메소드
@@ -150,15 +153,15 @@ public class JwtUtil {
 
     // refresh token 발급
     public ResponseCookie createRefreshToken(Long userId, String role) {
+        String refreshTokenId = UUID.randomUUID().toString();
         String refresh = Jwts.builder()
                 .claim("userId", userId)
                 .claim("role", role)
-                .setId(UUID.randomUUID().toString())
+                .setId(refreshTokenId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(refreshKey, SignatureAlgorithm.HS256)
                 .compact();
-
         return ResponseCookie.from(refreshTokenCookieName, refresh)
                 .httpOnly(true).secure(true).sameSite(cookieSamesite)
                 .domain(cookieDomain).path("/api/auth/refresh")
@@ -175,16 +178,16 @@ public class JwtUtil {
             throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
         }
 
-        if(isExpiredRefreshToken(refreshToken)) {
-            // refresh token 만료 시 예외 발생
-            throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
-        }
         // 기존에 저장된 refresh token tid와 토큰 갱신 요청에 담긴 refresh token의 tid가 동일한지 검증
         if(!getRefreshId(refreshToken).equals(prevRefreshTokenId)) {
             // 다르다면 동시접속 발생한 것으로 간주
             throw new ApplicationException(ApplicationError.CONCURRENT_CONNECTION);
         }
 
+        if(isExpiredRefreshToken(refreshToken)) {
+            // refresh token 만료 시 예외 발생
+            throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
+        }
         return true;
     }
 

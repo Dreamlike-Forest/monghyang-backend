@@ -1,8 +1,11 @@
 package com.example.monghyang.domain.users.controller;
 
+import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.global.response.ResponseDto;
 import com.example.monghyang.domain.users.dto.JoinDto;
 import com.example.monghyang.domain.users.service.UsersService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +20,11 @@ public class AuthController {
         this.usersService = usersService;
     }
 
-//    @PostMapping("/refresh")
+    @PostMapping("/refresh")
+    public ResponseEntity<ResponseDto> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
+        usersService.updateRefreshToken(request, response);
+        return ResponseEntity.ok().body(new ResponseDto());
+    }
 
 //    @PostMapping("/logout")
 
@@ -25,9 +32,9 @@ public class AuthController {
 
 
     @PostMapping("/common-join")
-    public ResponseEntity<ResponseDto<String>> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
+    public ResponseEntity<ResponseDto> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
         usersService.commonJoin(joinDto);
-        return ResponseEntity.ok().body(ResponseDto.contentFrom("회원 가입이 완료되었습니다."));
+        return ResponseEntity.ok().body(new ResponseDto());
     }
 
 //    @PostMapping("/seller-join")

@@ -2,13 +2,13 @@ package com.example.monghyang.domain.filter;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.details.JwtUserDetails;
 import com.example.monghyang.domain.users.dto.AuthDto;
 import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,8 +22,11 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    public JwtFilter(JwtUtil jwtUtil) {
+    private final RedisService redisService;
+
+    public JwtFilter(JwtUtil jwtUtil, RedisService redisService) {
         this.jwtUtil = jwtUtil;
+        this.redisService = redisService;
     }
 
 //    @Override
@@ -44,6 +47,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         AuthDto authDto = new AuthDto();
         try {
+            // 토큰에서 유저 식별자와 권한 정보 추출
+            Long userId = jwtUtil.getUserId(accessToken);
+            String role = jwtUtil.getRole(accessToken);
+
+            // redis에 존재하지 않는 access token 발견 시 동시 접속 발생으로 간주
+            if(!redisService.verifyAccessTokenTid(userId, jwtUtil.getId(accessToken))) {
+                ExceptionUtil.filterExceptionHandler(response, ApplicationError.CONCURRENT_CONNECTION);
+                response.flushBuffer();
+                return;
+            }
+
             // 토큰이 만료된 경우
             if(jwtUtil.isExpired(accessToken)) {
                 // response.sendRedirect(request.getContextPath() + "/api/user/refresh"); // refresh token을 이용한 토큰 재발급 요청을 하도록 리다이렉션 응답
@@ -52,9 +66,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 토큰에서 유저 식별자와 권한 정보 추출
-            Long userId = jwtUtil.getUserId(accessToken);
-            String role = jwtUtil.getRole(accessToken);
             // 추출한 정보를 AuthDto에 담는다.
             authDto.setUserId(userId);
             authDto.setRoleType(role);

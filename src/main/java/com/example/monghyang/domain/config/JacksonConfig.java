@@ -1,6 +1,9 @@
 package com.example.monghyang.domain.config;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
@@ -18,12 +21,16 @@ public class JacksonConfig {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer customizer() {
         return builder -> {
+            // 날짜 및 시간 직렬화 설정
             JavaTimeModule module = new JavaTimeModule();
             module.addSerializer(LocalDateTime.class,
                     new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
 
             builder.modules(module);
             builder.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+//            builder.serializationInclusion(JsonInclude.Include.NON_NULL); // 직렬화 시 null인 필드는 json에서 제외
+            builder.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE); // json 필드명을 snake_case로 변환하여 반환
         };
     }
 }

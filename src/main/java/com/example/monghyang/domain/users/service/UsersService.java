@@ -42,7 +42,7 @@ public class UsersService {
         usersRepository.updateRefreshToken(userId, jwtUtil.getRefreshId(refreshToken)); // tid 저장(bulk 쿼리)
     }
 
-    // refresh token 갱신
+    // refresh token을 이용한 token 갱신
     @Transactional
     public void updateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
         Long userId = AuthUtil.getUserId();
@@ -61,6 +61,7 @@ public class UsersService {
 
             ResponseCookie refreshToken = jwtUtil.createRefreshToken(userId, userRole);
             response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
+            setRefreshToken(userId, refreshToken.getValue());
         }
     }
 

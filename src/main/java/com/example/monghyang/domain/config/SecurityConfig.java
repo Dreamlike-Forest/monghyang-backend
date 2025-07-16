@@ -2,14 +2,12 @@ package com.example.monghyang.domain.config;
 
 import com.example.monghyang.domain.filter.JwtFilter;
 import com.example.monghyang.domain.filter.LoginFilter;
-import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
+import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.service.UsersService;
-import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,8 +52,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtFilter jwtFilter(JwtUtil jwtUtil) {
-        return new JwtFilter(jwtUtil);
+    public JwtFilter jwtFilter(JwtUtil jwtUtil, RedisService redisService) {
+        return new JwtFilter(jwtUtil, redisService);
     }
 
     @Bean
