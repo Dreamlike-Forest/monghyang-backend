@@ -50,8 +50,8 @@ public class Users {
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isDeleted = false;
 
-    @Builder(builderMethodName = "generalBuilder")
-    public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, Boolean isAgreed) {
+    @Builder(builderMethodName = "generalBuilder") // 플랫폼 회원가입
+    public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
         this.role = role;
         this.email = email;
         this.password = password;
@@ -61,15 +61,16 @@ public class Users {
         this.birth = birth;
         this.gender = gender;
         this.address = address;
+        this.addressDetail = address_detail;
         this.isAgreed = isAgreed;
     }
 
-    @Builder(builderMethodName = "oAuth2Builder")
+    @Builder(builderMethodName = "oAuth2Builder") // OAuth2 회원가입 -> 회원가입에 필요한 추가 정보 입력 페이지로 리다이렉션 필요
     public Users(String email, String name, String oAuth2Id, Role role) {
         this.email = email;
         this.name = name;
         this.oAuth2Id = oAuth2Id;
-        this.role = role;
+        this.role = role; // OAuth2 회원가입은 '일반 사용자'만 가능합니다.
         this.password = "oAuth2User";
     }
 
@@ -111,6 +112,10 @@ public class Users {
 
     public void setAgreed(Boolean agreed) {
         isAgreed = agreed;
+    }
+
+    public void setAddressDetail(String addressDetail) {
+        this.addressDetail = addressDetail;
     }
 
     public void setRefreshToken(String refreshToken) {

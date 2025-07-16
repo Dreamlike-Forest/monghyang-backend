@@ -9,7 +9,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AuthDto {
     private Long userId;
-    private String email;
     private String roleType;
-    private String password;
 }

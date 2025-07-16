@@ -2,10 +2,12 @@ package com.example.monghyang.domain.users.details;
 
 import com.example.monghyang.domain.users.dto.AuthDto;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class JwtUserDetails implements UserDetails {
     private final AuthDto authDto;
@@ -22,6 +24,7 @@ public class JwtUserDetails implements UserDetails {
             }
         });
         return authorities;
+//        return List.of(new SimpleGrantedAuthority(authDto.getRoleType()));
     }
 
     public Long getUserId() {
@@ -30,12 +33,12 @@ public class JwtUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return authDto.getPassword();
+        return "";
     }
 
     @Override
     public String getUsername() {
-        return authDto.getEmail();
+        return "";
     }
 
     @Override
