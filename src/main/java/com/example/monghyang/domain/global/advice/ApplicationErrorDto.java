@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApplicationErrorDto {
-    private LocalDateTime timestamp;
     private int status;
     private String method;
     private String path;
     private String message;
+    private LocalDateTime timestamp;
 
 
     private ApplicationErrorDto(HttpStatus status, String message) {
