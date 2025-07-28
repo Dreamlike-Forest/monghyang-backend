@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LoginDto {
+    private Integer status = 200;
     private String nickname;
     private String role;
 

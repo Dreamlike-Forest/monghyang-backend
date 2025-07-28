@@ -50,12 +50,10 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             GrantedAuthority grantedAuthority = iterator.next();
             String role = grantedAuthority.getAuthority();
 
-            ResponseCookie accessCookie = jwtUtil.createAccessToken(userId, role);
-            ResponseCookie refreshCookie = jwtUtil.createRefreshToken(userId, role);
-            usersService.setRefreshToken(userId, refreshCookie.getValue());
+            String refreshCookie = jwtUtil.createRefreshToken(userId, role);
+//            usersService.setRefreshToken(userId, refreshCookie);
 
-            response.setHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-            response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+            response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie);
             response.sendRedirect(clientUrl);
         }
     }

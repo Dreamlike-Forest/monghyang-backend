@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +35,6 @@ public class UsersService {
         this.jwtUtil = jwtUtil;
     }
 
-    // refresh token 새로 발급(로그인 성공 시 사용)
-    @Transactional
-    public void setRefreshToken(Long userId, String refreshToken) {
-        usersRepository.updateRefreshToken(userId, jwtUtil.getRefreshId(refreshToken)); // tid 저장(bulk 쿼리)
-    }
-
     // refresh token을 이용한 token 갱신
     @Transactional
     public void updateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
@@ -54,14 +47,11 @@ public class UsersService {
         Users users = usersRepository.findById(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
 
-        if(jwtUtil.verifyRefreshToken(request, users.getRefreshToken())) {
+        if(jwtUtil.verifyRefreshToken(request)) {
             // 두 토큰 새로 갱신
-            ResponseCookie access = jwtUtil.createAccessToken(userId, userRole);
-            response.addHeader(HttpHeaders.SET_COOKIE, access.toString());
-
-            ResponseCookie refreshToken = jwtUtil.createRefreshToken(userId, userRole);
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
-            setRefreshToken(userId, refreshToken.getValue());
+            String refreshToken = jwtUtil.createRefreshToken(userId, userRole);
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshToken);
+//            setRefreshToken(userId, refreshToken);
         }
     }
 

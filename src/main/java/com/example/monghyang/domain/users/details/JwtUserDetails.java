@@ -24,7 +24,6 @@ public class JwtUserDetails implements UserDetails {
             }
         });
         return authorities;
-//        return List.of(new SimpleGrantedAuthority(authDto.getRoleType()));
     }
 
     public Long getUserId() {

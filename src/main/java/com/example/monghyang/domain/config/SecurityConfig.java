@@ -1,9 +1,11 @@
 package com.example.monghyang.domain.config;
 
-import com.example.monghyang.domain.filter.JwtFilter;
 import com.example.monghyang.domain.filter.LoginFilter;
+import com.example.monghyang.domain.handler.SessionLoginFailureHandler;
+import com.example.monghyang.domain.handler.SessionLoginSuccessHandler;
+import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
+import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
-import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.service.UsersService;
 import com.example.monghyang.domain.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,9 +20,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -52,12 +51,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtFilter jwtFilter(JwtUtil jwtUtil, RedisService redisService) {
-        return new JwtFilter(jwtUtil, redisService);
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter, JwtFilter jwtFilter, AuthenticationSuccessHandler authenticationSuccessHandler, AuthenticationFailureHandler authenticationFailureHandler, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -89,28 +83,34 @@ public class SecurityConfig {
                         return config;
                     }
                 }))
-                .exceptionHandling(ex -> ex
+                .exceptionHandling(ex -> ex // 인증 및 권한 검증 시 발생 예외 처리
                         .authenticationEntryPoint(authenticationEntryPoint) // 인증 실패 시 401 반환
                         .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
                 .authorizeHttpRequests((auth) ->
-                        auth.requestMatchers("/api/auth/**", "/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        auth.requestMatchers("/api/auth/**", "/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/api/brewery/**", "/api/product/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
                                 .requestMatchers("/api/brewery-control/**").hasAnyRole("ADMIN", "BREWERY")
                                 .requestMatchers("/api/seller-control/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
                                 .anyRequest().authenticated())
-                .formLogin(AbstractHttpConfigurer::disable)
+                .formLogin(form -> form // form 로그인 활성화
+                        .loginPage("/?view=login")
+                        .loginProcessingUrl("/api/auth/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .successHandler(sessionLoginSuccessHandler)
+                        .failureHandler(sessionLoginFailureHandler))
                 .oauth2Login((oauth2) -> oauth2.loginPage("/auth/login")
                         .redirectionEndpoint(redirection -> redirection.baseUri("/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(authenticationSuccessHandler)
-                        .failureHandler(authenticationFailureHandler)
+                        .successHandler(customOAuth2AuthenticationSuccessHandler)
+                        .failureHandler(customOAuth2AuthenticationFailureHandler)
                 )
-                .logout(AbstractHttpConfigurer::disable)
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .invalidateHttpSession(true))
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtFilter, LoginFilter.class)
-                .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }
 }

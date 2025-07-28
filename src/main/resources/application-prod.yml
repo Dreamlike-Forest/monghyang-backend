@@ -6,21 +6,6 @@ spring:
     password: ${RDS_PASSWORD}
   config:
     import: optional:file:./.env[.properties] # .env 파일의 환경변수를 주입하여 jar 실행
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      timeout: 6000
-      lettuce:
-        pool:
-          max-active: 10 # 최대 redis 커넥션 개수
-          max-idle: 5 # 유휴 커넥션 최대 개수
-          min-idle: 1 # 유휴 커넥션 최소 개수
-      username: ${REDIS_USERNAME} # redis 유저네임
-      password: ${REDIS_PASSWORD} # redis 유저 비밀번호
-
 app:
   client-url: https://www.example.com # 실제 운영 도메인 url origin
   #  storage-path:  # 스토리지 '시작' 경로
-  cookie-samesite: Lax # 서드파티 쿠키 전송받지 않도록 하는 설정
-  cookie-domain: www.example.com # 실제 운영 도메인

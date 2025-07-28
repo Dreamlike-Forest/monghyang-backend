@@ -43,7 +43,6 @@ public class Users {
 
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isAgreed;
-    private String refreshToken;
     @Column(nullable = false)
     @CreationTimestamp
     private LocalDate createdAt;
@@ -116,10 +115,6 @@ public class Users {
 
     public void setAddressDetail(String addressDetail) {
         this.addressDetail = addressDetail;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
     }
 
     public void setDeleted(Boolean deleted) {

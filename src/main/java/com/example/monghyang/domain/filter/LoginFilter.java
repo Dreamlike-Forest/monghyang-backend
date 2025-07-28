@@ -1,10 +1,8 @@
 package com.example.monghyang.domain.filter;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.users.details.LoginUserDetails;
 import com.example.monghyang.domain.users.service.UsersService;
-import com.example.monghyang.domain.util.AuthUtil;
 import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -67,21 +64,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority grantedAuthority = iterator.next();
         String role = grantedAuthority.getAuthority();
 
-        ResponseCookie access = jwtUtil.createAccessToken(userId, role);
-        response.addHeader(HttpHeaders.SET_COOKIE, access.toString());
-
-        ResponseCookie refreshToken = jwtUtil.createRefreshToken(userId, role);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
+        String refreshToken = jwtUtil.createRefreshToken(userId, role);
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshToken);
 
         // 이미 로그인 시 유저 정보를 검증했으니, 이 메소드에서는 '업데이트' 쿼리만 호출한다.
-        usersService.setRefreshToken(userId, refreshToken.getValue());
+//        usersService.setRefreshToken(userId, refreshToken);
 
         try{
             response.setContentType("application/json;charset=utf-8");
-            objectMapper.writeValue(response.getWriter(), LoginDto.nicknameRoleOf(loginUserDetails.getNickname(), role));
+            objectMapper.writeValue(response.getWriter(), LoginDto.nicknameRoleOf(loginUserDetails.getUsername(), role));
         } catch (IOException e) {
             log.error(e.getMessage() + "\n 로그인 성공 후 응답할 http body 생성 중 에러가 발생했습니다.");
-            ExceptionUtil.filterExceptionHandler(response, ApplicationError.LOGIN_RESPONSE_ERROR);
+//            ExceptionUtil.filterExceptionHandler(response, ApplicationError.LOGIN_RESPONSE_ERROR);
         }
     }
 
