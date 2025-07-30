@@ -11,6 +11,7 @@ import java.util.List;
 
 @Configuration
 public class SessionConfig {
+    // 요청의 SID 추출 및 응답의 SID 헤더 세팅
     @Bean
     public HttpSessionIdResolver httpSessionIdResolver() {
         return new HttpSessionIdResolver() {

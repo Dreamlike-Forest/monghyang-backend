@@ -8,13 +8,10 @@ import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.RoleRepository;
 import com.example.monghyang.domain.users.repository.UsersRepository;
-import com.example.monghyang.domain.util.AuthUtil;
 import com.example.monghyang.domain.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,23 +33,27 @@ public class UsersService {
     }
 
     // refresh token을 이용한 token 갱신
-    @Transactional
-    public void updateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
-        Long userId = AuthUtil.getUserId();
-        String userRole = AuthUtil.getRole();
-        if(userId == null) {
-            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
-        }
+//    @Transactional
+//    public void updateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
+//        Long userId = AuthUtil.getUserId();
+//        String userRole = AuthUtil.getRole();
+//        if(userId == null) {
+//            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+//        }
+//
+//        Users users = usersRepository.findById(userId).orElseThrow(() ->
+//                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+//
+//        if(jwtUtil.verifyRefreshToken(request)) {
+//            // 두 토큰 새로 갱신
+//            String refreshToken = jwtUtil.createRefreshToken(userId, userRole);
+//            response.addHeader(HttpHeaders.SET_COOKIE, refreshToken);
+////            setRefreshToken(userId, refreshToken);
+//        }
+//    }
 
-        Users users = usersRepository.findById(userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+    public void logout(HttpServletRequest request) {
 
-        if(jwtUtil.verifyRefreshToken(request)) {
-            // 두 토큰 새로 갱신
-            String refreshToken = jwtUtil.createRefreshToken(userId, userRole);
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshToken);
-//            setRefreshToken(userId, refreshToken);
-        }
     }
 
     @Transactional

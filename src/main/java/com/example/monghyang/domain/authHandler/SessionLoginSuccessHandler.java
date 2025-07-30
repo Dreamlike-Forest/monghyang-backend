@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.handler;
+package com.example.monghyang.domain.authHandler;
 
 import com.example.monghyang.domain.filter.LoginDto;
 import com.example.monghyang.domain.global.advice.ApplicationError;
@@ -18,7 +18,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -53,15 +52,10 @@ public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler 
         String role = iterator.next().getAuthority();
         Long userId = loginUserDetails.getUserId();
 
-        // 세션에 유저 정보 저장
-        session.setAttribute("userId", userId);
-        session.setAttribute("role", role);
-        session.setAttribute("createdAt", LocalDateTime.now());
-        session.setAttribute("lastAccessAt", LocalDateTime.now());
+        // 세션에 유저 정보 저장(SessionUserInfo record)
+        session.setAttribute("sessionUserInfo", new SessionUserInfo(userId, role));
+        // 마지막 로그인 지역 정보 저장
         session.setAttribute("lastAccessLocation", request.getRemoteAddr());
-
-        response.setContentType("application/json;charset=utf-8");
-        objectMapper.writeValue(response.getWriter(), LoginDto.nicknameRoleOf(nickname, role)); // 유저 닉네임, 권한 정보 반환(json)
 
         String deviceType = DeviceTypeUtil.getDeviceType(request).name(); // 로그인을 시도한 클라이언트의 디바이스 타입
 
@@ -73,6 +67,11 @@ public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler 
 
         redisService.setLoginInfoWithDeviceType(userId, deviceType, session.getId()); // redis에 사용자 로그인 세션 정보 리스트 저장
 
-        jwtUtil.createRefreshToken(userId, deviceType); // redis에 refresh token 정보 저장
+        String refreshToken = jwtUtil.createRefreshToken(userId, deviceType); // redis에 refresh token 정보 저장
+        response.setHeader("X-Refresh-Token", refreshToken); // 응답 헤더에 refresh token 첨부
+
+        // 응답 http body 작성
+        response.setContentType("application/json;charset=utf-8");
+        objectMapper.writeValue(response.getWriter(), LoginDto.nicknameRoleOf(nickname, role)); // 유저 닉네임, 권한 정보 반환(json)
     }
 }

@@ -1,6 +1,5 @@
 package com.example.monghyang.domain.redis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +35,8 @@ public class RedisConfig {
     }
 
     @Bean // redis session json 직렬화
-    public RedisSerializer<Object> springSessionDefaultRedisSerializer(ObjectMapper objectMapper) {
-        return new GenericJackson2JsonRedisSerializer(objectMapper);
+    public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
+        return new GenericJackson2JsonRedisSerializer();
     }
 
     // 추후 json 객체 저장용 템플릿을 별도로 구현할 예정

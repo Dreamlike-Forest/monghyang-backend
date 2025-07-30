@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.users.details;
 
-import com.example.monghyang.domain.users.dto.AuthDto;
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,16 +8,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class LoginUserDetails implements UserDetails {
-    private final AuthDto authDto;
+    private final Long userId;
+    private final String roleType;
     private final String nickname;
     private final String password;
-    private LoginUserDetails(AuthDto authDto, String nickname, String password) {
-        this.authDto = authDto;
+
+    @Builder
+    public LoginUserDetails(Long userId, String roleType, String nickname, String password) {
+        this.userId = userId;
+        this.roleType = roleType;
         this.nickname = nickname;
         this.password = password;
-    }
-    public static LoginUserDetails authDtoNicknamePasswordOf(AuthDto authDto, String nickname, String password) {
-        return new LoginUserDetails(authDto, nickname, password);
     }
 
     @Override
@@ -26,14 +27,14 @@ public class LoginUserDetails implements UserDetails {
         authorities.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return authDto.getRoleType();
+                return roleType;
             }
         });
         return authorities;
     }
 
     public Long getUserId() {
-        return authDto.getUserId();
+        return userId;
     }
 
     @Override

@@ -13,15 +13,14 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RedisService {
     private final Long refreshTokenExpiration; // Redis 요소 수명
-    private final Duration sessionExpiration;
+    private final Long sessionExpiration;
     private final RedisTemplate<String, String> stringRedisTemplate; // access token tid 저장용 redis 템플릿
-    private static final String ACCESS_TOKEN_TID_PREFIX = "access_token_tid:";
     @Autowired
-    public RedisService(RedisTemplate<String, String> stringRedisTemplate, @Value("${jwt.expiration}") Long refreshTokenExpiration,
+    public RedisService(RedisTemplate<String, String> stringRedisTemplate, @Value("${jwt.refresh-expiration}") Duration refreshTokenExpiration,
                         @Value("${spring.session.timeout}") Duration sessionExpiration) {
         this.stringRedisTemplate = stringRedisTemplate;
-        this.refreshTokenExpiration = refreshTokenExpiration;
-        this.sessionExpiration = sessionExpiration;
+        this.refreshTokenExpiration = refreshTokenExpiration.toMillis();
+        this.sessionExpiration = sessionExpiration.toMillis();
     }
 
     private String createRefreshTokenKey(Long userId, String deviceType) {
@@ -38,8 +37,8 @@ public class RedisService {
         System.out.println("session's user id: "+userId);
         System.out.println("session's user device type: "+deviceType);
         System.out.println("session id: "+sessionId);
-        System.out.println("session expiration: "+sessionExpiration.toMillis());
-        stringRedisTemplate.opsForValue().set(key, sessionId, sessionExpiration.toMillis(), TimeUnit.MILLISECONDS);
+        System.out.println("session expiration: "+sessionExpiration);
+        stringRedisTemplate.opsForValue().set(key, sessionId, sessionExpiration, TimeUnit.MILLISECONDS);
     }
 
     // 세션 리프레시 토큰 정보 저장
@@ -69,8 +68,22 @@ public class RedisService {
         return storedTid.equals(tid);
     }
 
+
+    // 세션 제거
     public void deleteSessionId(String sessionId) {
         String key = "spring:session:sessions:" + sessionId;
+        stringRedisTemplate.delete(key);
+    }
+
+    // 리프레시 토큰 제거
+    public void deleteRefreshTokenTid(Long userId, String deviceType) {
+        String key = createRefreshTokenKey(userId, deviceType);
+        stringRedisTemplate.delete(key);
+    }
+
+    // 디바이스별 로그인 정보 제거
+    public void deleteLoginInfo(Long userId, String deviceType) {
+        String key = createLoginInfoKey(userId, deviceType);
         stringRedisTemplate.delete(key);
     }
 

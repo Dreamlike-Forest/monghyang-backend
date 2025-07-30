@@ -5,6 +5,7 @@ spring:
       namespace: spring:session
       flush-mode: on_save
       save-mode: on_set_attribute
+      repository-type: indexed
   jackson:
     mapper:
       accept-case-insensitive-enums: true # enum 대소문자 구분없이 매핑
@@ -56,7 +57,5 @@ logging:
 #        web: debug
 # JWT 관련 설정
 jwt:
-  secret: ${JWT_SECRET_KEY} # JWT 서명에 사용되는 비밀 키 (이 값은 환경에 맞게 적절히 관리해야 합니다)
   refresh-secret: ${JWT_REFRESH_SECRET_KEY} # JWT REFRESH 토큰 생성에 사용되는 비밀키
-  expiration: 3600000                 # JWT 만료 시간: 15 min (밀리초 단위, 1시간 = 3600000, 30분 = 1800000), 개발 시에는 편의상 7days로 설정
-  refresh-expiration: 604800000       # 리프레시 토큰 만료시간 (7 days)
+  refresh-expiration: 28d       # 리프레시 토큰 만료시간 (7 days)

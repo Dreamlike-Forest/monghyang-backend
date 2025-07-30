@@ -16,6 +16,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        ExceptionUtil.filterExceptionHandler(response, ApplicationError.USER_UNAUTHORIZED);
+        ExceptionUtil.filterExceptionHandler(response, ApplicationError.AUTH_INFO_NOT_FOUND);
     }
 }

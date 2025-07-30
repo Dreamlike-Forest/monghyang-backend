@@ -1,7 +1,6 @@
 package com.example.monghyang.domain.users.service;
 
 import com.example.monghyang.domain.users.details.LoginUserDetails;
-import com.example.monghyang.domain.users.dto.AuthDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         Users user = usersRepository.findByEmail(email).orElseThrow(() ->
                 new UsernameNotFoundException("아이디와 비밀번호가 일치하지 않습니다."));
 
-        AuthDto authDto = new AuthDto();
-        authDto.setUserId(user.getId());
-        authDto.setRoleType(user.getRole().getName().toString());
-        return LoginUserDetails.authDtoNicknamePasswordOf(authDto, user.getNickname(), user.getPassword());
+        return LoginUserDetails.builder()
+                .userId(user.getId())
+                .roleType(user.getRole().getName().toString())
+                .nickname(user.getNickname())
+                .password(user.getPassword()).build();
     }
 }

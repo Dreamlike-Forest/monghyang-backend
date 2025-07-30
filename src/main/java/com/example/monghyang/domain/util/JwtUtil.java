@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 
@@ -26,11 +27,11 @@ public class JwtUtil {
     private final Long refreshExpiration; // refresh token 수명
     private final RedisService redisService;
 
-    public JwtUtil(@Value("${jwt.refresh-secret}") String refreshSecret, @Value("${jwt.refresh-expiration}") Long refreshExpiration
+    public JwtUtil(@Value("${jwt.refresh-secret}") String refreshSecret, @Value("${jwt.refresh-expiration}") Duration refreshExpiration
             , RedisService redisService) {
 
         this.refreshKey = new SecretKeySpec(refreshSecret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
-        this.refreshExpiration = refreshExpiration;
+        this.refreshExpiration = refreshExpiration.toMillis();
         this.redisService = redisService;
     }
 
