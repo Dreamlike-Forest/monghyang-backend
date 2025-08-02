@@ -1,5 +1,7 @@
 package com.example.monghyang.domain.authHandler;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.util.DeviceTypeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +25,10 @@ public class CustomLogoutHandler implements LogoutHandler {
     }
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        if(authentication == null){
+            // 인증정보 객체가 존재하지 않는 경우 예외처리
+            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+        }
         Long userId = (Long) authentication.getPrincipal();
         String deviceType = DeviceTypeUtil.getDeviceType(request).name();
 

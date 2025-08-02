@@ -2,6 +2,7 @@ package com.example.monghyang.domain.authHandler;
 
 import com.example.monghyang.domain.filter.LoginDto;
 import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.details.LoginUserDetails;
 import com.example.monghyang.domain.util.DeviceTypeUtil;
@@ -38,8 +39,7 @@ public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         HttpSession session = request.getSession(true); // 기존에 존재하는 세션을 조회. 세션이 없다면 새로 생성(true)
         if(session == null) { // 세션이 생성되지 않은 경우 예외처리
-            ExceptionUtil.filterExceptionHandler(response, ApplicationError.SESSION_CREATE_ERROR);
-            return;
+            throw new ApplicationException(ApplicationError.SESSION_CREATE_ERROR);
         }
 
         response.setHeader("X-Session-Id", session.getId()); // 응답 http header에 세션 아이디 삽입

@@ -1,10 +1,8 @@
 package com.example.monghyang.domain.config;
 
-import com.example.monghyang.domain.authHandler.SessionLogoutSeccessHandler;
+import com.example.monghyang.domain.authHandler.*;
+import com.example.monghyang.domain.filter.ExceptionHandlerFilter;
 import com.example.monghyang.domain.filter.SessionAuthFilter;
-import com.example.monghyang.domain.authHandler.CustomLogoutHandler;
-import com.example.monghyang.domain.authHandler.SessionLoginFailureHandler;
-import com.example.monghyang.domain.authHandler.SessionLoginSuccessHandler;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
@@ -44,7 +42,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, SessionAuthFilter sessionAuthFilter, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, SessionAuthFilter sessionAuthFilter, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, ExceptionHandlerFilter exceptionHandlerFilter) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -107,7 +105,8 @@ public class SecurityConfig {
                         .invalidateHttpSession(true) // 해당되는 세션 정보 제거(해당 세션을 Spring Session이 내부적으로 사용하기 위한 만료 관리용 키가 생성된다.(ttl: 300))
                         .clearAuthentication(true)) // 현재 인증 정보 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(sessionAuthFilter, LogoutFilter.class) // 로그아웃 필터 앞단에 세션 필터 삽입(즉, 가장 앞단)
+                .addFilterBefore(sessionAuthFilter, LogoutFilter.class) // 로그아웃 필터 앞단에 세션 필터 삽입(즉, 인증 필터 중 제일 앞)
+                .addFilterBefore(exceptionHandlerFilter, SessionAuthFilter.class) // 예외처리 필터. 가장 앞단에 위치
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }

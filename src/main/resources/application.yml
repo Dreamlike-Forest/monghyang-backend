@@ -5,7 +5,6 @@ spring:
       namespace: spring:session
       flush-mode: on_save
       save-mode: on_set_attribute
-      repository-type: indexed
   jackson:
     mapper:
       accept-case-insensitive-enums: true # enum 대소문자 구분없이 매핑
