@@ -3,7 +3,9 @@ package com.example.monghyang.domain.oauth2.handler;
 import com.example.monghyang.domain.oauth2.details.CustomOAuth2UserDetails;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.service.UsersService;
+import com.example.monghyang.domain.util.DeviceTypeUtil;
 import com.example.monghyang.domain.util.JwtUtil;
+import com.example.monghyang.domain.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,11 +27,13 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
     private final JwtUtil jwtUtil;
     private final String clientUrl;
     private final UsersService usersService;
+    private final SessionUtil sessionUtil;
 
-    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl, UsersService usersService) {
+    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl, UsersService usersService, SessionUtil sessionUtil) {
         this.jwtUtil = jwtUtil;
         this.clientUrl = clientUrl;
         this.usersService = usersService;
+        this.sessionUtil = sessionUtil;
     }
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -49,12 +53,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
             GrantedAuthority grantedAuthority = iterator.next();
             String role = grantedAuthority.getAuthority();
-
-            String refreshCookie = jwtUtil.createRefreshToken(userId, role);
-//            usersService.setRefreshToken(userId, refreshCookie);
-
-            response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie);
-            response.sendRedirect(clientUrl);
+            sessionUtil.createNewAuthInfo(request, response, userId, role);
         }
     }
 }

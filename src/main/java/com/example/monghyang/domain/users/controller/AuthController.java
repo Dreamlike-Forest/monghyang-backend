@@ -20,10 +20,11 @@ public class AuthController {
         this.usersService = usersService;
     }
 
-//    @PostMapping("/refresh")
-//    public ResponseEntity<ResponseDto> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
-//
-//    }
+    @PostMapping("/refresh")
+    public ResponseEntity<ResponseDto> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
+        usersService.updateRefreshToken(request, response);
+        return ResponseEntity.ok().body(new ResponseDto());
+    }
 
 //    @PostMapping("/logout")
 //    public ResponseEntity<ResponseDto> logout(HttpServletRequest request) {

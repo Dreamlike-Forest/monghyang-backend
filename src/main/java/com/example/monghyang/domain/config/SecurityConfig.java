@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .requireExplicitSave(true))
                 .requestCache(AbstractHttpConfigurer::disable) // 요청에 대한 캐시 비활성화
                 .exceptionHandling(ex -> ex // 인증 및 권한 검증 시 발생 예외 처리
-                        .authenticationEntryPoint(authenticationEntryPoint) // 인증 실패 시 401 반환
+                        .authenticationEntryPoint(authenticationEntryPoint) // 세션 조회 실패 시 404 반환
                         .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
                 .authorizeHttpRequests((auth) ->
@@ -102,8 +102,7 @@ public class SecurityConfig {
                         .logoutUrl("/api/auth/logout")
                         .addLogoutHandler(customLogoutHandler)
                         .logoutSuccessHandler(sessionLogoutSeccessHandler)
-                        .invalidateHttpSession(true) // 해당되는 세션 정보 제거(해당 세션을 Spring Session이 내부적으로 사용하기 위한 만료 관리용 키가 생성된다.(ttl: 300))
-                        .clearAuthentication(true)) // 현재 인증 정보 비우기
+                        .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(sessionAuthFilter, LogoutFilter.class) // 로그아웃 필터 앞단에 세션 필터 삽입(즉, 인증 필터 중 제일 앞)
                 .addFilterBefore(exceptionHandlerFilter, SessionAuthFilter.class) // 예외처리 필터. 가장 앞단에 위치

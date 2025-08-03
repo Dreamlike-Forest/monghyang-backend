@@ -44,10 +44,6 @@ public class RedisService {
     // 세션 리프레시 토큰 정보 저장
     public void setRefreshTokenTid(Long userId, String deviceType, String tid) {
         String key = createRefreshTokenKey(userId, deviceType);
-        System.out.println("refresh token redis key: "+key);
-        System.out.println("refresh token tid: "+tid);
-        System.out.println("refresh token's user device type: "+deviceType);
-        System.out.println("refresh token expiration: "+refreshTokenExpiration);
         stringRedisTemplate.opsForValue().set(key, tid, refreshTokenExpiration, TimeUnit.MILLISECONDS);
     }
 
@@ -63,9 +59,16 @@ public class RedisService {
         String key = createRefreshTokenKey(userId, deviceType);
         String storedTid = stringRedisTemplate.opsForValue().get(key);
         if(storedTid == null){
-            throw new ApplicationException(ApplicationError.CONCURRENT_CONNECTION);
+            // 조회되는 것이 아무것도 없다면 토큰이 만료된 것 -> 재로그인 필요
+            throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
         }
         return storedTid.equals(tid);
+    }
+
+    // 세션 존재 여부 검증
+    public boolean isExistSessionId(Long userId, String deviceType) {
+        String key = createLoginInfoKey(userId, deviceType);
+        return stringRedisTemplate.hasKey(key);
     }
 
 
@@ -84,6 +87,8 @@ public class RedisService {
     // 디바이스별 로그인 정보 제거
     public void deleteLoginInfo(Long userId, String deviceType) {
         String key = createLoginInfoKey(userId, deviceType);
+        String sessionId = getSessionIdWithUserIdAndDeviceType(userId, deviceType);
+        deleteSessionId(sessionId);
         stringRedisTemplate.delete(key);
     }
 

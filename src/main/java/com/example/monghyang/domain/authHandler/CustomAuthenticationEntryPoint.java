@@ -16,6 +16,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+        if(request.getSession(false) == null) {
+            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+        }
+        throw new ApplicationException(ApplicationError.SESSION_NOT_FOUND);
     }
 }

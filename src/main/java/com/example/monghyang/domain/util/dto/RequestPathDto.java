@@ -1,13 +1,10 @@
 package com.example.monghyang.domain.util.dto;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RequestPathDto {
     private String httpMethod;
     private String path;
