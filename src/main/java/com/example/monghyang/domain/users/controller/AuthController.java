@@ -1,7 +1,6 @@
 package com.example.monghyang.domain.users.controller;
 
 import com.example.monghyang.domain.global.response.ResponseDataDto;
-import com.example.monghyang.domain.global.response.ResponseDto;
 import com.example.monghyang.domain.users.dto.JoinDto;
 import com.example.monghyang.domain.users.service.UsersService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,23 +20,16 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ResponseDto> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ResponseDataDto<Void>> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
         usersService.updateRefreshToken(request, response);
-        return ResponseEntity.ok().body(new ResponseDto());
+        return ResponseEntity.ok().body(ResponseDataDto.success("세션 및 토큰 갱신에 성공하였습니다."));
     }
-
-//    @PostMapping("/logout")
-//    public ResponseEntity<ResponseDto> logout(HttpServletRequest request) {
-//
-//    }
-
-//    @GetMapping("/check-email/{email}")
 
 
     @PostMapping("/common-join")
-    public ResponseEntity<ResponseDto> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
+    public ResponseEntity<ResponseDataDto<Void>> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
         usersService.commonJoin(joinDto);
-        return ResponseEntity.ok().body(new ResponseDto());
+        return ResponseEntity.ok().body(ResponseDataDto.success("회원가입이 완료되었습니다."));
     }
 
 //    @PostMapping("/seller-join")

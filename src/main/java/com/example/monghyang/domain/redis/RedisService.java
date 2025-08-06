@@ -34,10 +34,6 @@ public class RedisService {
     // 로그인 세션 리스트 정보 저장
     public void setLoginInfoWithDeviceType(Long userId, String deviceType, String sessionId) {
         String key = createLoginInfoKey(userId, deviceType);
-        System.out.println("session's user id: "+userId);
-        System.out.println("session's user device type: "+deviceType);
-        System.out.println("session id: "+sessionId);
-        System.out.println("session expiration: "+sessionExpiration);
         stringRedisTemplate.opsForValue().set(key, sessionId, sessionExpiration, TimeUnit.MILLISECONDS);
     }
 
@@ -65,10 +61,10 @@ public class RedisService {
         return storedTid.equals(tid);
     }
 
-    // 세션 존재 여부 검증
-    public boolean isExistSessionId(Long userId, String deviceType) {
+    // 로그인 정보 ttl 갱신
+    public void expireLoginInfo(Long userId, String deviceType) {
         String key = createLoginInfoKey(userId, deviceType);
-        return stringRedisTemplate.hasKey(key);
+        stringRedisTemplate.expire(key, sessionExpiration, TimeUnit.MILLISECONDS);
     }
 
 
