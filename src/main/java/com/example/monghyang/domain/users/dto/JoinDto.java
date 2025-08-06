@@ -33,5 +33,5 @@ public class JoinDto {
     @NotBlank
     private String address_detail;
     @NotNull
-    private Boolean isAgreed; // 약관 동의여부. 반드시 사용자로부터 약관동의를 받아야 하므로, 항상 true여야 하는 필드.
+    private Boolean is_agreed; // 약관 동의여부. 반드시 사용자로부터 약관동의를 받아야 하므로, 항상 true여야 하는 필드.
 }

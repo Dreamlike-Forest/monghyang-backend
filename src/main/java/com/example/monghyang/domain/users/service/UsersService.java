@@ -65,7 +65,7 @@ public class UsersService {
     @Transactional
     public void commonJoin(JoinDto joinDto) {
         // 약관에 동의하지 않으면 회원가입 불가
-        if(joinDto.getIsAgreed().equals(Boolean.FALSE)) {
+        if(joinDto.getIs_agreed().equals(Boolean.FALSE)) {
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
 
@@ -82,7 +82,7 @@ public class UsersService {
                 .phone(joinDto.getPhone()).birth(joinDto.getBirth())
                 .gender(gender).address(joinDto.getAddress())
                 .address_detail(joinDto.getAddress_detail())
-                .isAgreed(joinDto.getIsAgreed()).build();
+                .isAgreed(joinDto.getIs_agreed()).build();
         usersRepository.save(users);
     }
 
