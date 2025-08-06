@@ -1,7 +1,7 @@
-package com.example.monghyang.domain.config;
+package com.example.monghyang.domain.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.util.ExceptionUtil;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +15,6 @@ import java.io.IOException;
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        ExceptionUtil.filterExceptionHandler(response, ApplicationError.REQUEST_FORBIDDEN);
+        throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
     }
 }

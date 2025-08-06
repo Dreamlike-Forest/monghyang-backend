@@ -1,12 +1,11 @@
 package com.example.monghyang.domain.config;
 
-import com.example.monghyang.domain.filter.JwtFilter;
-import com.example.monghyang.domain.filter.LoginFilter;
+import com.example.monghyang.domain.authHandler.*;
+import com.example.monghyang.domain.filter.ExceptionHandlerFilter;
+import com.example.monghyang.domain.filter.SessionAuthFilter;
+import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
+import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
-import com.example.monghyang.domain.redis.RedisService;
-import com.example.monghyang.domain.users.service.UsersService;
-import com.example.monghyang.domain.util.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +17,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -44,20 +42,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public LoginFilter loginFilter(AuthenticationManager authenticationManager, UsersService usersService, JwtUtil jwtUtil, ObjectMapper objectMapper) {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager, jwtUtil, usersService, objectMapper);
-        loginFilter.setFilterProcessesUrl("/api/auth/login");
-        loginFilter.setAuthenticationManager(authenticationManager); // loginFilter의 상위 부모 필터의 필드를 초기화하는 상위 클래스의 메소드
-        return loginFilter;
-    }
-
-    @Bean
-    public JwtFilter jwtFilter(JwtUtil jwtUtil, RedisService redisService) {
-        return new JwtFilter(jwtUtil, redisService);
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginFilter loginFilter, JwtFilter jwtFilter, AuthenticationSuccessHandler authenticationSuccessHandler, AuthenticationFailureHandler authenticationFailureHandler, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, SessionAuthFilter sessionAuthFilter, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, ExceptionHandlerFilter exceptionHandlerFilter) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -82,35 +67,46 @@ public class SecurityConfig {
                         // CORS 응답 캐시 시간(초)을 설정 클라이언트가 얼마나 오랫동안 이 CORS 정책을 캐시할지를 설정
                         // 3600초(1시간)
                         config.setMaxAge(3600L);
-
-//                        // CORS 응답에서 노출될 헤더를 설정. 클라이언트에서 `Access`, 'Refresh' 헤더에 접근할 수 있도록 허용
-//                        // List를 인자로 받는다.
-//                        config.setExposedHeaders(List.of("Access", "Refresh"));
                         return config;
                     }
                 }))
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint) // 인증 실패 시 401 반환
+                .securityContext(c -> c // security context를 세션에 저장하지 않는 설정
+                        .securityContextRepository(new RequestAttributeSecurityContextRepository())
+                        .requireExplicitSave(true))
+                .requestCache(AbstractHttpConfigurer::disable) // 요청에 대한 캐시 비활성화
+                .exceptionHandling(ex -> ex // 인증 및 권한 검증 시 발생 예외 처리
+                        .authenticationEntryPoint(authenticationEntryPoint) // 세션 조회 실패 시 404 반환
                         .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
                 .authorizeHttpRequests((auth) ->
-                        auth.requestMatchers("/api/auth/**", "/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        auth.requestMatchers("/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
+                                .requestMatchers("/api/auth/**", "/api/brewery/**", "/api/product/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
                                 .requestMatchers("/api/brewery-control/**").hasAnyRole("ADMIN", "BREWERY")
                                 .requestMatchers("/api/seller-control/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
                                 .anyRequest().authenticated())
-                .formLogin(AbstractHttpConfigurer::disable)
-                .oauth2Login((oauth2) -> oauth2.loginPage("/auth/login")
+                .formLogin(form -> form // form 로그인
+                        .loginPage(clientUrl + "/?view=login")
+                        .loginProcessingUrl("/api/auth/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .successHandler(sessionLoginSuccessHandler)
+                        .failureHandler(sessionLoginFailureHandler))
+                .oauth2Login((oauth2) -> oauth2.loginPage("/auth/login") // OAuth2 로그인
                         .redirectionEndpoint(redirection -> redirection.baseUri("/oauth2/code/*"))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(authenticationSuccessHandler)
-                        .failureHandler(authenticationFailureHandler)
+                        .successHandler(customOAuth2AuthenticationSuccessHandler)
+                        .failureHandler(customOAuth2AuthenticationFailureHandler)
                 )
-                .logout(AbstractHttpConfigurer::disable)
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .addLogoutHandler(customLogoutHandler)
+                        .logoutSuccessHandler(sessionLogoutSeccessHandler)
+                        .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtFilter, LoginFilter.class)
-                .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .addFilterBefore(sessionAuthFilter, LogoutFilter.class) // 로그아웃 필터 앞단에 세션 필터 삽입(즉, 인증 필터 중 제일 앞)
+                .addFilterBefore(exceptionHandlerFilter, SessionAuthFilter.class) // 예외처리 필터. 가장 앞단에 위치
+                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }
 }

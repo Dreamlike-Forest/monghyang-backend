@@ -27,6 +27,9 @@ public class AuthController {
     }
 
 //    @PostMapping("/logout")
+//    public ResponseEntity<ResponseDto> logout(HttpServletRequest request) {
+//
+//    }
 
 //    @GetMapping("/check-email/{email}")
 

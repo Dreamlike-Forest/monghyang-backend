@@ -44,19 +44,4 @@ public class ExceptionUtil {
 
         return RequestPathDto.httpMethodPathOf(httpMethod, path);
     }
-
-    // Filter 발생 예외 처리 메소드
-    // 에러 처리용 dto를 통해 http 응답의 body에 http status code, error message 값을 json으로 반환합니다.
-    // 이 경우 로그 처리 및 프론트엔드 개발 편의성을 위해 body에도 status code를 첨부합니다.
-    public static void filterExceptionHandler(HttpServletResponse response, ApplicationError applicationError) {
-        response.setStatus(applicationError.getStatus().value());
-        response.setContentType("application/json;charset=utf-8");
-        try {
-            // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
-            objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.statusMessageOf(applicationError.getStatus(), applicationError.getMessage()));
-        } catch (IOException e) {
-            log.error(e.getMessage()+"\n response http body 작성 도중 에러가 발생했습니다.");
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-    }
 }

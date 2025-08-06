@@ -1,4 +1,10 @@
 spring:
+  session:
+    timeout: 2h
+    redis:
+      namespace: spring:session
+      flush-mode: on_save
+      save-mode: on_set_attribute
   jackson:
     mapper:
       accept-case-insensitive-enums: true # enum 대소문자 구분없이 매핑
@@ -29,6 +35,18 @@ spring:
   profiles:
     include: oauth
     active: local # 기본 프로파일: local (로컬 테스트 개발용: local, FE팀 로컬 테스트용: dev, 운영용: prod)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 6s
+      lettuce:
+        pool:
+          max-active: 10 # 최대 redis 커넥션 개수
+          max-idle: 5 # 유휴 커넥션 최대 개수
+          min-idle: 1 # 유휴 커넥션 최소 개수
+      username: ${REDIS_USERNAME} # redis 유저네임
+      password: ${REDIS_PASSWORD} # redis 유저 비밀번호
 logging:
   level:
     #    root: debug
@@ -38,9 +56,5 @@ logging:
 #        web: debug
 # JWT 관련 설정
 jwt:
-  secret: ${JWT_SECRET_KEY} # JWT 서명에 사용되는 비밀 키 (이 값은 환경에 맞게 적절히 관리해야 합니다)
   refresh-secret: ${JWT_REFRESH_SECRET_KEY} # JWT REFRESH 토큰 생성에 사용되는 비밀키
-  expiration: 3600000                 # JWT 만료 시간: 15 min (밀리초 단위, 1시간 = 3600000, 30분 = 1800000), 개발 시에는 편의상 7days로 설정
-  refresh-expiration: 604800000       # 리프레시 토큰 만료시간 (7 days)
-  access-token-cookie-name: "access_token"
-  refresh-token-cookie-name: "refresh_token"
+  refresh-expiration: 28d       # 리프레시 토큰 만료시간 (7 days)

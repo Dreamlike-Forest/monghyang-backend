@@ -12,8 +12,4 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     @Query("select u from Users u join fetch u.role where u.email = :email")
     Optional<Users> findByEmail(@Param("email") String email);
     Optional<Users> findByoAuth2Id(String oAuth2Id);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Users u set u.refreshToken = :refreshTokenId where u.id = :userId")
-    void updateRefreshToken(@Param("userId") Long userId, @Param("refreshTokenId") String refreshTokenId);
 }
