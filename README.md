@@ -31,8 +31,8 @@
 > **2. 날짜 객체 타입** : LocalDate(yyyy-mm-dd), LocalDateTime(밀리초 단위까지 표현)만 사용 <br>
 
 > ### 객체 관련
-> **1. Setter** : 기본키 필드의 Setter는 생성하지 않습니다. <br>
-> **2. 객체 생성 방식** : 생성자 파라메터 4개 이하: 정적 팩토리 메소드, 초과: Builder 패턴(Lombok 이용) 적용 <br>
+> **1. Setter 생성** : 기본키 필드의 setter는 생성하지 않습니다. 수정이 필요한 필드의 경우에만 setter method를 생성합니다. 이때 메소드명에는 <ins>**필드 수정의 이유**</ins>가 드러나야 합니다.<br>*ex: unSetDeleted()* <br>
+> **2. 객체 생성 방식(기본 생성자 protected로 정의)** : 생성자 파라메터 4개 이하: 정적 팩토리 메소드, 초과: Builder 패턴(Lombok 이용) 적용 <br>
 > **3. Entity 연관관계 설정** : 모든 Join 연관관계(@ManyToOne 등)는 지연로딩(LAZY) 전략을 사용합니다. <br>
 > **4. 예외 처리** : 컨트롤러 계층에서 발생하는 예외는 GlobalExceptionHandler 클래스에서 전역적으로 처리합니다. 커스텀 예외 리스트는 ApplicationError Enum으로 관리합니다.
 > **5. 예외 처리 후 반환** : ApplicationError enum으로 예외처리 응답용 dto의 필드를 채워 반환 
