@@ -1,5 +1,10 @@
 package com.example.monghyang.domain.auth.service;
 
+import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.brewery.main.entity.RegionType;
+import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
@@ -34,9 +39,11 @@ public class AuthService {
     private final RedisService redisService;
     private final SessionUtil sessionUtil;
     private final SellerRepository sellerRepository;
+    private final BreweryRepository breweryRepository;
+    private final RegionTypeRepository regionTypeRepository;
 
     @Autowired
-    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository) {
+    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository) {
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.roleRepository = roleRepository;
@@ -44,6 +51,8 @@ public class AuthService {
         this.sessionUtil = sessionUtil;
         this.redisService = redisService;
         this.sellerRepository = sellerRepository;
+        this.breweryRepository = breweryRepository;
+        this.regionTypeRepository = regionTypeRepository;
     }
 
     public void checkEmail(String email) {
@@ -111,5 +120,26 @@ public class AuthService {
                 .sellerBankName(sellerJoinDto.getSeller_bank_name()).introduction(sellerJoinDto.getIntroduction())
                 .isAgreedSeller(sellerJoinDto.getIs_agreed_seller()).build();
         sellerRepository.save(seller);
+    }
+
+    @Transactional
+    public void breweryJoin(BreweryJoinDto breweryJoinDto) {
+        // 양조장 회원 플랫폼 회원가입
+        Users users = createUser(breweryJoinDto, RoleType.ROLE_BREWERY);
+        usersRepository.save(users);
+
+        RegionType regionType = regionTypeRepository.findById(breweryJoinDto.getRegion_type_id()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.REGION_NOT_FOUND));
+
+        Brewery brewery = Brewery.breweryBuilder()
+                .user(users).breweryName(breweryJoinDto.getBrewery_name()).regionType(regionType)
+                .breweryPhone(breweryJoinDto.getBrewery_phone())
+                .breweryEmail(breweryJoinDto.getEmail()).breweryAddress(breweryJoinDto.getBrewery_address())
+                .breweryAddressDetail(breweryJoinDto.getBrewery_address_detail()).businessRegistrationNumber(breweryJoinDto.getBusiness_registration_number())
+                .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
+                .breweryBankName(breweryJoinDto.getBrewery_bank_name()).introduction(breweryJoinDto.getIntroduction())
+                .breweryWebsite(breweryJoinDto.getBrewery_website()).isRegularVisit(breweryJoinDto.getIs_regular_visit()).isAgreedBrewery(breweryJoinDto.getIs_agreed_brewery())
+                .build();
+        breweryRepository.save(brewery);
     }
 }

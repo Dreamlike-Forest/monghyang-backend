@@ -17,6 +17,7 @@ public enum ApplicationError {
     TOKEN_IMPAIRED(HttpStatus.UNAUTHORIZED, "토큰이 훼손되었습니다."),
     CONCURRENT_CONNECTION(HttpStatus.CONFLICT, "다른 곳에서 새로 접속하여 로그아웃합니다."),
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Role 입니다."),
+    REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Region 입니다."),
     TERMS_AND_CONDITIONS_NOT_AGREED(HttpStatus.CONFLICT, "약관에 동의하지 않으면 회원 가입하실 수 없습니다."),
     EMAIL_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다.");

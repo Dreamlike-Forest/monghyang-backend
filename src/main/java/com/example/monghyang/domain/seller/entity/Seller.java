@@ -67,4 +67,13 @@ public class Seller {
         this.introduction = introduction;
         this.isAgreedSeller = isAgreedSeller;
     }
+
+    public void setDeleted() {
+        // 유저 삭제 처리
+        isDeleted = Boolean.TRUE;
+    }
+    public void unSetDeleted() {
+        // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
+        isDeleted = Boolean.FALSE;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.auth.controller;
 
+import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
 import com.example.monghyang.domain.auth.dto.SellerJoinDto;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.auth.dto.JoinDto;
@@ -49,10 +50,16 @@ public class AuthController {
     @Operation(summary = "판매자 회원의 회원가입")
     public ResponseEntity<ResponseDataDto<Void>> sellerJoin(@Valid @ModelAttribute SellerJoinDto sellerJoinDto) {
         authService.sellerJoin(sellerJoinDto);
-        return ResponseEntity.ok().body(ResponseDataDto.success("회원가입이 완료되었습니다."));
+        return ResponseEntity.ok().body(ResponseDataDto.success("판매자 회원가입이 완료되었습니다."));
     }
 
-//    @PostMapping("/brewery-join")
+    @PostMapping(value = "/brewery-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "양조장 회원의 회원가입")
+    public ResponseEntity<ResponseDataDto<Void>> breweryJoin(@Valid @ModelAttribute BreweryJoinDto breweryJoinDto) {
+        authService.breweryJoin(breweryJoinDto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("양조장 회원가입이 완료되었습니다."));
+    }
+
 
 //    @PostMapping("/reset-pw")
 
