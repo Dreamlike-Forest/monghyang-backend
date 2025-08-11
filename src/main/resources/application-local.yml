@@ -27,12 +27,14 @@ logging:
       springframework:
         security: trace
         web:
+          servlet: debug
           multipart: debug
+        validation: debug
       apache:
         tomcat:
           util:
             http:
               fileupload: debug
-        catalina:
-          connector: debug
+        catalina: debug
+        coyote: debug
 #  storage-path:  # 스토리지 '시작' 경로
