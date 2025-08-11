@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
                 .authorizeHttpRequests((auth) ->
-                        auth.requestMatchers("/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
+                        auth.requestMatchers("/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/actuator/**" ,"/error").permitAll()
                                 .requestMatchers("/api/auth/**", "/api/brewery/**", "/api/product/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
                                 .requestMatchers("/api/brewery-priv/**").hasAnyRole("ADMIN", "BREWERY")
