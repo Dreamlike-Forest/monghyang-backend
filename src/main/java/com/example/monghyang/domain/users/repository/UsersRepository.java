@@ -12,4 +12,5 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     @Query("select u from Users u join fetch u.role where u.email = :email")
     Optional<Users> findByEmail(@Param("email") String email);
     Optional<Users> findByoAuth2Id(String oAuth2Id);
+    boolean existsByEmail(String email);
 }

@@ -1,6 +1,6 @@
-package com.example.monghyang.domain.users.service;
+package com.example.monghyang.domain.auth.service;
 
-import com.example.monghyang.domain.users.details.LoginUserDetails;
+import com.example.monghyang.domain.auth.details.LoginUserDetails;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;

@@ -82,8 +82,8 @@ public class SecurityConfig {
                         auth.requestMatchers("/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/error").permitAll()
                                 .requestMatchers("/api/auth/**", "/api/brewery/**", "/api/product/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
-                                .requestMatchers("/api/brewery-control/**").hasAnyRole("ADMIN", "BREWERY")
-                                .requestMatchers("/api/seller-control/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
+                                .requestMatchers("/api/brewery-priv/**").hasAnyRole("ADMIN", "BREWERY")
+                                .requestMatchers("/api/seller-priv/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
                                 .anyRequest().authenticated())
                 .formLogin(form -> form // form 로그인
                         .loginPage(clientUrl + "/?view=login")

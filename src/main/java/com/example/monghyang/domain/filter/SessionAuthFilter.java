@@ -34,33 +34,29 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
-            Authentication existedAuth = SecurityContextHolder.getContext().getAuthentication();
-            // 기존의 인증 토큰이 존재하지 않거나, 존재하더라도 '익명 인증 토큰'인 경우에만 새 Security Context 생성 시도
-            if(existedAuth == null || existedAuth instanceof AnonymousAuthenticationToken) {
-                HttpSession session = request.getSession(false); // 세션 조회 및 조회된 세션의 ttl 갱신
-                if(session != null) {
-                    SessionUserInfo sessionUserInfo = (SessionUserInfo) session.getAttribute("sessionUserInfo");
+        Authentication existedAuth = SecurityContextHolder.getContext().getAuthentication();
+        // 기존의 인증 토큰이 존재하지 않거나, 존재하더라도 '익명 인증 토큰'인 경우에만 새 Security Context 생성 시도
+        if(existedAuth == null || existedAuth instanceof AnonymousAuthenticationToken) {
+            HttpSession session = request.getSession(false); // 세션 조회 및 조회된 세션의 ttl 갱신
+            if(session != null) {
+                SessionUserInfo sessionUserInfo = (SessionUserInfo) session.getAttribute("sessionUserInfo");
 
-                    if(sessionUserInfo != null && sessionUserInfo.userId() != null && sessionUserInfo.role() != null) {
-                        Long userId = sessionUserInfo.userId();
-                        String deviceType = DeviceTypeUtil.getDeviceType(request).name();
-                        List<GrantedAuthority> authentication = Collections.singletonList((new SimpleGrantedAuthority(sessionUserInfo.role())));
+                if(sessionUserInfo != null && sessionUserInfo.userId() != null && sessionUserInfo.role() != null) {
+                    Long userId = sessionUserInfo.userId();
+                    String deviceType = DeviceTypeUtil.getDeviceType(request).name();
+                    List<GrantedAuthority> authentication = Collections.singletonList((new SimpleGrantedAuthority(sessionUserInfo.role())));
 
-                        redisService.expireLoginInfo(userId, deviceType); // redis의 로그인 정보 ttl 또한 갱신
+                    redisService.expireLoginInfo(userId, deviceType); // redis의 로그인 정보 ttl 또한 갱신
 
-                        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, null, authentication);
-                        authenticationToken.setDetails(detailsSource.buildDetails(request));
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, null, authentication);
+                    authenticationToken.setDetails(detailsSource.buildDetails(request));
 
-                        SecurityContext context = SecurityContextHolder.createEmptyContext();
-                        context.setAuthentication(authenticationToken);
-                        SecurityContextHolder.setContext(context);
-                    }
+                    SecurityContext context = SecurityContextHolder.createEmptyContext();
+                    context.setAuthentication(authenticationToken);
+                    SecurityContextHolder.setContext(context);
                 }
             }
-            filterChain.doFilter(request, response);
-        } finally {
-            SecurityContextHolder.clearContext();
         }
+        filterChain.doFilter(request, response);
     }
 }

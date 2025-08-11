@@ -1,5 +1,7 @@
 package com.example.monghyang.domain.users.entity;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,7 +30,7 @@ public class Users {
     private String nickname;
     @Column(nullable = false)
     private String name;
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false, unique = true)
     private String phone;
     @Column(nullable = false)
     private LocalDate birth;
@@ -47,10 +49,14 @@ public class Users {
     @CreationTimestamp
     private LocalDate createdAt;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
-    private Boolean isDeleted = false;
+    private Boolean isDeleted = Boolean.FALSE;
 
-    @Builder(builderMethodName = "generalBuilder") // 플랫폼 회원가입
+    @Builder(builderMethodName = "generalBuilder") // 일반 회원 플랫폼 회원가입
     public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
+        if(isAgreed == Boolean.FALSE) {
+            // 약관에 동의하지 않으면 회원가입 불가
+            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
+        }
         this.role = role;
         this.email = email;
         this.password = password;
@@ -73,51 +79,52 @@ public class Users {
         this.password = "oAuth2User";
     }
 
-    public void setRole(Role role) {
+    public void updateRole(Role role) {
         this.role = role;
     }
 
-    public void setEmail(String email) {
+    public void updateEmail(String email) {
         this.email = email;
     }
 
-    public void setPassword(String password) {
+    public void updatePassword(String password) {
         this.password = password;
     }
 
-    public void setNickname(String nickname) {
+    public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    public void setName(String name) {
+    public void updateName(String name) {
         this.name = name;
     }
 
-    public void setPhone(String phone) {
+    public void updatePhone(String phone) {
         this.phone = phone;
     }
 
-    public void setBirth(LocalDate birth) {
+    public void updateBirth(LocalDate birth) {
         this.birth = birth;
     }
 
-    public void setGender(Boolean gender) {
+    public void updateGender(Boolean gender) {
         this.gender = gender;
     }
 
-    public void setAddress(String address) {
+    public void updateAddress(String address) {
         this.address = address;
     }
 
-    public void setAgreed(Boolean agreed) {
-        isAgreed = agreed;
-    }
-
-    public void setAddressDetail(String addressDetail) {
+    public void updateAddressDetail(String addressDetail) {
         this.addressDetail = addressDetail;
     }
 
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
+    public void setDeleted() {
+        // 유저 삭제 처리
+        isDeleted = Boolean.TRUE;
+    }
+    public void unSetDeleted() {
+        // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
+        isDeleted = Boolean.FALSE;
     }
 }
