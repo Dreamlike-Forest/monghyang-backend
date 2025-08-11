@@ -54,11 +54,13 @@
 > java -Dspring.profiles.active=[프로파일명] -jar [jar파일명].jar &
 > ```
 
-> ### 쿠키
-> - JWT Access Token 쿠키 이름: access_token
-> - JWT Refresh Token 쿠키 이름: refresh_token
-> - refresh token 쿠키는 '/api/auth/refresh' 요청 시에만 서버로 전송됩니다.
-> - 쿠키는 JS에서 접근할 수 없습니다.
+> ### 헤더
+> - Session ID 헤더 이름: X-Session-Id
+> - Refresh Token 헤더 이름: X-Refresh-Token
+> - CSRF Token 헤더 이름: X-CSRF-Token
+> - refresh token 헤더는 세션 갱신 혹은 로그아웃 요청 시 서버로 전송해주세요.
+> - CSRF Token과 Session ID는 모든 요청 시 서버로 전송해주세요.
+
 ### 권한 이름
 - ROLE_권한명
 - ROLE_ADMIN, ROLE_USER, ROLE_SELLER, ROLE_BREWERY
