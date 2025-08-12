@@ -2,6 +2,7 @@ package com.example.monghyang.domain.users.entity;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.users.dto.ResUsersDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -121,10 +122,10 @@ public class Users {
 
     public void setDeleted() {
         // 유저 삭제 처리
-        isDeleted = Boolean.TRUE;
+        this.isDeleted = Boolean.TRUE;
     }
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
-        isDeleted = Boolean.FALSE;
+        this.isDeleted = Boolean.FALSE;
     }
 }
