@@ -7,6 +7,7 @@ import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFai
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,10 +29,13 @@ import java.util.Collections;
 public class SecurityConfig {
     private final String clientUrl;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomSecurityContextRepository customSecurityContextRepository;
 
-    public SecurityConfig(@Value("${app.client-url}") String clientUrl, CustomOAuth2UserService customOAuth2UserService) {
+    @Autowired
+    public SecurityConfig(@Value("${app.client-url}") String clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
         this.clientUrl = clientUrl;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.customSecurityContextRepository = customSecurityContextRepository;
     }
 
     @Bean
@@ -71,7 +75,7 @@ public class SecurityConfig {
                     }
                 }))
                 .securityContext(c -> c // security context를 세션에 저장하지 않는 설정
-                        .securityContextRepository(new RequestAttributeSecurityContextRepository())
+                        .securityContextRepository(customSecurityContextRepository)
                         .requireExplicitSave(true))
                 .requestCache(AbstractHttpConfigurer::disable) // 요청에 대한 캐시 비활성화
                 .exceptionHandling(ex -> ex // 인증 및 권한 검증 시 발생 예외 처리
@@ -104,8 +108,7 @@ public class SecurityConfig {
                         .logoutSuccessHandler(sessionLogoutSeccessHandler)
                         .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(sessionAuthFilter, LogoutFilter.class) // 로그아웃 필터 앞단에 세션 필터 삽입(즉, 인증 필터 중 제일 앞)
-                .addFilterBefore(exceptionHandlerFilter, SessionAuthFilter.class) // 예외처리 필터. 가장 앞단에 위치
+                .addFilterBefore(exceptionHandlerFilter, LogoutFilter.class) // 예외처리 필터. 가장 앞단에 위치
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }

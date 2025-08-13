@@ -13,7 +13,7 @@ public enum ApplicationError {
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),
-    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션 정보를 찾을 수 없습니다. 갱신 요청을 보내주세요."),
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션 정보가 존재하지 않습니다."),
     TOKEN_IMPAIRED(HttpStatus.UNAUTHORIZED, "토큰이 훼손되었습니다."),
     CONCURRENT_CONNECTION(HttpStatus.CONFLICT, "다른 곳에서 새로 접속하여 로그아웃합니다."),
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Role 입니다."),
