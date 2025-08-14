@@ -59,8 +59,5 @@ public class CustomLogoutHandler implements LogoutHandler {
         } catch (Exception e) {
             log.error("로그아웃 redis 접근 중 에러 발생. user id: {}, device type: {}\nerror message: {}", userId, deviceType, e.getMessage());
         }
-
-
-
     }
 }

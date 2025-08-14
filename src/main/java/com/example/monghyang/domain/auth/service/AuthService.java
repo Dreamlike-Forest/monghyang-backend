@@ -87,6 +87,7 @@ public class AuthService {
         Role role = roleRepository.findByName(roleType).orElseThrow(() ->
                 new ApplicationException(ApplicationError.ROLE_NOT_FOUND));
         String password = bCryptPasswordEncoder.encode(joinDto.getPassword()); // 비밀번호 해싱
+        joinDto.setPassword(password);
         Boolean gender = (joinDto.getGender().equals("man")) ? Boolean.FALSE : Boolean.TRUE; // false: 남자, true: 여자
 
         return Users.generalBuilder().email(joinDto.getEmail())

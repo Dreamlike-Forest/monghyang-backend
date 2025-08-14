@@ -2,7 +2,7 @@ package com.example.monghyang.domain.users.entity;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.users.dto.ResUsersDto;
+import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -80,44 +80,43 @@ public class Users {
         this.password = "oAuth2User";
     }
 
+    public void updateUsers(ReqUsersDto reqUsersDto) {
+        if(reqUsersDto.getEmail() != null) {
+            this.email = reqUsersDto.getEmail();
+        }
+        if(reqUsersDto.getNewPassword() != null) {
+            this.password = reqUsersDto.getNewPassword();
+        }
+        if(reqUsersDto.getNickname() != null) {
+            this.nickname = reqUsersDto.getNickname();
+        }
+        if(reqUsersDto.getName() != null) {
+            this.name = reqUsersDto.getName();
+        }
+        if(reqUsersDto.getPhone() != null) {
+            this.phone = reqUsersDto.getPhone();
+        }
+        if(reqUsersDto.getBirth() != null) {
+            this.birth = reqUsersDto.getBirth();
+        }
+        if(reqUsersDto.getGender() != null) {
+            if(reqUsersDto.getGender().equals("man")) {
+                this.gender = Boolean.FALSE;
+            } else {
+                this.gender = Boolean.TRUE;
+            }
+        }
+        if(reqUsersDto.getAddress() != null) {
+            this.address = reqUsersDto.getAddress();
+        }
+        if(reqUsersDto.getAddress_detail() != null) {
+            this.addressDetail = reqUsersDto.getAddress_detail();
+        }
+    }
+
     public void updateRole(Role role) {
+        // 권한 변경
         this.role = role;
-    }
-
-    public void updateEmail(String email) {
-        this.email = email;
-    }
-
-    public void updatePassword(String password) {
-        this.password = password;
-    }
-
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public void updateName(String name) {
-        this.name = name;
-    }
-
-    public void updatePhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void updateBirth(LocalDate birth) {
-        this.birth = birth;
-    }
-
-    public void updateGender(Boolean gender) {
-        this.gender = gender;
-    }
-
-    public void updateAddress(String address) {
-        this.address = address;
-    }
-
-    public void updateAddressDetail(String addressDetail) {
-        this.addressDetail = addressDetail;
     }
 
     public void setDeleted() {

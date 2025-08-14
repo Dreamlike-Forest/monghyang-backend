@@ -35,7 +35,7 @@ public class ResUsersDto {
         this.address_detail = users.getAddressDetail();
     }
 
-    public static ResUsersDto usersFetchJoinedRoleFrom(Users users) {
+    public static ResUsersDto usersJoinedWithRoleToDto(Users users) {
         return new ResUsersDto(users);
     }
 }
