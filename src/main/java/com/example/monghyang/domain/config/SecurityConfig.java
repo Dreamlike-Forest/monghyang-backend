@@ -17,8 +17,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -111,7 +111,7 @@ public class SecurityConfig {
                         .logoutSuccessHandler(sessionLogoutSeccessHandler)
                         .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(exceptionHandlerFilter, LogoutFilter.class) // 예외처리 필터. 가장 앞단에 위치
+//                .addFilterBefore(exceptionHandlerFilter, SecurityContextHolderFilter.class) // 예외처리 필터. 가장 앞단에 위치
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }
