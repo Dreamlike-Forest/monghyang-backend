@@ -63,9 +63,21 @@ public class UsersController {
 
 
     // 회원 탈퇴 api
-//    @DeleteMapping
-//    @Operation(summary = "회원 탈퇴 API")
-//    public ResponseEntity<ResponseDataDto<Void>> deleteUsers(@LoginUserId Long userId) {
-//
-//    }
+    @DeleteMapping
+    @Operation(summary = "회원 탈퇴 API")
+    public ResponseEntity<ResponseDataDto<Void>> deleteUsers(
+            @LoginUserId Long userId,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        usersService.withdrawalUser(userId); // 회원 탈퇴 로직(soft delete)
+        // 해당 유저의 현재 세션 정보를 제거
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(auth != null) {
+            securityContextLogoutHandler.logout(request, response, auth);
+        }
+        // 해당 유저의 나머지 모든 세션 정보 및 refresh token 정보를 제거
+        redisService.deleteAllInfo(userId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("회원 탈퇴가 완료되었습니다."));
+    }
 }

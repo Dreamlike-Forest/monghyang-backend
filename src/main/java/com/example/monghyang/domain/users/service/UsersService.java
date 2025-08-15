@@ -64,4 +64,12 @@ public class UsersService {
 
         users.updateUsers(reqUsersDto);
     }
+
+    // 회원 탈퇴(soft delete)
+    public void withdrawalUser(Long userId) {
+        Users users = usersRepository.findById(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        users.setDeleted();
+        usersRepository.save(users);
+    }
 }

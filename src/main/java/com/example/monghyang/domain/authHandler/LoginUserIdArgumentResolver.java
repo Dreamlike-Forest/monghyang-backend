@@ -30,6 +30,7 @@ public class LoginUserIdArgumentResolver implements HandlerMethodArgumentResolve
 
         if(auth == null || "anonymousUser".equals(auth.getPrincipal().toString())){
             // 인증 객체가 존재하지 않거나, '익명 유저'인 경우 userId 파싱 불가
+            // 익명 유저의 경우 인증 객체의 Principal 값이 Long 타입 userId가 아니라 "anonymousUser" 문자열이 된다.
             throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
         }
 
