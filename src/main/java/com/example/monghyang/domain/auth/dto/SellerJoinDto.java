@@ -13,11 +13,6 @@ import lombok.Setter;
 public class SellerJoinDto extends JoinDto {
     @NotBlank(message = "seller_name 값이 공백일 수 없습니다.")
     private String seller_name;
-    @NotBlank(message = "seller_phone 값이 공백일 수 없습니다.")
-    private String seller_phone;
-    @NotBlank(message = "seller_email 값이 공백일 수 없습니다.")
-    @Email(message = "seller_email 필드에 이메일 형식의 값을 입력해주세요.")
-    private String seller_email;
     @NotBlank(message = "seller_address 값이 공백일 수 없습니다.")
     private String seller_address;
     @NotBlank(message = "seller_address_detail 값이 공백일 수 없습니다.")

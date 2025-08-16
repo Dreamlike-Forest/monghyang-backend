@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.config;
 
-import com.example.monghyang.domain.authHandler.LoginUserIdArgumentResolver;
+import com.example.monghyang.domain.global.annotation.LoginUserIdArgumentResolver;
+import com.example.monghyang.domain.global.annotation.LoginUserRoleArgumentResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -11,15 +12,19 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     private final LoginUserIdArgumentResolver loginUserIdArgumentResolver;
+    private final LoginUserRoleArgumentResolver loginUserRoleArgumentResolver;
+
     @Autowired
-    public WebConfig(LoginUserIdArgumentResolver loginUserIdArgumentResolver) {
+    public WebConfig(LoginUserIdArgumentResolver loginUserIdArgumentResolver, LoginUserRoleArgumentResolver loginUserRoleArgumentResolver) {
         this.loginUserIdArgumentResolver = loginUserIdArgumentResolver;
+        this.loginUserRoleArgumentResolver = loginUserRoleArgumentResolver;
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        // LoginUserIdArgumentResolver를 Spring MVC가 사용하도록 설정
+        // 커스텀 어노테이션을 Spring MVC가 사용하도록 설정
         resolvers.add(loginUserIdArgumentResolver);
+        resolvers.add(loginUserRoleArgumentResolver);
     }
 
 }

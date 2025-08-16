@@ -8,8 +8,10 @@ public enum ApplicationError {
     // 회원 및 인증/인가
     USER_BAD_REQUEST(HttpStatus.BAD_REQUEST, "아이디와 비밀번호를 정확히 입력해 주세요."),
     REQUEST_FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."),
-    AUTH_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 세션 아이디가 존재하지 않습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보가 존재하지 않습니다."),
+    SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "판매자 정보가 존재하지 않습니다."),
+    BREWERY_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 정보가 존재하지 않습니다."),
+    AUTH_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "세션(인증) 정보가 존재하지 않습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),

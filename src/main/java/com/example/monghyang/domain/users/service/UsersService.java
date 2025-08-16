@@ -1,11 +1,16 @@
 package com.example.monghyang.domain.users.service;
 
 import com.example.monghyang.domain.authHandler.CustomLogoutHandler;
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
+import com.example.monghyang.domain.seller.entity.Seller;
+import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
+import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.RoleRepository;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -20,22 +25,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsersService {
     private final UsersRepository usersRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder; // 패스워드 암호화 모듈
-    private final RoleRepository roleRepository;
+    private final SellerRepository sellerRepository;
+    private final BreweryRepository breweryRepository;
+
     @Autowired
-    public UsersService(UsersRepository usersRepository, RoleRepository roleRepository, BCryptPasswordEncoder bCryptPasswordEncoder, CustomLogoutHandler customLogoutHandler) {
+    public UsersService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, SellerRepository sellerRepository, BreweryRepository breweryRepository) {
         this.usersRepository = usersRepository;
-        this.roleRepository = roleRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.sellerRepository = sellerRepository;
+        this.breweryRepository = breweryRepository;
     }
 
     public ResUsersDto getUsersByEmail(String email) {
-        Users users = usersRepository.findByEmailActive(email).orElseThrow(() ->
+        Users users = usersRepository.findByEmailJoinedRole(email).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         return ResUsersDto.usersJoinedWithRoleToDto(users);
     }
 
     @Transactional
-    public void updateUsers(Long userId, ReqUsersDto reqUsersDto) {
+    public void updateUsers(Long userId, ReqUsersDto reqUsersDto, String userRole) {
         if(reqUsersDto == null) {
             throw new ApplicationException(ApplicationError.DTO_NULL_ERROR);
         }
@@ -55,21 +63,44 @@ public class UsersService {
                     // 새 비밀번호 필드 비어있음을 알리는 예외
                     throw new ApplicationException(ApplicationError.NEW_PASSWORD_NULL);
                 }
-
             } else {
                 // 사용자가 입력한 '현재 비밀번호'가 DB와 일치하지 않음을 알리는 예외
                 throw new ApplicationException(ApplicationError.NOT_MATCH_CUR_PASSWORD);
             }
         }
+        users.updateUsers(reqUsersDto); // 회원 테이블 수정
 
-        users.updateUsers(reqUsersDto);
+        if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
+            // 판매자의 경우 판매자 테이블의 주소, 주소 상세 정보 갱신
+            Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+            seller.updateSellerAddress(users.getAddress());
+            seller.updateSellerAddressDetail(users.getAddressDetail());
+        } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
+            // 양조장의 경우 양조장 테이블의 주소, 주소 상세 정보 갱신
+            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+            brewery.updateBreweryAddress(users.getAddress());
+            brewery.updateBreweryAddressDetail(users.getAddressDetail());
+        }
     }
 
     // 회원 탈퇴(soft delete)
-    public void withdrawalUser(Long userId) {
+    public void withdrawalUser(Long userId, String userRole) {
         Users users = usersRepository.findById(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         users.setDeleted();
+        if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
+            // 탈퇴 유형이 판매자인 경우 판매자 테이블에서도 삭제 처리
+            Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+            seller.setDeleted();
+        } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
+            // 탈퇴 유형이 양조장인 경우 양조장 테이블에서도 삭제 처리
+            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+            brewery.setDeleted();
+        }
         usersRepository.save(users);
     }
 }

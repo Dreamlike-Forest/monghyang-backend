@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.authHandler;
+package com.example.monghyang.domain.global.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

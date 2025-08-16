@@ -30,10 +30,6 @@ public class Brewery {
     @Column(nullable = false)
     private String breweryName;
     @Column(nullable = false)
-    private String breweryPhone;
-    @Column(nullable = false)
-    private String breweryEmail;
-    @Column(nullable = false)
     private String breweryAddress;
     @Column(nullable = false)
     private String breweryAddressDetail;
@@ -51,6 +47,7 @@ public class Brewery {
     private String breweryWebsite;
 
     @CreationTimestamp
+    @Column(nullable = false)
     private LocalDate registeredAt;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isRegularVisit; // 상시 방문 가능 여부
@@ -62,15 +59,13 @@ public class Brewery {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "breweryBuilder")
-    public Brewery(Users user, RegionType regionType, String breweryName, String breweryPhone, String breweryEmail, String breweryAddress, String breweryAddressDetail, String businessRegistrationNumber, String breweryDepositor, String breweryAccountNumber, String breweryBankName, String introduction, String breweryWebsite, Boolean isRegularVisit, Boolean isAgreedBrewery) {
+    public Brewery(Users user, RegionType regionType, String breweryName, String breweryAddress, String breweryAddressDetail, String businessRegistrationNumber, String breweryDepositor, String breweryAccountNumber, String breweryBankName, String introduction, String breweryWebsite, Boolean isRegularVisit, Boolean isAgreedBrewery) {
         if(isAgreedBrewery == Boolean.FALSE){
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
         this.user = user;
         this.regionType = regionType;
         this.breweryName = breweryName;
-        this.breweryPhone = breweryPhone;
-        this.breweryEmail = breweryEmail;
         this.breweryAddress = breweryAddress;
         this.breweryAddressDetail = breweryAddressDetail;
         this.businessRegistrationNumber = businessRegistrationNumber;
@@ -100,5 +95,13 @@ public class Brewery {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         isDeleted = Boolean.FALSE;
+    }
+
+    public void updateBreweryAddress(String breweryAddress) {
+        this.breweryAddress = breweryAddress;
+    }
+
+    public void updateBreweryAddressDetail(String breweryAddressDetail) {
+        this.breweryAddressDetail = breweryAddressDetail;
     }
 }

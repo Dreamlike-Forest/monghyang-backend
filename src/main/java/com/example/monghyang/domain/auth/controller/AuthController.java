@@ -59,8 +59,4 @@ public class AuthController {
         authService.breweryJoin(breweryJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 회원가입이 완료되었습니다."));
     }
-
-
-//    @PostMapping("/reset-pw")
-
 }

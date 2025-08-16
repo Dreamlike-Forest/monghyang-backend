@@ -1,8 +1,7 @@
 package com.example.monghyang.domain.users.controller;
 
-import com.example.monghyang.domain.authHandler.LoginUserId;
-import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.LoginUserRole;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
@@ -15,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +44,12 @@ public class UsersController {
     @PostMapping("/update")
     @Operation(summary = "회원 수정 api", description = "비밀번호 변경 시 '기존 비밀번호'와 '새 비밀번호'를 각각의 필드에 입력하여 전송해주셔야 합니다. 수정 성공 시 해당 유저의 모든 로그인 상태 정보가 서버에서 제거됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> updateUsers(
-            @LoginUserId Long userId, @ModelAttribute ReqUsersDto reqUsersDto,
+            @LoginUserId Long userId, @LoginUserRole String userRole,
+            @ModelAttribute ReqUsersDto reqUsersDto,
             HttpServletRequest request, HttpServletResponse response) {
-        usersService.updateUsers(userId, reqUsersDto);
+        System.out.println("유저 식별자: "+userId+", 유저 권한: "+userRole);
+
+        usersService.updateUsers(userId, reqUsersDto, userRole);
 
         // 해당 유저의 현재 세션 정보를 제거
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -66,11 +67,11 @@ public class UsersController {
     @DeleteMapping
     @Operation(summary = "회원 탈퇴 API")
     public ResponseEntity<ResponseDataDto<Void>> deleteUsers(
-            @LoginUserId Long userId,
+            @LoginUserId Long userId, @LoginUserRole String userRole,
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        usersService.withdrawalUser(userId); // 회원 탈퇴 로직(soft delete)
+        usersService.withdrawalUser(userId, userRole); // 회원 탈퇴 로직(soft delete)
         // 해당 유저의 현재 세션 정보를 제거
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if(auth != null) {

@@ -114,7 +114,6 @@ public class AuthService {
         usersRepository.save(users);
         Seller seller = Seller.sellerBuilder()
                 .user(users).sellerName(sellerJoinDto.getName())
-                .sellerPhone(sellerJoinDto.getPhone()).sellerEmail(sellerJoinDto.getSeller_email())
                 .sellerAddress(sellerJoinDto.getSeller_address()).sellerAddressDetail(sellerJoinDto.getSeller_address_detail())
                 .businessRegistrationNumber(sellerJoinDto.getBusiness_registration_number())
                 .sellerAccountNumber(sellerJoinDto.getSeller_account_number()).sellerDepositor(sellerJoinDto.getSeller_depositor())
@@ -134,8 +133,7 @@ public class AuthService {
 
         Brewery brewery = Brewery.breweryBuilder()
                 .user(users).breweryName(breweryJoinDto.getBrewery_name()).regionType(regionType)
-                .breweryPhone(breweryJoinDto.getBrewery_phone())
-                .breweryEmail(breweryJoinDto.getEmail()).breweryAddress(breweryJoinDto.getBrewery_address())
+                .breweryAddress(breweryJoinDto.getBrewery_address())
                 .breweryAddressDetail(breweryJoinDto.getBrewery_address_detail()).businessRegistrationNumber(breweryJoinDto.getBusiness_registration_number())
                 .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
                 .breweryBankName(breweryJoinDto.getBrewery_bank_name()).introduction(breweryJoinDto.getIntroduction())

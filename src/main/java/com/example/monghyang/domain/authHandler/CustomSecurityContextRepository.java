@@ -67,7 +67,7 @@ public class CustomSecurityContextRepository implements SecurityContextRepositor
                 Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, authentication);
                 context.setAuthentication(auth);
             } else {
-                System.out.println("세션 저장 정보가 SessionUserInfo 레코드가 아님");
+                log.error("세션 정보가 SessionUserInfo 레코드 형식이 아닙니다.");
             }
             return context;
 

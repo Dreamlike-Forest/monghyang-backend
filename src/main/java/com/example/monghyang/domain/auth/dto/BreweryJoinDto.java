@@ -15,11 +15,6 @@ import java.util.List;
 public class BreweryJoinDto extends JoinDto{
     @NotBlank(message = "brewery_name 값이 공백일 수 없습니다.")
     private String brewery_name;
-    @NotBlank(message = "brewery_phone 값이 공백일 수 없습니다.")
-    private String brewery_phone;
-    @NotBlank(message = "brewery_email 값이 공백일 수 없습니다.")
-    @Email(message = "brewery_email 필드에 이메일 형식의 값을 입력하세요.")
-    private String brewery_email;
     @NotBlank(message = "brewery_address 값이 공백일 수 없습니다.")
     private String brewery_address;
     @NotBlank(message = "brewery_address_detail 값이 공백일 수 없습니다.")

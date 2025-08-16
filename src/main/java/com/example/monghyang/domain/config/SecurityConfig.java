@@ -111,7 +111,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(sessionLogoutSeccessHandler)
                         .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
-//                .addFilterBefore(exceptionHandlerFilter, SecurityContextHolderFilter.class) // 예외처리 필터. 가장 앞단에 위치
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }

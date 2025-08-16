@@ -24,14 +24,11 @@ public class Seller {
     @Column(nullable = false)
     private String sellerName;
     @Column(nullable = false)
-    private String sellerPhone;
-    @Column(nullable = false)
-    private String sellerEmail;
-    @Column(nullable = false)
     private String sellerAddress;
     @Column(nullable = false)
     private String sellerAddressDetail;
     @CreationTimestamp
+    @Column(nullable = false)
     private LocalDate registeredAt;
     @Column(nullable = false)
     private String businessRegistrationNumber;
@@ -49,15 +46,13 @@ public class Seller {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "sellerBuilder")
-    public Seller(Users user, String sellerName, String sellerPhone, String sellerEmail, String sellerAddress, String sellerAddressDetail, String businessRegistrationNumber, String sellerAccountNumber, String sellerDepositor, String sellerBankName, String introduction, Boolean isAgreedSeller) {
+    public Seller(Users user, String sellerName, String sellerAddress, String sellerAddressDetail, String businessRegistrationNumber, String sellerAccountNumber, String sellerDepositor, String sellerBankName, String introduction, Boolean isAgreedSeller) {
         if(isAgreedSeller == Boolean.FALSE) {
             // 판매자 약관에 동의하지 않으면 회원 가입 불가
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
         this.user = user;
         this.sellerName = sellerName;
-        this.sellerPhone = sellerPhone;
-        this.sellerEmail = sellerEmail;
         this.sellerAddress = sellerAddress;
         this.sellerAddressDetail = sellerAddressDetail;
         this.businessRegistrationNumber = businessRegistrationNumber;
@@ -75,5 +70,13 @@ public class Seller {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         isDeleted = Boolean.FALSE;
+    }
+
+    public void updateSellerAddress(String sellerAddress) {
+        this.sellerAddress = sellerAddress;
+    }
+
+    public void updateSellerAddressDetail(String sellerAddressDetail) {
+        this.sellerAddressDetail = sellerAddressDetail;
     }
 }

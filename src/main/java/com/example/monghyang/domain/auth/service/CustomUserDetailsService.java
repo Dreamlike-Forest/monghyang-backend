@@ -21,7 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override // 이메일을 통해 유저를 조회한 결과를 AuthDto 인스턴스에 담고, LoginUserDetails 생성자의 매개변수로 담아 반환
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Users user = usersRepository.findByEmail(email).orElseThrow(() ->
+        Users user = usersRepository.findByEmailActiveJoinedRole(email).orElseThrow(() ->
                 new UsernameNotFoundException("아이디와 비밀번호가 일치하지 않습니다."));
 
         return LoginUserDetails.builder()
