@@ -17,6 +17,7 @@
 > **7. merge 성공 이후 절차 따르기(노션 참고)** <br>
 > - 개발이 완료된 브랜치는 로컬 및 원격에서 삭제합니다.
 > - 단, dev 브랜치는 절대 삭제하지 않습니다.
+> - 실제 운영을 위한 배포 브랜치는 main 입니다.
 
 > ### 네이밍 및 커밋 메시지
 > **1. ddl-auto 옵션(중요)** <br> - 로컬 개발 환경: create, update <br> - 배포 환경: validate, none <br>
@@ -37,6 +38,10 @@
 > **4. 예외 처리** : 컨트롤러 계층에서 발생하는 예외는 GlobalExceptionHandler 클래스에서 전역적으로 처리합니다. 커스텀 예외 리스트는 ApplicationError Enum으로 관리합니다.
 > **5. 예외 처리 후 반환** : ApplicationError enum으로 예외처리 응답용 dto의 필드를 채워 반환 
 
+> ### 기타
+> **1. 커스텀 어노테이션** <br>
+> @LoginUserId: 세션의 'userId'를 Long 타입 파라메터에 주입합니다. (ex: @LoginUserId Long userId)<br>
+> @LoginUserRole: 세션의 'role'을 String 타입 파라메터에 주입합니다. (ex: @LoginUserId String userRole)<br>
 ---
 
 ## ▶️ 가이드
