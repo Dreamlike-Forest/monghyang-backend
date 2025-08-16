@@ -36,7 +36,7 @@ public class JwtUtil {
     }
 
     // refresh token 파싱(dto에 필드값 담아서 반환)
-    public JwtClaimsDto parseRefreshToken(String token) {
+    public JwtClaimsDto parseRefreshToken(String token) throws ApplicationException {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(refreshKey)

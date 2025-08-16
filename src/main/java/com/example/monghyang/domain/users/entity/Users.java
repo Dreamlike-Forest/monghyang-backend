@@ -1,5 +1,8 @@
 package com.example.monghyang.domain.users.entity;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,7 +31,7 @@ public class Users {
     private String nickname;
     @Column(nullable = false)
     private String name;
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false, unique = true)
     private String phone;
     @Column(nullable = false)
     private LocalDate birth;
@@ -47,10 +50,14 @@ public class Users {
     @CreationTimestamp
     private LocalDate createdAt;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
-    private Boolean isDeleted = false;
+    private Boolean isDeleted = Boolean.FALSE;
 
-    @Builder(builderMethodName = "generalBuilder") // 플랫폼 회원가입
+    @Builder(builderMethodName = "generalBuilder") // 일반 회원 플랫폼 회원가입
     public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
+        if(isAgreed == Boolean.FALSE) {
+            // 약관에 동의하지 않으면 회원가입 불가
+            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
+        }
         this.role = role;
         this.email = email;
         this.password = password;
@@ -73,51 +80,51 @@ public class Users {
         this.password = "oAuth2User";
     }
 
-    public void setRole(Role role) {
+    public void updateUsers(ReqUsersDto reqUsersDto) {
+        if(reqUsersDto.getEmail() != null) {
+            this.email = reqUsersDto.getEmail();
+        }
+        if(reqUsersDto.getNewPassword() != null) {
+            this.password = reqUsersDto.getNewPassword();
+        }
+        if(reqUsersDto.getNickname() != null) {
+            this.nickname = reqUsersDto.getNickname();
+        }
+        if(reqUsersDto.getName() != null) {
+            this.name = reqUsersDto.getName();
+        }
+        if(reqUsersDto.getPhone() != null) {
+            this.phone = reqUsersDto.getPhone();
+        }
+        if(reqUsersDto.getBirth() != null) {
+            this.birth = reqUsersDto.getBirth();
+        }
+        if(reqUsersDto.getGender() != null) {
+            if(reqUsersDto.getGender().equals("man")) {
+                this.gender = Boolean.FALSE;
+            } else {
+                this.gender = Boolean.TRUE;
+            }
+        }
+        if(reqUsersDto.getAddress() != null) {
+            this.address = reqUsersDto.getAddress();
+        }
+        if(reqUsersDto.getAddress_detail() != null) {
+            this.addressDetail = reqUsersDto.getAddress_detail();
+        }
+    }
+
+    public void updateRole(Role role) {
+        // 권한 변경
         this.role = role;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setDeleted() {
+        // 유저 삭제 처리
+        this.isDeleted = Boolean.TRUE;
     }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setBirth(LocalDate birth) {
-        this.birth = birth;
-    }
-
-    public void setGender(Boolean gender) {
-        this.gender = gender;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public void setAgreed(Boolean agreed) {
-        isAgreed = agreed;
-    }
-
-    public void setAddressDetail(String addressDetail) {
-        this.addressDetail = addressDetail;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
+    public void unSetDeleted() {
+        // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
+        this.isDeleted = Boolean.FALSE;
     }
 }

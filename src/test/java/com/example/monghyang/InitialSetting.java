@@ -1,5 +1,7 @@
 package com.example.monghyang;
 
+import com.example.monghyang.domain.brewery.main.entity.RegionType;
+import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.repository.RoleRepository;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class InitialSetting {
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private RegionTypeRepository regionTypeRepository;
     // 데이터베이스에 기본값(role type 등) 삽입하는 스크립트
 
     @Test
@@ -28,5 +32,9 @@ public class InitialSetting {
             role.setName(roles[i]);
             roleRepository.save(role);
         }
+
+        regionTypeRepository.save(RegionType.nameFrom("미정"));
+        regionTypeRepository.save(RegionType.nameFrom("서울"));
+        regionTypeRepository.save(RegionType.nameFrom("경기도"));
     }
 }

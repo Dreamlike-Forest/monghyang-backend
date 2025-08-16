@@ -18,14 +18,6 @@ import java.io.IOException;
 @Slf4j
 @Component
 public class ExceptionUtil {
-
-    private static ObjectMapper objectMapper; // 정적 메소드에서 사용되는 값이므로 필드 또한 정적 설정
-
-    @Autowired
-    public ExceptionUtil(ObjectMapper objectMapper) {
-        ExceptionUtil.objectMapper = objectMapper;
-    }
-
     // 현재 API 요청의 PATH를 구하는 메소드
     public static RequestPathDto getRequestPath() {
         // 현재 요청 정보 load

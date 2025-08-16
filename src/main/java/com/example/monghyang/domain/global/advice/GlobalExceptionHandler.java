@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         for (ObjectError objectError : objectErrors) {
             errors.add(objectError.getDefaultMessage());
         }
-        String error = String.join("\n", errors); // 클라이언트에 반환하기 위해 처리된 최종 에러 메시지 문자열
+        String error = String.join(" ", errors); // 클라이언트에 반환하기 위해 처리된 최종 에러 메시지 문자열
         log.error("{} : {}", e.getCause(), e.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, error));

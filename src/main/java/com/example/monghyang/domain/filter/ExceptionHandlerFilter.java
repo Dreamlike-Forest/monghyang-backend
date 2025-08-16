@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,6 +20,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE) // 이 필터가 가장 높은 우선순위로 동작하도록 설정
 public class ExceptionHandlerFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     @Autowired
@@ -27,24 +30,27 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            filterChain.doFilter(request, response);
-        } catch (ApplicationException e) {
-            setErrorResponse(response, e.getApplicationError());
-        }
-    }
-
-    // 에러 처리용 dto를 통해 http 응답의 body에 http status code, error message 값을 json으로 반환합니다.
-    // 이 경우 로그 처리 및 프론트엔드 개발 편의성을 위해 body에도 status code를 첨부합니다.
-    public void setErrorResponse(HttpServletResponse response, ApplicationError applicationError) {
-        System.out.println("setErrorResponse() 메소드 호출!");
-        response.setStatus(applicationError.getStatus().value());
-        response.setContentType("application/json;charset=utf-8");
-        try {
-            // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
-            objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.statusMessageOf(applicationError.getStatus(), applicationError.getMessage()));
+            try {
+                filterChain.doFilter(request, response);
+            } catch (ApplicationException e) {
+                setApplicationErrorResponse(response, e.getApplicationError());
+            } catch (IllegalStateException e) {
+                return;
+            }
         } catch (IOException e) {
             log.error(e.getMessage()+"\n response http body 작성 도중 에러가 발생했습니다.");
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
+
     }
+
+    // 에러 처리용 dto를 통해 http 응답의 body에 http status code, error message 값을 json으로 반환합니다.
+    // 이 경우 로그 처리 및 프론트엔드 개발 편의성을 위해 body에도 status code를 첨부합니다.
+    public void setApplicationErrorResponse(HttpServletResponse response, ApplicationError applicationError) throws IOException {
+        response.setStatus(applicationError.getStatus().value());
+        response.setContentType("application/json;charset=utf-8");
+        // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
+        objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.statusMessageOf(applicationError.getStatus(), applicationError.getMessage()));
+    }
+
 }

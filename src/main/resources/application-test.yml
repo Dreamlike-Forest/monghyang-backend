@@ -4,6 +4,13 @@ spring:
     url: ${RDS_URL}
     username: ${RDS_USERNAME}
     password: ${RDS_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate # 개발 시에는 'create' or 'update', 실제 운영 시 'validate' or 'none'
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
   config:
     import: optional:file:./.env[.properties] # .env 파일의 환경변수를 주입하여 jar 실행
 app:
