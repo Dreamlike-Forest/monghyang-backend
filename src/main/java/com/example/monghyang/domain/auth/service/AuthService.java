@@ -10,6 +10,7 @@ import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.ImageUpdateDto;
+import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
@@ -32,6 +33,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -154,10 +156,16 @@ public class AuthService {
         // 양조장 이미지 추가 로직
         if(!breweryJoinDto.getImages().isEmpty()) {
             for(ImageUpdateDto image : breweryJoinDto.getImages()) {
-                UUID imageKey = storageService.upload(image.getAddImage());
-                Long volume = image.getAddImage().getSize();
-                breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, image.getSeq(), volume));
+                Integer seq = image.getSeq();
+                if(seq == null) {
+                    // 이미지 순서 정보 누락되면 업로드 로직 수행 x
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_NULL);
+                }
+                UUID imageKey = storageService.upload(image.getImage(), ImageType.BREWERY_IMAGE);
+                Long volume = image.getImage().getSize();
+                breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));
             }
         }
     }
+
 }

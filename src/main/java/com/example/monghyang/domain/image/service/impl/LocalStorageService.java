@@ -2,6 +2,7 @@ package com.example.monghyang.domain.image.service.impl;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -38,7 +39,7 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public UUID upload(MultipartFile file) {
+    public UUID upload(MultipartFile file, ImageType imageType) {
         if(file.isEmpty()) {
             throw new ApplicationException(ApplicationError.IMAGE_REQUEST_NULL);
         }

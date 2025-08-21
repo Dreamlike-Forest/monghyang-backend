@@ -1,11 +1,14 @@
 package com.example.monghyang.domain.auth.dto;
 
+import com.example.monghyang.domain.image.dto.ImageUpdateDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,4 +25,6 @@ public class SellerJoinDto extends JoinDto {
     private String introduction;
     @NotNull(message = "is_agreed_seller 필드가 공백일 수 없습니다.")
     private Boolean is_agreed_seller;
+
+    private List<ImageUpdateDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 }

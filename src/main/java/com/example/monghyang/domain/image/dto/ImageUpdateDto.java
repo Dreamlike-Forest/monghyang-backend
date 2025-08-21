@@ -9,6 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 @NoArgsConstructor
 public class ImageUpdateDto { // 이미지 새로 추가할 때 하나의 이미지 파일과 순서 정보를 묶어서 받기 위한 dto
-    private MultipartFile addImage; // 새로 추가할 이미지 파일
+    private MultipartFile image; // 새로 추가할 이미지 파일
     private Integer seq;
 }

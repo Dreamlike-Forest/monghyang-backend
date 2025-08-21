@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.image.service.impl;
 
+import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Profile("prod") // 운영 환경에서 사용되는 스토리지 서비스
 public class AwsStorageService implements StorageService {
     @Override
-    public UUID upload(MultipartFile file) {
+    public UUID upload(MultipartFile file, ImageType imageType) {
         return null;
     }
 
