@@ -4,10 +4,7 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -28,7 +25,7 @@ public class Brewery {
     private RegionType regionType;
 
     @Column(nullable = false)
-    private String breweryName;
+    private String breweryName; // 상호명
     @Column(nullable = false)
     private String breweryAddress;
     @Column(nullable = false)
@@ -58,8 +55,9 @@ public class Brewery {
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isDeleted = Boolean.FALSE;
 
+
     @Builder(builderMethodName = "breweryBuilder")
-    public Brewery(Users user, RegionType regionType, String breweryName, String breweryAddress, String breweryAddressDetail, String businessRegistrationNumber, String breweryDepositor, String breweryAccountNumber, String breweryBankName, String introduction, String breweryWebsite, Boolean isRegularVisit, Boolean isAgreedBrewery) {
+    public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery) {
         if(isAgreedBrewery == Boolean.FALSE){
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
@@ -77,6 +75,7 @@ public class Brewery {
         this.isRegularVisit = isRegularVisit;
         this.isAgreedBrewery = isAgreedBrewery;
     }
+
 
     public void setVisitingBrewery() {
         // '찾아가는 양조장' 으로 변경

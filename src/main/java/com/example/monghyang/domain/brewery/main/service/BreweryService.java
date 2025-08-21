@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.brewery.main.service;
 
+import com.example.monghyang.domain.image.dto.ImageUpdateDto;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,15 +14,6 @@ public class BreweryService {
     public BreweryService(BreweryRepository breweryRepository) {
         this.breweryRepository = breweryRepository;
     }
-
-    // 양조장 관련 수정 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 양조장 조회 -> 양조장 식별자 사용)
-
-    // 양조장 이미지 업로드
-    // 동일한 이미지 순서값을 여러 개 받을 경우(ex: 순서가 1인 이미지를 2개 이상 받는 경우) DB 레벨 예외 발생
-
-    // 양조장 태그 수정(추가 + 삭제)
-
-    // 양조장 탈퇴(삭제 처리)
 
     // 양조장 검색 (필터링 옵션 종류: 지역 타입, 가격 범위, 주종(태그), 배지(태그)): 이때 각 양조장의 이미지는 '대표 이미지'만 조회되도록
     // 삭제처리된 양조장은 취급하지 않음

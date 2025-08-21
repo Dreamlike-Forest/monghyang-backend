@@ -2,11 +2,15 @@ package com.example.monghyang.domain.auth.service;
 
 import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.brewery.main.entity.BreweryImage;
 import com.example.monghyang.domain.brewery.main.entity.RegionType;
+import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.image.dto.ImageUpdateDto;
+import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.auth.dto.JoinDto;
@@ -28,6 +32,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @Slf4j
 public class AuthService {
@@ -41,9 +47,11 @@ public class AuthService {
     private final SellerRepository sellerRepository;
     private final BreweryRepository breweryRepository;
     private final RegionTypeRepository regionTypeRepository;
+    private final StorageService storageService;
+    private final BreweryImageRepository breweryImageRepository;
 
     @Autowired
-    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository) {
+    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository, StorageService storageService, BreweryImageRepository breweryImageRepository) {
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.roleRepository = roleRepository;
@@ -53,6 +61,8 @@ public class AuthService {
         this.sellerRepository = sellerRepository;
         this.breweryRepository = breweryRepository;
         this.regionTypeRepository = regionTypeRepository;
+        this.storageService = storageService;
+        this.breweryImageRepository = breweryImageRepository;
     }
 
     public void checkEmail(String email) {
@@ -114,7 +124,7 @@ public class AuthService {
         usersRepository.save(users);
         Seller seller = Seller.sellerBuilder()
                 .user(users).sellerName(sellerJoinDto.getName())
-                .sellerAddress(sellerJoinDto.getSeller_address()).sellerAddressDetail(sellerJoinDto.getSeller_address_detail())
+                .sellerAddress(sellerJoinDto.getAddress()).sellerAddressDetail(sellerJoinDto.getAddress_detail())
                 .businessRegistrationNumber(sellerJoinDto.getBusiness_registration_number())
                 .sellerAccountNumber(sellerJoinDto.getSeller_account_number()).sellerDepositor(sellerJoinDto.getSeller_depositor())
                 .sellerBankName(sellerJoinDto.getSeller_bank_name()).introduction(sellerJoinDto.getIntroduction())
@@ -132,13 +142,22 @@ public class AuthService {
                 new ApplicationException(ApplicationError.REGION_NOT_FOUND));
 
         Brewery brewery = Brewery.breweryBuilder()
-                .user(users).breweryName(breweryJoinDto.getBrewery_name()).regionType(regionType)
-                .breweryAddress(breweryJoinDto.getBrewery_address())
-                .breweryAddressDetail(breweryJoinDto.getBrewery_address_detail()).businessRegistrationNumber(breweryJoinDto.getBusiness_registration_number())
+                .user(users).breweryName(users.getName()).regionType(regionType)
+                .breweryAddress(breweryJoinDto.getAddress())
+                .breweryAddressDetail(breweryJoinDto.getAddress_detail()).businessRegistrationNumber(breweryJoinDto.getBusiness_registration_number())
                 .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
                 .breweryBankName(breweryJoinDto.getBrewery_bank_name()).introduction(breweryJoinDto.getIntroduction())
                 .breweryWebsite(breweryJoinDto.getBrewery_website()).isRegularVisit(breweryJoinDto.getIs_regular_visit()).isAgreedBrewery(breweryJoinDto.getIs_agreed_brewery())
                 .build();
         breweryRepository.save(brewery);
+
+        // 양조장 이미지 추가 로직
+        if(!breweryJoinDto.getImages().isEmpty()) {
+            for(ImageUpdateDto image : breweryJoinDto.getImages()) {
+                UUID imageKey = storageService.upload(image.getAddImage());
+                Long volume = image.getAddImage().getSize();
+                breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, image.getSeq(), volume));
+            }
+        }
     }
 }

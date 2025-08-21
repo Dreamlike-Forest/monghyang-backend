@@ -4,10 +4,7 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -53,7 +50,7 @@ public class Users {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "generalBuilder") // 일반 회원 플랫폼 회원가입
-    public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
+    public Users(@NonNull Role role, @NonNull String email, @NonNull String password, @NonNull String nickname, @NonNull String name, @NonNull String phone, @NonNull LocalDate birth, @NonNull Boolean gender, @NonNull String address, @NonNull String address_detail, @NonNull Boolean isAgreed) {
         if(isAgreed == Boolean.FALSE) {
             // 약관에 동의하지 않으면 회원가입 불가
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);

@@ -21,6 +21,8 @@ public enum ApplicationError {
     IMAGE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 중 서버에서 에러가 발생했습니다."),
     IMAGE_LOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 로드 중 서버에서 에러가 발생했습니다."),
     IMAGE_FORMAT_ERROR(HttpStatus.BAD_REQUEST, "이미지 형식이 잘못되었습니다."),
+    IMAGE_SIZE_OVER(HttpStatus.BAD_REQUEST, "10MB가 넘는 이미지를 업로드할 수 없습니다."),
+    IMAGE_SIZE_ERROR(HttpStatus.BAD_REQUEST, "잘못된 크기의 이미지입니다."),
     TOKEN_IMPAIRED(HttpStatus.UNAUTHORIZED, "토큰이 훼손되었습니다."),
     CONCURRENT_CONNECTION(HttpStatus.CONFLICT, "다른 곳에서 새로 접속하여 로그아웃합니다."),
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Role 입니다."),

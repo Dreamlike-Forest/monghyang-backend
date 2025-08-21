@@ -12,8 +12,8 @@ import java.util.UUID;
 @Profile("prod") // 운영 환경에서 사용되는 스토리지 서비스
 public class AwsStorageService implements StorageService {
     @Override
-    public String upload(MultipartFile file) {
-        return "";
+    public UUID upload(MultipartFile file) {
+        return null;
     }
 
     @Override

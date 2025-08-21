@@ -19,9 +19,9 @@ public class JoinDto {
     @NotBlank(message = "password 값이 공백일 수 없습니다.")
     private String password;
     @NotBlank(message = "nickname 값이 공백일 수 없습니다.")
-    private String nickname;
+    private String nickname; // 일반회원: 닉네임, 양조장 및 판매자: 상호명
     @NotBlank(message = "name 값이 공백일 수 없습니다.")
-    private String name;
+    private String name; // 일반회원: 실명, 양조장 및 판매자: 대표자명
     @NotBlank(message = "phone 값이 공백일 수 없습니다.")
     private String phone;
     @NotNull(message = "birth 값이 공백일 수 없습니다.")

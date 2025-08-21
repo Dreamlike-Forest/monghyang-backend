@@ -11,12 +11,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class SellerJoinDto extends JoinDto {
-    @NotBlank(message = "seller_name 값이 공백일 수 없습니다.")
-    private String seller_name;
-    @NotBlank(message = "seller_address 값이 공백일 수 없습니다.")
-    private String seller_address;
-    @NotBlank(message = "seller_address_detail 값이 공백일 수 없습니다.")
-    private String seller_address_detail;
     @NotBlank(message = "business_registration_number 값이 공백일 수 없습니다.")
     private String business_registration_number;
     @NotBlank(message = "seller_account_number 값이 공백일 수 없습니다.")

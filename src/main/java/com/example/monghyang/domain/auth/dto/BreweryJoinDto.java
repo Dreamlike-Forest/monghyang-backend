@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.auth.dto;
 
+import com.example.monghyang.domain.image.dto.ImageUpdateDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,13 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class BreweryJoinDto extends JoinDto{
-    @NotBlank(message = "brewery_name 값이 공백일 수 없습니다.")
-    private String brewery_name;
-    @NotBlank(message = "brewery_address 값이 공백일 수 없습니다.")
-    private String brewery_address;
-    @NotBlank(message = "brewery_address_detail 값이 공백일 수 없습니다.")
-    private String brewery_address_detail;
+public class BreweryJoinDto extends JoinDto {
     @NotBlank(message = "business_registration_number 값이 공백일 수 없습니다.")
     private String business_registration_number;
     @NotBlank(message = "brewery_depositor 값이 공백일 수 없습니다.")
@@ -29,6 +24,8 @@ public class BreweryJoinDto extends JoinDto{
     private String brewery_bank_name;
     private String introduction;
     private String brewery_website;
+
+    private List<ImageUpdateDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 
     @NotNull(message = "region_type_id 값이 공백일 수 없습니다.")
     private Integer region_type_id;

@@ -12,7 +12,7 @@ public interface StorageService {
      * @param file 업로드된 MultipartFile
      * @return 저장 후 생성된 이미지 UUID key
      */
-    String upload(MultipartFile file);
+    UUID upload(MultipartFile file);
 
     /**
      * 파일 이름으로 실제 파일 리소스를 반환합니다.
