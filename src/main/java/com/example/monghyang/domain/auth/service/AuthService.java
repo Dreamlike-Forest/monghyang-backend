@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -163,7 +164,13 @@ public class AuthService {
                 }
                 UUID imageKey = storageService.upload(image.getImage(), ImageType.BREWERY_IMAGE);
                 Long volume = image.getImage().getSize();
-                breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));
+                try {
+                    breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));
+                } catch (DataIntegrityViolationException e) {
+                    // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+
             }
         }
     }

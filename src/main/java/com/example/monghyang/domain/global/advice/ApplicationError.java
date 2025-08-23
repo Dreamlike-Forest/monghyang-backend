@@ -24,6 +24,7 @@ public enum ApplicationError {
     IMAGE_SIZE_OVER(HttpStatus.BAD_REQUEST, "10MB가 넘는 이미지를 업로드할 수 없습니다."),
     IMAGE_SIZE_ERROR(HttpStatus.BAD_REQUEST, "잘못된 크기의 이미지입니다."),
     IMAGE_SEQ_NULL(HttpStatus.BAD_REQUEST, "이미지의 순서 정보(seq)가 누락되었습니다."),
+    IMAGE_SEQ_INVALID(HttpStatus.BAD_REQUEST, "이미지의 순서 정보가 올바르지 않습니다. 수정사항을 롤백합니다."),
     TOKEN_IMPAIRED(HttpStatus.UNAUTHORIZED, "토큰이 훼손되었습니다."),
     CONCURRENT_CONNECTION(HttpStatus.CONFLICT, "다른 곳에서 새로 접속하여 로그아웃합니다."),
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Role 입니다."),

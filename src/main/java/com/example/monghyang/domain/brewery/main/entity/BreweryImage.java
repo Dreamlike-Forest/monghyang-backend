@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(uniqueConstraints = {
         @UniqueConstraint(
                 name = "uk_brewery_image_seq",
-                columnNames = {"BREWERY_ID", "SEQ"}
+                columnNames = {"BREWERY_ID", "SEQ"} // 양조장 식별자와 '이미지 순서 정보'를 묶어서 유니크하게 설정
         )
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
