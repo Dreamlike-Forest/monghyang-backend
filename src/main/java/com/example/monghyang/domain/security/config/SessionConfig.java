@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.config;
+package com.example.monghyang.domain.security.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

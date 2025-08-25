@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.filter;
+package com.example.monghyang.domain.security.filter;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationErrorDto;

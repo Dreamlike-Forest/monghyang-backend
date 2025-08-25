@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.config;
+package com.example.monghyang.domain.security.config;
 
 import com.example.monghyang.domain.global.annotation.LoginUserIdArgumentResolver;
 import com.example.monghyang.domain.global.annotation.LoginUserRoleArgumentResolver;

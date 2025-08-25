@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.config;
+package com.example.monghyang.domain.security.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

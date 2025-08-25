@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.authHandler;
+package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.util.DeviceTypeUtil;

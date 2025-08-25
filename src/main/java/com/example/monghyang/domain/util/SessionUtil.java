@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.util;
 
-import com.example.monghyang.domain.authHandler.SessionUserInfo;
+import com.example.monghyang.domain.security.authHandler.SessionUserInfo;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.redis.RedisService;
