@@ -1,7 +1,9 @@
 package com.example.monghyang.domain.users.entity;
 
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -123,5 +125,17 @@ public class Users {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         this.isDeleted = Boolean.FALSE;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
+    public void updateAddressDetail(String addressDetail) {
+        this.addressDetail = addressDetail;
     }
 }

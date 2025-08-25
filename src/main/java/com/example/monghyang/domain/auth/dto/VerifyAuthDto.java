@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class QuitRequestDto {
-    @NotBlank(message = "회원 탈퇴를 하기위해 기존 비밀번호를 입력하여야 합니다.")
+public class VerifyAuthDto {
+    @NotBlank(message = "검증을 위한 비밀번호 필드를 입력해주세요.")
     private String password;
 }

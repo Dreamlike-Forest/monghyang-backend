@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.auth.service;
 
 import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
+import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.entity.BreweryImage;
 import com.example.monghyang.domain.brewery.main.entity.RegionType;
@@ -9,7 +10,7 @@ import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.image.dto.ImageUpdateDto;
+import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.redis.RedisService;
@@ -34,7 +35,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -71,6 +71,14 @@ public class AuthService {
     public void checkEmail(String email) {
         if(usersRepository.existsByEmail(email)) {
             throw new ApplicationException(ApplicationError.EMAIL_DUPLICATE);
+        }
+    }
+
+    public void checkPassword(Long userId, VerifyAuthDto verifyAuthDto) {
+        Users users = usersRepository.findById(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        if(!bCryptPasswordEncoder.matches(verifyAuthDto.getPassword(), users.getPassword())) {
+            throw new ApplicationException(ApplicationError.NOT_MATCH_CUR_PASSWORD);
         }
     }
 
@@ -126,7 +134,7 @@ public class AuthService {
         Users users = createUser(sellerJoinDto, RoleType.ROLE_SELLER);
         usersRepository.save(users);
         Seller seller = Seller.sellerBuilder()
-                .user(users).sellerName(sellerJoinDto.getName())
+                .user(users).sellerName(sellerJoinDto.getNickname())
                 .sellerAddress(sellerJoinDto.getAddress()).sellerAddressDetail(sellerJoinDto.getAddress_detail())
                 .businessRegistrationNumber(sellerJoinDto.getBusiness_registration_number())
                 .sellerAccountNumber(sellerJoinDto.getSeller_account_number()).sellerDepositor(sellerJoinDto.getSeller_depositor())
@@ -145,7 +153,7 @@ public class AuthService {
                 new ApplicationException(ApplicationError.REGION_NOT_FOUND));
 
         Brewery brewery = Brewery.breweryBuilder()
-                .user(users).breweryName(users.getName()).regionType(regionType)
+                .user(users).breweryName(breweryJoinDto.getNickname()).regionType(regionType)
                 .breweryAddress(breweryJoinDto.getAddress())
                 .breweryAddressDetail(breweryJoinDto.getAddress_detail()).businessRegistrationNumber(breweryJoinDto.getBusiness_registration_number())
                 .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
@@ -156,13 +164,15 @@ public class AuthService {
 
         // 양조장 이미지 추가 로직
         if(!breweryJoinDto.getImages().isEmpty()) {
-            for(ImageUpdateDto image : breweryJoinDto.getImages()) {
+            for(AddImageDto image : breweryJoinDto.getImages()) {
                 Integer seq = image.getSeq();
                 if(seq == null) {
                     // 이미지 순서 정보 누락되면 업로드 로직 수행 x
                     throw new ApplicationException(ApplicationError.IMAGE_SEQ_NULL);
+                } else if(seq > 5 || seq < 1) {
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
                 }
-                UUID imageKey = storageService.upload(image.getImage(), ImageType.BREWERY_IMAGE);
+                String imageKey = storageService.upload(image.getImage(), ImageType.BREWERY_IMAGE);
                 Long volume = image.getImage().getSize();
                 try {
                     breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));

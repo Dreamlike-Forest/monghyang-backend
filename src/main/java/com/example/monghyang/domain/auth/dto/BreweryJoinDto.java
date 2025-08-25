@@ -1,7 +1,6 @@
 package com.example.monghyang.domain.auth.dto;
 
-import com.example.monghyang.domain.image.dto.ImageUpdateDto;
-import jakarta.validation.constraints.Email;
+import com.example.monghyang.domain.image.dto.AddImageDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -25,7 +24,7 @@ public class BreweryJoinDto extends JoinDto {
     private String introduction;
     private String brewery_website;
 
-    private List<ImageUpdateDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
+    private List<AddImageDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 
     @NotNull(message = "region_type_id 값이 공백일 수 없습니다.")
     private Integer region_type_id;

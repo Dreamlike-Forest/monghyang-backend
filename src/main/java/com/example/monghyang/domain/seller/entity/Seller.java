@@ -69,6 +69,10 @@ public class Seller {
         isDeleted = Boolean.FALSE;
     }
 
+    public void updateSellerName(String sellerName) {
+        this.sellerName = sellerName;
+    }
+
     public void updateSellerAddress(String sellerAddress) {
         this.sellerAddress = sellerAddress;
     }

@@ -2,6 +2,8 @@ package com.example.monghyang.domain.auth.controller;
 
 import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
 import com.example.monghyang.domain.auth.dto.SellerJoinDto;
+import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.global.annotation.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.auth.dto.JoinDto;
 import com.example.monghyang.domain.auth.service.AuthService;
@@ -39,6 +41,13 @@ public class AuthController {
         return ResponseEntity.ok().body(ResponseDataDto.success("사용할 수 있는 이메일입니다."));
     }
 
+    @PostMapping("/verify-pw")
+    @Operation(summary = "기존 비밀번호 검증 API", description = "정보 수정 등의 동작을 수행하기 전과 같은 상황에서 사용")
+    public ResponseEntity<ResponseDataDto<Void>> checkPassword(@LoginUserId Long userId, @Valid @ModelAttribute VerifyAuthDto verifyAuthDto) {
+        authService.checkPassword(userId, verifyAuthDto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 일치합니다."));
+    }
+
     @PostMapping(value = "/common-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "일반 회원의 플랫폼 회원가입")
     public ResponseEntity<ResponseDataDto<Void>> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
@@ -47,14 +56,14 @@ public class AuthController {
     }
 
     @PostMapping(value = "/seller-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "판매자 회원의 회원가입")
+    @Operation(summary = "판매자 회원의 회원가입", description = "nickname: 판매자 상호명, name: 판매자 대표자명")
     public ResponseEntity<ResponseDataDto<Void>> sellerJoin(@Valid @ModelAttribute SellerJoinDto sellerJoinDto) {
         authService.sellerJoin(sellerJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("판매자 회원가입이 완료되었습니다."));
     }
 
     @PostMapping(value = "/brewery-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "양조장 회원의 회원가입")
+    @Operation(summary = "양조장 회원의 회원가입", description = "nickname: 양조장 상호명, name: 양조장 대표자명")
     public ResponseEntity<ResponseDataDto<Void>> breweryJoin(@Valid @ModelAttribute BreweryJoinDto breweryJoinDto) {
         authService.breweryJoin(breweryJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 회원가입이 완료되었습니다."));

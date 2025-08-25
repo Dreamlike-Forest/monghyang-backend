@@ -5,8 +5,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Entity
 @Getter
 @Table(uniqueConstraints = {
@@ -24,13 +22,13 @@ public class BreweryImage {
     @ManyToOne(fetch = FetchType.LAZY)
     private Brewery brewery;
     @Column(nullable = false, unique = true)
-    private UUID imageKey;
+    private String imageKey; // UUID + 확장자명까지 포함한 이미지 전체 이름
     @Column(nullable = false)
     private Integer seq;
     @Column(nullable = false)
     private Long volume;
 
-    private BreweryImage(Brewery brewery, UUID imageKey, Integer seq, Long volume) {
+    private BreweryImage(Brewery brewery, String imageKey, Integer seq, Long volume) {
         this.brewery = brewery;
         this.imageKey = imageKey;
         this.seq = seq;
@@ -46,7 +44,7 @@ public class BreweryImage {
      * @param volume 해당 이미지의 용량 정보
      * @return 저장 후 생성된 이미지 UUID key
      */
-    public static BreweryImage breweryKeySeqVolume(Brewery brewery, UUID imageKey, Integer seq, Long volume) {
+    public static BreweryImage breweryKeySeqVolume(Brewery brewery, String imageKey, Integer seq, Long volume) {
         return new BreweryImage(brewery, imageKey, seq, volume);
     }
 

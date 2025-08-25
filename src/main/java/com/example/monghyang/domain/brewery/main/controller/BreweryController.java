@@ -13,4 +13,6 @@ public class BreweryController {
     public BreweryController(BreweryService breweryService) {
         this.breweryService = breweryService;
     }
+
+    // 양
 }

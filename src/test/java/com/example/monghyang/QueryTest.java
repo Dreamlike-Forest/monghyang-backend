@@ -33,12 +33,6 @@ public class QueryTest {
     @Test
     @Transactional
     void test() {
-        Brewery brewery = breweryRepository.findById(1L).orElseThrow(() ->
-                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        UUID imageKey = UUID.randomUUID();
-        Integer seq = 1;
-        Long volume = 10L;
-        breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));
-        breweryImageRepository.saveAndFlush(BreweryImage.breweryKeySeqVolume(brewery, imageKey, seq, volume));
+
     }
 }

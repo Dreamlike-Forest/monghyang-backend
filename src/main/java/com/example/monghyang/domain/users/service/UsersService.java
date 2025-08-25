@@ -70,18 +70,38 @@ public class UsersService {
         }
         users.updateUsers(reqUsersDto); // 회원 테이블 수정
 
-        if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
-            // 판매자의 경우 판매자 테이블의 주소, 주소 상세 정보 갱신
-            Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
-                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
-            seller.updateSellerAddress(users.getAddress());
-            seller.updateSellerAddressDetail(users.getAddressDetail());
-        } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
-            // 양조장의 경우 양조장 테이블의 주소, 주소 상세 정보 갱신
-            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
-                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-            brewery.updateBreweryAddress(users.getAddress());
-            brewery.updateBreweryAddressDetail(users.getAddressDetail());
+        // 판매자/양조장 테이블을 수정해야 하는 경우인지 검증하는 플래그 변수
+        boolean needsOtherEntity = reqUsersDto.getNickname() != null
+                || reqUsersDto.getAddress() != null
+                || reqUsersDto.getAddress_detail() != null;
+
+        if(needsOtherEntity) {
+            if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
+                Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+                if(reqUsersDto.getNickname() != null) {
+                    seller.updateSellerName(reqUsersDto.getNickname());
+                }
+                if(reqUsersDto.getAddress() != null) {
+                    seller.updateSellerAddress(reqUsersDto.getAddress());
+                }
+                if(reqUsersDto.getAddress_detail() != null) {
+                    seller.updateSellerAddressDetail(reqUsersDto.getAddress_detail());
+                }
+            } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
+                Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+
+                if(reqUsersDto.getNickname() != null) {
+                    brewery.updateBreweryName(reqUsersDto.getNickname());
+                }
+                if(reqUsersDto.getAddress() != null) {
+                    brewery.updateBreweryAddress(reqUsersDto.getAddress());
+                }
+                if(reqUsersDto.getAddress_detail() != null) {
+                    brewery.updateBreweryAddressDetail(reqUsersDto.getAddress_detail());
+                }
+            }
         }
     }
 
@@ -97,7 +117,7 @@ public class UsersService {
             seller.setDeleted();
         } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
             // 탈퇴 유형이 양조장인 경우 양조장 테이블에서도 삭제 처리
-            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
+            Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
                     new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
             brewery.setDeleted();
         }

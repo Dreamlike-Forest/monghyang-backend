@@ -27,7 +27,7 @@ public class ImageController {
     }
 
     @GetMapping("/{imageFullName}")
-    @Operation(summary = "실제 이미지 파일 요청 API", description = "이미지 키에 해당되는 uuid를 url 파라메터에 넣어주세요.")
+    @Operation(summary = "실제 이미지 파일 요청 API", description = "확장자명을 포함한 이미지 전체 이름을 파라메터에 넣어주세요.")
     public ResponseEntity<Resource> loadImage(@PathVariable String imageFullName, HttpServletRequest request) {
         try {
             Resource image = storageService.load(imageFullName);

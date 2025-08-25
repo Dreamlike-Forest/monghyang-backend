@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.brewery.main.entity;
 
+import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.entity.Users;
@@ -76,6 +77,42 @@ public class Brewery {
         this.isAgreedBrewery = isAgreedBrewery;
     }
 
+    public void updateBrewery(ReqBreweryDto reqBreweryDto) {
+        if(reqBreweryDto.getBrewery_name() != null){
+            this.breweryName = reqBreweryDto.getBrewery_name();
+            this.user.updateNickname(reqBreweryDto.getBrewery_name()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBrewery_address() != null){
+            this.breweryAddress = reqBreweryDto.getBrewery_address();
+            this.user.updateAddress(reqBreweryDto.getBrewery_address()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBrewery_address_detail() != null){
+            this.breweryAddressDetail = reqBreweryDto.getBrewery_address_detail();
+            this.user.updateAddressDetail(reqBreweryDto.getBrewery_address_detail()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBusiness_registration_number() != null){
+            this.businessRegistrationNumber = reqBreweryDto.getBusiness_registration_number();
+        }
+        if(reqBreweryDto.getBrewery_depositor() != null){
+            this.breweryDepositor = reqBreweryDto.getBrewery_depositor();
+        }
+        if(reqBreweryDto.getBrewery_account_number() != null){
+            this.breweryAccountNumber = reqBreweryDto.getBrewery_account_number();
+        }
+        if(reqBreweryDto.getBrewery_bank_name() != null){
+            this.breweryBankName = reqBreweryDto.getBrewery_bank_name();
+        }
+        if(reqBreweryDto.getIntroduction() != null){
+            this.introduction = reqBreweryDto.getIntroduction();
+        }
+        if(reqBreweryDto.getBrewery_website() != null){
+            this.breweryWebsite = reqBreweryDto.getBrewery_website();
+        }
+        if(reqBreweryDto.getIs_regular_visit() != null){
+            this.isRegularVisit = reqBreweryDto.getIs_regular_visit();
+        }
+    }
+
 
     public void setVisitingBrewery() {
         // '찾아가는 양조장' 으로 변경
@@ -94,6 +131,10 @@ public class Brewery {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         isDeleted = Boolean.FALSE;
+    }
+
+    public void updateBreweryName(String breweryName) {
+        this.breweryName = breweryName;
     }
 
     public void updateBreweryAddress(String breweryAddress) {

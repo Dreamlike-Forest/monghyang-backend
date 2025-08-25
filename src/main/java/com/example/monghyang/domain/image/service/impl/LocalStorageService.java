@@ -39,7 +39,7 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public UUID upload(MultipartFile file, ImageType imageType) {
+    public String upload(MultipartFile file, ImageType imageType) {
         if(file.isEmpty()) {
             throw new ApplicationException(ApplicationError.IMAGE_REQUEST_NULL);
         }
@@ -60,7 +60,7 @@ public class LocalStorageService implements StorageService {
         try {
             Path uploadPath = storagePath.resolve(key + ext);
             Files.copy(file.getInputStream(), uploadPath); // 최종 경로 'uploadPath'에 이미지 복사(업로드)
-            return key;
+            return key + ext;
         } catch (IOException e) {
             throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR);
         }
@@ -78,6 +78,16 @@ public class LocalStorageService implements StorageService {
             }
         } catch (MalformedURLException e) {
             throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR);
+        }
+    }
+
+    @Override
+    public void remove(String imageFullName) {
+        try {
+            Path filePath = storagePath.resolve(imageFullName).normalize();
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            throw new ApplicationException(ApplicationError.IMAGE_REMOVE_ERROR);
         }
     }
 }

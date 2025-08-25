@@ -12,5 +12,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     @Query("select b.user.phone from Brewery b where b.id = :breweryId")
     Optional<String> findPhoneById(@Param("breweryId") Long breweryId);
 
-    Optional<Brewery> findByUser(Users user);
+    @Query("select b from Brewery b where b.user.id = :userId")
+    Optional<Brewery> findByUserId(@Param("userId") Long userId);
+
 }
