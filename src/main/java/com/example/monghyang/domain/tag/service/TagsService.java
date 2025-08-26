@@ -92,4 +92,21 @@ public class TagsService {
         }
         return result;
     }
+
+    // 태그 카테고리별 조회
+    public Page<ResTagDto> getTagListByCategory(Integer categoryId, Integer startOffset) {
+        if(categoryId == null) {
+            throw new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND);
+        }
+        if(startOffset == null) {
+            startOffset = 0;
+        }
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+        Pageable pageable = PageRequest.of(startOffset, tagPageSize, sort);
+        Page<ResTagDto> result = tagsRepository.findByCategoryActivePaging(categoryId, pageable).map(tags -> ResTagDto.idTagCategoryNameName(tags.getId(), tags.getCategory().getName(), tags.getName()));
+        if(!result.hasContent()) {
+            throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
+        }
+        return result;
+    }
 }

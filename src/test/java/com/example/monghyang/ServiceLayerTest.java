@@ -39,17 +39,7 @@ public class ServiceLayerTest {
     @Test
     @Transactional
     void test() {
-//        TagCategory tagCategory = tagCategoryRepository.findById(1).orElseThrow(() ->
-//                new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND));
-        tagsService.createTag(1, "새로운 카테고리 이름");
-//        tagsService.updateTag(3, "업데이트된 태그 이름");
-//        tagsService.deleteTag(2);
-//        Page<ResTagDto> result = tagsService.getTagListLatest(0);
-//        result.getContent().forEach(t -> System.out.println("tag id: "+t.getId()+" tag name: "+t.getName()));
-//
-//        tagsService.restoreTag(2);
-//
-//        Page<ResTagDto> result2 = tagsService.getTagListKeyword("", 0);
-//        result2.getContent().forEach(t -> System.out.println("tag id: "+t.getId()+" tag name: "+t.getName()));
+        Page<ResTagDto> result2 = tagsService.getTagListByCategory(1, 0);
+        result2.getContent().forEach(t -> System.out.println("tag id: "+t.getId()+" tag name: "+t.getName()));
     }
 }
