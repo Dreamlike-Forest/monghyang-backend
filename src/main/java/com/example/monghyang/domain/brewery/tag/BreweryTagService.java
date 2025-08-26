@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class BreweryTagService {
     }
 
     // 태그 수정
+    @Transactional
     public void updateTag(Long userId, ReqBreweryTagDto reqBreweryTagDto) throws DataIntegrityViolationException {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
@@ -39,10 +41,8 @@ public class BreweryTagService {
             breweryTagRepository.save(BreweryTag.breweryTags(brewery, tags));
         }
 
-        // 태그 삭제
-        for(Integer curTagId : reqBreweryTagDto.getDelete_tag_list()) {
-            breweryTagRepository.deleteByBreweryIdAndTagId(brewery.getId(), curTagId);
-        }
+        // 태그 삭제: 일괄 삭제 벌크 쿼리
+        breweryTagRepository.deleteByBreweryIdAndTagId(brewery.getId(), reqBreweryTagDto.getDelete_tag_list());
     }
 
 }

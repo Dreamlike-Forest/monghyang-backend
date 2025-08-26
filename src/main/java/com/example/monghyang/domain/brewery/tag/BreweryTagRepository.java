@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface BreweryTagRepository extends JpaRepository<BreweryTag,Long> {
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from BreweryTag b where b.brewery.id = :breweryId and b.tags.id = :tagId")
-    void deleteByBreweryIdAndTagId(@Param("breweryId") Long breweryId, @Param("tagId") Integer tagId);
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("delete from BreweryTag b where b.brewery.id = :breweryId and b.tags.id in :deleteTagIdList")
+    void deleteByBreweryIdAndTagId(@Param("breweryId") Long breweryId, @Param("deleteTagIdList") List<Integer> deleteTagIdList);
 }
