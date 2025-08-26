@@ -32,6 +32,7 @@ public enum ApplicationError {
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Role 입니다."),
     REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 Region 입니다."),
     TAG_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 태그 카테고리입니다."),
+    TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 태그입니다."),
     TERMS_AND_CONDITIONS_NOT_AGREED(HttpStatus.CONFLICT, "약관에 동의하지 않으면 회원 가입하실 수 없습니다."),
     EMAIL_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     DTO_NULL_ERROR(HttpStatus.BAD_REQUEST, "DTO가 null입니다."),

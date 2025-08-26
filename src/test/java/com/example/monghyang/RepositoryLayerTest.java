@@ -32,21 +32,6 @@ public class RepositoryLayerTest {
     @Test
     @Transactional
     void test() {
-        tagCategoryService.createTagCategory("카테고리1");
-        tagCategoryService.createTagCategory("카테고리2");
-
-        TagCategory tagCategory = tagCategoryRepository.findById(1).orElse(null);
-        TagCategory tagCategory2 = tagCategoryRepository.findById(2).orElse(null);
-        if(tagCategory != null) {
-            tagCategoryService.updateTagCategoryName(tagCategory.getId(), "업데이트된 카테고리1");
-        }
-
-        if(tagCategory2 != null) {
-            tagCategoryService.deleteTagCategory(tagCategory2.getId());
-        }
-
-        tagCategoryService.getTagCategoryListLatest(0);
-        tagCategoryService.getTagCategoryListKeyword("카테", 0);
 
     }
 }

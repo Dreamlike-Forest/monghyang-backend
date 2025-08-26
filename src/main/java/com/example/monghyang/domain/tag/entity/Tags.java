@@ -37,4 +37,8 @@ public class Tags {
     public void unSetDeleted() {
         isDeleted = Boolean.FALSE;
     }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }

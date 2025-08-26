@@ -7,6 +7,7 @@ import com.example.monghyang.domain.tag.entity.TagCategory;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,12 +25,12 @@ public class TagCategoryService {
     }
 
     // 태그 카테고리 생성
-    public void createTagCategory(String categoryName) {
+    public void createTagCategory(String categoryName) throws DataIntegrityViolationException {
         tagCategoryRepository.save(TagCategory.categoryNameFrom(categoryName));
     }
 
     // 태그 카테고리 이름 수정
-    public void updateTagCategoryName(Integer categoryId, String categoryName) {
+    public void updateTagCategoryName(Integer categoryId, String categoryName) throws DataIntegrityViolationException {
         TagCategory tagCategory = tagCategoryRepository.findById(categoryId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND));
         tagCategory.updateCategoryName(categoryName);
@@ -68,7 +69,7 @@ public class TagCategoryService {
 
     // 태그 카테고리 키워드 조회
     public Page<ResTagCategoryDto> getTagCategoryListKeyword(String keyword, Integer startOffset) {
-        if(keyword == null) {
+        if(keyword.isBlank()) {
             throw new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND);
         }
         if(startOffset == null) {
