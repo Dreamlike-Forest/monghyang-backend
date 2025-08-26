@@ -1,6 +1,6 @@
-package com.example.monghyang.domain.authHandler;
+package com.example.monghyang.domain.security.authHandler;
 
-import com.example.monghyang.domain.filter.LogoutDto;
+import com.example.monghyang.domain.security.filter.LogoutDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

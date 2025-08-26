@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.filter;
+package com.example.monghyang.domain.security.filter;
 
 import lombok.AccessLevel;
 import lombok.Getter;

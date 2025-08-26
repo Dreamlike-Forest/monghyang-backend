@@ -1,10 +1,10 @@
-package com.example.monghyang.domain.config;
+package com.example.monghyang.domain.security.config;
 
-import com.example.monghyang.domain.authHandler.*;
-import com.example.monghyang.domain.filter.ExceptionHandlerFilter;
+import com.example.monghyang.domain.security.filter.ExceptionHandlerFilter;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
+import com.example.monghyang.domain.security.authHandler.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 

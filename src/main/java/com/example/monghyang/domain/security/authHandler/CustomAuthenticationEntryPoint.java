@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.authHandler;
+package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;

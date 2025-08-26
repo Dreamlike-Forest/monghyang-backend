@@ -1,18 +1,15 @@
 package com.example.monghyang.domain.users.service;
 
-import com.example.monghyang.domain.authHandler.CustomLogoutHandler;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
-import com.example.monghyang.domain.users.repository.RoleRepository;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

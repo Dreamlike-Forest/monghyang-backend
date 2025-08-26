@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.authHandler;
+package com.example.monghyang.domain.security.authHandler;
 
 import java.io.Serializable;
 
