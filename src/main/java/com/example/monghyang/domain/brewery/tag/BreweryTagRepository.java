@@ -13,4 +13,7 @@ public interface BreweryTagRepository extends JpaRepository<BreweryTag,Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from BreweryTag b where b.brewery.id = :breweryId and b.tags.id in :deleteTagIdList")
     void deleteByBreweryIdAndTagId(@Param("breweryId") Long breweryId, @Param("deleteTagIdList") List<Integer> deleteTagIdList);
+
+    @Query("select b from BreweryTag b join fetch b.tags where b.brewery.id = :breweryId")
+    List<BreweryTag> findByBreweryId(@Param("breweryId") Long breweryId);
 }

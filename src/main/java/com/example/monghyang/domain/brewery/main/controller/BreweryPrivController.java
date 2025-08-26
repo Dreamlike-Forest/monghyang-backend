@@ -4,6 +4,7 @@ import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.brewery.tag.ReqBreweryTagDto;
+import com.example.monghyang.domain.brewery.tag.ResBreweryTagDto;
 import com.example.monghyang.domain.global.annotation.LoginUserId;
 import com.example.monghyang.domain.brewery.main.service.BreweryService;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
@@ -13,6 +14,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/brewery-priv") // 양조장용 api

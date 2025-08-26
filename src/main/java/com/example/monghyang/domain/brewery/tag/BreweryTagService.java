@@ -32,7 +32,7 @@ public class BreweryTagService {
     @Transactional
     public void updateTag(Long userId, ReqBreweryTagDto reqBreweryTagDto) throws DataIntegrityViolationException {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
 
         // 태그 추가
         for(Integer curTagId : reqBreweryTagDto.getAdd_tag_list()) {
@@ -43,6 +43,18 @@ public class BreweryTagService {
 
         // 태그 삭제: 일괄 삭제 벌크 쿼리
         breweryTagRepository.deleteByBreweryIdAndTagId(brewery.getId(), reqBreweryTagDto.getDelete_tag_list());
+    }
+
+    public List<ResBreweryTagDto> getBreweryTags(Long breweryId) {
+        List<BreweryTag> result = breweryTagRepository.findByBreweryId(breweryId);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
+        }
+
+        return result.stream().
+                map(breweryTag ->
+                        ResBreweryTagDto.tagIdTagName(breweryTag.getTags().getId(), breweryTag.getTags().getName()))
+                .toList();
     }
 
 }
