@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Entity
 @Getter
@@ -23,7 +24,7 @@ public class TagCategory {
         this.name = name;
     }
 
-    public static TagCategory categoryNameFrom(String name) {
+    public static TagCategory categoryNameFrom(@NonNull String name) {
         return new TagCategory(name);
     }
 

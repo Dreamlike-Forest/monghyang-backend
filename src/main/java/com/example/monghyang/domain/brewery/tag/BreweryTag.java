@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Entity
 @Getter
@@ -28,7 +29,7 @@ public class BreweryTag {
     @ManyToOne(fetch = FetchType.LAZY)
     private Tags tags;
 
-    private BreweryTag(Brewery brewery, Tags tags) {
+    private BreweryTag(@NonNull Brewery brewery, @NonNull Tags tags) {
         this.brewery = brewery;
         this.tags = tags;
     }

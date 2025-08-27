@@ -34,6 +34,7 @@ public class BreweryService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final BreweryImageRepository breweryImageRepository;
     private final StorageService storageService;
+    private final int BREWERY_PAGE_SIZE = 12;
 
     @Autowired
     public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService) {

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 public class TagsService {
     private final TagsRepository tagsRepository;
     private final TagCategoryRepository tagCategoryRepository;
-    private final Integer tagPageSize = 10;
+    private final int TAG_PAGE_SIZE = 10;
 
     @Autowired
     public TagsService(TagsRepository tagsRepository, TagCategoryRepository tagCategoryRepository) {
@@ -68,7 +68,7 @@ public class TagsService {
             startOffset = 0;
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 정렬 기준: 기본키 기준으로 내림차순 정렬
-        Pageable pageable = PageRequest.of(startOffset, tagPageSize, sort);
+        Pageable pageable = PageRequest.of(startOffset, TAG_PAGE_SIZE, sort);
         Page<ResTagDto> result = tagsRepository.findActivePaging(pageable).map(tags -> ResTagDto.idTagCategoryNameName(tags.getId(), tags.getCategory().getName(), tags.getName()));
         if(!result.hasContent()) {
             throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
@@ -85,7 +85,7 @@ public class TagsService {
             startOffset = 0;
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable pageable = PageRequest.of(startOffset, tagPageSize, sort);
+        Pageable pageable = PageRequest.of(startOffset, TAG_PAGE_SIZE, sort);
         Page<ResTagDto> result = tagsRepository.findByKeywordActivePaging(keyword ,pageable).map(tags -> ResTagDto.idTagCategoryNameName(tags.getId(), tags.getCategory().getName(), tags.getName()));
         if(!result.hasContent()) {
             throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
@@ -102,7 +102,7 @@ public class TagsService {
             startOffset = 0;
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable pageable = PageRequest.of(startOffset, tagPageSize, sort);
+        Pageable pageable = PageRequest.of(startOffset, TAG_PAGE_SIZE, sort);
         Page<ResTagDto> result = tagsRepository.findByCategoryActivePaging(categoryId, pageable).map(tags -> ResTagDto.idTagCategoryNameName(tags.getId(), tags.getCategory().getName(), tags.getName()));
         if(!result.hasContent()) {
             throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
