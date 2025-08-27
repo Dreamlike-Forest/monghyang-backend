@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -84,13 +85,14 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint) // 세션 조회 실패 시 404 반환
                         .accessDeniedHandler(accessDeniedHandler) // 권한 부족 시 403 반환
                 )
-                .authorizeHttpRequests((auth) ->
-                        auth.requestMatchers("/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/actuator/**" ,"/error").permitAll()
-                                .requestMatchers("/api/auth/**", "/api/brewery/**", "/api/product/**").permitAll()
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
-                                .requestMatchers("/api/brewery-priv/**").hasAnyRole("ADMIN", "BREWERY")
-                                .requestMatchers("/api/seller-priv/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
-                                .anyRequest().authenticated())
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Spring Security에서는 권한의 "ROLE_" 부분을 제외한 나머지 부분만 취급한다.
+                        .requestMatchers("/api/brewery-priv/**").hasAnyRole("ADMIN", "BREWERY")
+                        .requestMatchers("/api/seller-priv/**").hasAnyRole("ADMIN", "SELLER", "BREWERY")
+                        .requestMatchers("/api/auth/**", "/oauth2/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/actuator/**" ,"/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .anyRequest().authenticated())
                 .formLogin(form -> form // form 로그인
                         .loginPage(clientUrl + "/?view=login")
                         .loginProcessingUrl("/api/auth/login")

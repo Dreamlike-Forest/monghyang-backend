@@ -9,10 +9,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface UsersRepository extends JpaRepository<Users, Long> {
-    @Query("select u from Users u join fetch u.role where u.email = :email")
+    @Query("select u from Users u join fetch u.role where u.email like %:email%")
     Optional<Users> findByEmailJoinedRole(@Param("email") String email);
 
-    @Query("select u from Users u join fetch u.role where u.email = :email and u.isDeleted = false")
+    @Query("select u from Users u join fetch u.role where u.email like %:email% and u.isDeleted = false")
     Optional<Users> findByEmailActiveJoinedRole(@Param("email") String email);
     Optional<Users> findByoAuth2Id(String oAuth2Id);
     boolean existsByEmail(String email);
