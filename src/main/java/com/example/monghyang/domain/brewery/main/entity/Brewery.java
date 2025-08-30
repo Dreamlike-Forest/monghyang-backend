@@ -3,12 +3,15 @@ package com.example.monghyang.domain.brewery.main.entity;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,6 +47,11 @@ public class Brewery {
     private String introduction;
     private String breweryWebsite;
 
+    @Column(nullable = false)
+    private Integer minJoyPrice = 0;
+    @Column(nullable = false)
+    private Integer joyCount = 0;
+
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDate registeredAt;
@@ -55,6 +63,9 @@ public class Brewery {
     private Boolean isAgreedBrewery;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isDeleted = Boolean.FALSE;
+
+    @OneToMany(mappedBy = "")
+    private List<Tags> tagsList = new ArrayList<>();
 
 
     @Builder(builderMethodName = "breweryBuilder")
@@ -143,5 +154,17 @@ public class Brewery {
 
     public void updateBreweryAddressDetail(String breweryAddressDetail) {
         this.breweryAddressDetail = breweryAddressDetail;
+    }
+
+    public void updateMinJoyPrice(Integer minJoyPrice) {
+        this.minJoyPrice = minJoyPrice;
+    }
+
+    public void increaseJoyCount() {
+        this.joyCount++;
+    }
+
+    public void decreaseJoyCount() {
+        this.joyCount--;
     }
 }

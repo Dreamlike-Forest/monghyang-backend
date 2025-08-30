@@ -113,6 +113,34 @@ public class Users {
         }
     }
 
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void updateBirth(LocalDate birth) {
+        this.birth = birth;
+    }
+
+    public void updateGender(String gender) {
+        if(gender.equals("man")) {
+            this.gender = Boolean.FALSE;
+        } else {
+            this.gender = Boolean.TRUE;
+        }
+    }
+
     public void updateRole(Role role) {
         // 권한 변경
         this.role = role;

@@ -8,31 +8,29 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Getter
-@Setter
-@NoArgsConstructor
 public class ResUsersDto {
-    private Long id;
-    private String role;
-    private String email;
-    private String nickname;
-    private String name;
-    private String phone;
-    private LocalDate birth;
-    private String gender;
-    private String address;
-    private String address_detail;
+    private final Long users_id;
+    private final String role_name;
+    private final String users_email;
+    private final String users_nickname;
+    private final String users_name;
+    private final String users_phone;
+    private final LocalDate users_birth;
+    private final String users_gender;
+    private final String users_address;
+    private final String users_address_detail;
 
     private ResUsersDto(Users users) {
-        this.id = users.getId();
-        this.role = users.getRole().getName().getRoleName();
-        this.email = users.getEmail();
-        this.nickname = users.getNickname();
-        this.name = users.getName();
-        this.phone = users.getPhone();
-        this.birth = users.getBirth();
-        this.gender = (users.getGender() == Boolean.FALSE) ? "man" : "woman";
-        this.address = users.getAddress();
-        this.address_detail = users.getAddressDetail();
+        this.users_id = users.getId();
+        this.role_name = users.getRole().getName().getRoleName();
+        this.users_email = users.getEmail();
+        this.users_nickname = users.getNickname();
+        this.users_name = users.getName();
+        this.users_phone = users.getPhone();
+        this.users_birth = users.getBirth();
+        this.users_gender = (users.getGender() == Boolean.FALSE) ? "man" : "woman";
+        this.users_address = users.getAddress();
+        this.users_address_detail = users.getAddressDetail();
     }
 
     public static ResUsersDto usersJoinedWithRoleToDto(Users users) {

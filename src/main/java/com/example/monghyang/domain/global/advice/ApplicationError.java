@@ -11,6 +11,7 @@ public enum ApplicationError {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보가 존재하지 않습니다."),
     SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "판매자 정보가 존재하지 않습니다."),
     BREWERY_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 정보가 존재하지 않습니다."),
+    JOY_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 정보가 존재하지 않습니다."),
     AUTH_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "세션(인증) 정보가 존재하지 않습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),

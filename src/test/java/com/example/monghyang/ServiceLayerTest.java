@@ -1,12 +1,12 @@
 package com.example.monghyang;
 
+import com.example.monghyang.domain.brewery.joy.dto.ReqJoyDto;
+import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyDto;
+import com.example.monghyang.domain.brewery.joy.dto.ResJoyDto;
+import com.example.monghyang.domain.brewery.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
-import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
-import com.example.monghyang.domain.tag.dto.ResTagDto;
-import com.example.monghyang.domain.tag.entity.TagCategory;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.tag.service.TagCategoryService;
 import com.example.monghyang.domain.tag.service.TagsService;
@@ -15,8 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -35,11 +36,50 @@ public class ServiceLayerTest {
     private TagCategoryRepository tagCategoryRepository;
     @Autowired
     private TagsService tagsService;
+    @Autowired
+    private JoyService joyService;
 
     @Test
     @Transactional
     void test() {
-        Page<ResTagDto> result2 = tagsService.getTagListByCategory(1, 0);
-        result2.getContent().forEach(t -> System.out.println("tag id: "+t.getId()+" tag name: "+t.getName()));
+//        ReqJoyDto reqJoyDto = new ReqJoyDto();
+//        reqJoyDto.setName("service layer test joy");
+//        reqJoyDto.setDetail("service layer test joy detail");
+//        reqJoyDto.setPlace("service layer test joy place");
+//        reqJoyDto.setOrigin_price(12341234);
+//        joyService.createJoy(1L, reqJoyDto);
+//
+//        System.out.println("=============================================================");
+//
+//        joyService.deleteJoy(1L, 10L);
+//
+//        System.out.println("=============================================================");
+//
+//        List<ResJoyDto> list = joyService.getJoyListByBreweryId(1L);
+//        for(ResJoyDto resJoyDto : list){
+//            System.out.println(resJoyDto.getJoy_id()+" "+resJoyDto.getBrewery_id()+" "+resJoyDto.getJoy_name()+" "+resJoyDto.getJoy_origin_price()+" "+ resJoyDto.getJoy_discount_rate()+"% "+resJoyDto.getJoy_final_price());
+//        }
+//
+//        System.out.println("=============================================================");
+//
+//        joyService.restoreJoy(1L, 10L);
+//
+//        System.out.println("=============================================================");
+//
+//        List<ResJoyDto> list2 = joyService.getJoyListByBreweryId(1L);
+//        for(ResJoyDto resJoyDto : list2){
+//            System.out.println(resJoyDto.getJoy_id()+" "+resJoyDto.getBrewery_id()+" "+resJoyDto.getJoy_name()+" "+resJoyDto.getJoy_origin_price()+" "+ resJoyDto.getJoy_discount_rate()+"% "+resJoyDto.getJoy_final_price());
+//        }
+//
+//        System.out.println("=============================================================");
+//
+//        ReqUpdateJoyDto reqUpdateJoyDto = new ReqUpdateJoyDto();
+//        reqUpdateJoyDto.setId(10L);
+//        reqUpdateJoyDto.setName("service layer test joy");
+//        reqUpdateJoyDto.setDetail("service layer test joy detail");
+//        reqUpdateJoyDto.setPlace("service layer test joy place");
+//        reqUpdateJoyDto.setOrigin_price(90);
+//        reqUpdateJoyDto.setDiscount_rate(10);
+//        joyService.updateJoy(1L, reqUpdateJoyDto);
     }
 }

@@ -2,9 +2,11 @@ package com.example.monghyang.domain.brewery.main.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
+import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.entity.BreweryImage;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
+import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
@@ -12,18 +14,20 @@ import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,14 +39,16 @@ public class BreweryService {
     private final BreweryImageRepository breweryImageRepository;
     private final StorageService storageService;
     private final int BREWERY_PAGE_SIZE = 12;
+    private final BreweryTagRepository breweryTagRepository;
 
     @Autowired
-    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService) {
+    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository) {
         this.breweryRepository = breweryRepository;
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.breweryImageRepository = breweryImageRepository;
         this.storageService = storageService;
+        this.breweryTagRepository = breweryTagRepository;
     }
 
     // 양조장 검색 (필터링 옵션 종류: 지역 타입, 가격 범위, 주종(태그), 배지(태그)): 이때 각 양조장의 이미지는 '대표 이미지'만 조회되도록
@@ -153,6 +159,37 @@ public class BreweryService {
             // 해당 리뷰 태그 종, 해당 리뷰 이미지 수
 
     // 페이징 단위: 12개
+
+    @Transactional(readOnly = true)
+    public List<ResBreweryListDto> getFilteringSearch(Integer startOffset, String keyword, Integer minPrice, Integer maxPrice,
+                                                      List<Integer> tagIdList, List<Integer> regionIdList) {
+        if (startOffset == null) {
+            startOffset = 0;
+        }
+        boolean tagListIsEmpty = tagIdList == null || tagIdList.isEmpty();
+        boolean regionListIsEmpty = regionIdList == null || regionIdList.isEmpty();
+
+        // 1. 필터링과 페이징을 적용해서 양조장 조회
+        Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 정렬 기준: 기본키 기준으로 내림차순 정렬
+        Pageable pageable = PageRequest.of(startOffset, BREWERY_PAGE_SIZE, sort);
+        List<ResBreweryListDto> result = breweryRepository.findBreweryIdByDynamicFiltering(pageable, tagListIsEmpty, regionListIsEmpty,
+                keyword, minPrice, maxPrice, tagIdList, regionIdList);
+
+        // 2. 각 양조장의 태그 정보를 조회하기 위해 추가적인 쿼리문 실행
+        List<Long> breweryIdList = result.stream().map(ResBreweryListDto::getBrewery_id).toList();
+        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryId(breweryIdList);
+        HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
+        // key가 존재하면 기존 리스트에 값 삽입, 존재하지 않으면 key값으로 리스트 생성 후 값 삽입
+        for(TagNameDto cur : breweryTagList) {
+            breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
+        }
+        // 조회된 양조장 별 태그 정보를 반환 dto에 삽입
+        for(ResBreweryListDto dto : result) {
+            dto.setTag_name(breweryIdTagMap.get(dto.getBrewery_id()));
+        }
+
+        return result;
+    }
 
 
 

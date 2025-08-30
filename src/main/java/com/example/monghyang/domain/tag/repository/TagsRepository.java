@@ -16,4 +16,5 @@ public interface TagsRepository extends JpaRepository<Tags, Integer> {
 
     @Query("select t from Tags t join fetch t.category where t.category.id = :categoryId and t.isDeleted = false")
     Page<Tags> findByCategoryActivePaging(@Param("categoryId") Integer categoryId, Pageable pageable);
+
 }

@@ -1,13 +1,11 @@
 package com.example.monghyang.domain.brewery.tag;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ResBreweryTagDto {
-    private Integer tags_id;
-    private String tags_name;
+    private final Integer tags_id;
+    private final String tags_name;
 
     private ResBreweryTagDto(Integer tags_id, String tags_name) {
         this.tags_id = tags_id;
