@@ -1,18 +1,15 @@
 package com.example.monghyang.domain.users.service;
 
-import com.example.monghyang.domain.authHandler.CustomLogoutHandler;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
-import com.example.monghyang.domain.users.repository.RoleRepository;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +55,7 @@ public class UsersService {
                 // 비밀번호 변경 요청이 포함되어 있어야 한다.
                 if(reqUsersDto.getNewPassword() != null) {
                     String newPassword = bCryptPasswordEncoder.encode(reqUsersDto.getNewPassword());
-                    reqUsersDto.setNewPassword(newPassword);
+                    users.updatePassword(newPassword);
                 } else {
                     // 새 비밀번호 필드 비어있음을 알리는 예외
                     throw new ApplicationException(ApplicationError.NEW_PASSWORD_NULL);
@@ -68,20 +65,66 @@ public class UsersService {
                 throw new ApplicationException(ApplicationError.NOT_MATCH_CUR_PASSWORD);
             }
         }
-        users.updateUsers(reqUsersDto); // 회원 테이블 수정
+//        users.updateUsers(reqUsersDto);
+        // 회원 테이블 수정
+        if(reqUsersDto.getEmail() != null) {
+            users.updateEmail(reqUsersDto.getEmail());
+        }
+        if(reqUsersDto.getNickname() != null) {
+            users.updateNickname(reqUsersDto.getNickname());
+        }
+        if(reqUsersDto.getName() != null) {
+            users.updateName(reqUsersDto.getName());
+        }
+        if(reqUsersDto.getPhone() != null) {
+            users.updatePhone(reqUsersDto.getPhone());
+        }
+        if(reqUsersDto.getBirth() != null) {
+            users.updateBirth(reqUsersDto.getBirth());
+        }
+        if(reqUsersDto.getGender() != null) {
+            users.updateGender(reqUsersDto.getGender());
+        }
+        if(reqUsersDto.getAddress() != null) {
+            users.updateAddress(reqUsersDto.getAddress());
+        }
+        if(reqUsersDto.getAddress_detail() != null) {
+            users.updateAddressDetail(reqUsersDto.getAddress_detail());
+        }
 
-        if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
-            // 판매자의 경우 판매자 테이블의 주소, 주소 상세 정보 갱신
-            Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
-                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
-            seller.updateSellerAddress(users.getAddress());
-            seller.updateSellerAddressDetail(users.getAddressDetail());
-        } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
-            // 양조장의 경우 양조장 테이블의 주소, 주소 상세 정보 갱신
-            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
-                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-            brewery.updateBreweryAddress(users.getAddress());
-            brewery.updateBreweryAddressDetail(users.getAddressDetail());
+        // 판매자/양조장 테이블을 수정해야 하는 경우인지 검증하는 플래그 변수
+        boolean needsOtherEntity = reqUsersDto.getNickname() != null
+                || reqUsersDto.getAddress() != null
+                || reqUsersDto.getAddress_detail() != null;
+
+        // 판매자/양조장에 관련된 컬럼에 대한 수정사항 발생 시 판매자/양조장 테이블에 똑같이 반영
+        if(needsOtherEntity) {
+            if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
+                Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+                if(reqUsersDto.getNickname() != null) {
+                    seller.updateSellerName(reqUsersDto.getNickname());
+                }
+                if(reqUsersDto.getAddress() != null) {
+                    seller.updateSellerAddress(reqUsersDto.getAddress());
+                }
+                if(reqUsersDto.getAddress_detail() != null) {
+                    seller.updateSellerAddressDetail(reqUsersDto.getAddress_detail());
+                }
+            } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
+                Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+
+                if(reqUsersDto.getNickname() != null) {
+                    brewery.updateBreweryName(reqUsersDto.getNickname());
+                }
+                if(reqUsersDto.getAddress() != null) {
+                    brewery.updateBreweryAddress(reqUsersDto.getAddress());
+                }
+                if(reqUsersDto.getAddress_detail() != null) {
+                    brewery.updateBreweryAddressDetail(reqUsersDto.getAddress_detail());
+                }
+            }
         }
     }
 
@@ -97,7 +140,7 @@ public class UsersService {
             seller.setDeleted();
         } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {
             // 탈퇴 유형이 양조장인 경우 양조장 테이블에서도 삭제 처리
-            Brewery brewery = breweryRepository.findByUser(users).orElseThrow(() ->
+            Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
                     new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
             brewery.setDeleted();
         }

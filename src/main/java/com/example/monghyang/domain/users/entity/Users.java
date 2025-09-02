@@ -1,13 +1,12 @@
 package com.example.monghyang.domain.users.entity;
 
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -53,7 +52,7 @@ public class Users {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "generalBuilder") // 일반 회원 플랫폼 회원가입
-    public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
+    public Users(@NonNull Role role, @NonNull String email, @NonNull String password, @NonNull String nickname, @NonNull String name, @NonNull String phone, @NonNull LocalDate birth, @NonNull Boolean gender, @NonNull String address, @NonNull String address_detail, @NonNull Boolean isAgreed) {
         if(isAgreed == Boolean.FALSE) {
             // 약관에 동의하지 않으면 회원가입 불가
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
@@ -114,6 +113,34 @@ public class Users {
         }
     }
 
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void updateBirth(LocalDate birth) {
+        this.birth = birth;
+    }
+
+    public void updateGender(String gender) {
+        if(gender.equals("man")) {
+            this.gender = Boolean.FALSE;
+        } else {
+            this.gender = Boolean.TRUE;
+        }
+    }
+
     public void updateRole(Role role) {
         // 권한 변경
         this.role = role;
@@ -126,5 +153,17 @@ public class Users {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         this.isDeleted = Boolean.FALSE;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
+    public void updateAddressDetail(String addressDetail) {
+        this.addressDetail = addressDetail;
     }
 }

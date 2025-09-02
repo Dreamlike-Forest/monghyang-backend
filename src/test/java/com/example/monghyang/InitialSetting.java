@@ -2,6 +2,8 @@ package com.example.monghyang;
 
 import com.example.monghyang.domain.brewery.main.entity.RegionType;
 import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
+import com.example.monghyang.domain.tag.entity.TagCategory;
+import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.repository.RoleRepository;
@@ -20,6 +22,8 @@ public class InitialSetting {
     private RoleRepository roleRepository;
     @Autowired
     private RegionTypeRepository regionTypeRepository;
+    @Autowired
+    private TagCategoryRepository tagCategoryRepository;
     // 데이터베이스에 기본값(role type 등) 삽입하는 스크립트
 
     @Test
@@ -36,5 +40,12 @@ public class InitialSetting {
         regionTypeRepository.save(RegionType.nameFrom("미정"));
         regionTypeRepository.save(RegionType.nameFrom("서울"));
         regionTypeRepository.save(RegionType.nameFrom("경기도"));
+
+        TagCategory tagCategory1 = TagCategory.categoryNameFrom("주종");
+        TagCategory tagCategory2 = TagCategory.categoryNameFrom("배지");
+        TagCategory tagCategory3 = TagCategory.categoryNameFrom("프리미엄");
+        tagCategoryRepository.save(tagCategory1);
+        tagCategoryRepository.save(tagCategory2);
+        tagCategoryRepository.save(tagCategory3);
     }
 }

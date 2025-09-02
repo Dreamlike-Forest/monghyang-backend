@@ -4,10 +4,7 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -46,7 +43,7 @@ public class Seller {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "sellerBuilder")
-    public Seller(Users user, String sellerName, String sellerAddress, String sellerAddressDetail, String businessRegistrationNumber, String sellerAccountNumber, String sellerDepositor, String sellerBankName, String introduction, Boolean isAgreedSeller) {
+    public Seller(@NonNull Users user, @NonNull String sellerName, @NonNull String sellerAddress, @NonNull String sellerAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String sellerAccountNumber, @NonNull String sellerDepositor, @NonNull String sellerBankName, String introduction, @NonNull Boolean isAgreedSeller) {
         if(isAgreedSeller == Boolean.FALSE) {
             // 판매자 약관에 동의하지 않으면 회원 가입 불가
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
@@ -70,6 +67,10 @@ public class Seller {
     public void unSetDeleted() {
         // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
         isDeleted = Boolean.FALSE;
+    }
+
+    public void updateSellerName(String sellerName) {
+        this.sellerName = sellerName;
     }
 
     public void updateSellerAddress(String sellerAddress) {

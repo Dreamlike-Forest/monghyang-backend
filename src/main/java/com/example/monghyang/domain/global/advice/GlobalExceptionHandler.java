@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.global.advice;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
         log.error("{} : {}", e.getCause(), e.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, error));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class) // DB 무결성 제약조건 위배 예외 처리(not null, uk, fk 제약조건 위배, 데이터 길이 초과 등)
+    public ResponseEntity<ApplicationErrorDto> dataIntegrityViolationException(DataIntegrityViolationException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, "DB의 데이터 무결성 제약조건을 위배하는 값입니다. 다른 값을 입력해주세요."));
     }
 
     @ExceptionHandler(Exception.class)
