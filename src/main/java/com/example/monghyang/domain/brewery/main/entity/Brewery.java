@@ -63,11 +63,7 @@ public class Brewery {
     private Boolean isAgreedBrewery;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isDeleted = Boolean.FALSE;
-
-    @OneToMany(mappedBy = "")
-    private List<Tags> tagsList = new ArrayList<>();
-
-
+    
     @Builder(builderMethodName = "breweryBuilder")
     public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery) {
         if(isAgreedBrewery == Boolean.FALSE){

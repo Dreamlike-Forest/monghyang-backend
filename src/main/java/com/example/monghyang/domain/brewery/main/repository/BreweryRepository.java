@@ -30,12 +30,12 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      * @param maxPrice 최대 체험 가격 필터링 조건
      * @param tagIdList 태그 식별자 리스트 필터링 조건
      * @param regionIdList 지역 식별자 리스트 필터링 조건
-     * @return
      */
     @Query("""
-        select distinct new com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto(b.id, b.breweryName, r.name, b.introduction, b.minJoyPrice, b.joyCount)
+        select distinct new com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto(b.id, b.breweryName, r.name, b.introduction, b.minJoyPrice, b.joyCount, bi.imageKey)
         from Brewery b
         join b.regionType r
+        left join BreweryImage bi on b.id = bi.brewery.id and bi.seq = 1
         where
           (:tagListIsEmpty = true or exists (
              select 1

@@ -21,10 +21,6 @@ import java.util.UUID;
 @Service
 @Profile("local") // 로컬 개발 환경에서 사용되는 스토리지 서비스
 public class LocalStorageService implements StorageService {
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    public static final int BREWERY_IMAGE_MAX_WIDTH = 1920;
-    public static final int BREWERY_IMAGE_MAX_HEIGHT = 1080;
-    public static final float BREWERY_IMAGE_QUALITY = 0.90f;
     private final Path storagePath;
 
     public LocalStorageService(@Value("${app.storage-path}") String storagePath) {
@@ -55,12 +51,12 @@ public class LocalStorageService implements StorageService {
         }
 
         String ext = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")).toLowerCase();
-        UUID key = UUID.randomUUID();
+        String key = UUID.randomUUID() + ext;
 
         try {
-            Path uploadPath = storagePath.resolve(key + ext);
+            Path uploadPath = storagePath.resolve(key);
             Files.copy(file.getInputStream(), uploadPath); // 최종 경로 'uploadPath'에 이미지 복사(업로드)
-            return key + ext;
+            return key;
         } catch (IOException e) {
             throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR);
         }

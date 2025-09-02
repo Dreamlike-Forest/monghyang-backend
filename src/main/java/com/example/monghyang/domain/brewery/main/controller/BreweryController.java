@@ -8,6 +8,7 @@ import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.brewery.tag.ResBreweryTagDto;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/brewery") // 모두가 접근할 수 있는 양조장 관련 api(조회 등)
+@Tag(name = "양조장 API")
 public class BreweryController {
     private final BreweryService breweryService;
     private final BreweryTagService breweryTagService;

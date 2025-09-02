@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.security.config;
+package com.example.monghyang.domain.config;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;

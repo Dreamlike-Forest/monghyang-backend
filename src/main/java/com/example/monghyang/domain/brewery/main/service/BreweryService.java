@@ -166,6 +166,7 @@ public class BreweryService {
         if (startOffset == null) {
             startOffset = 0;
         }
+        // 플래그 계산
         boolean tagListIsEmpty = tagIdList == null || tagIdList.isEmpty();
         boolean regionListIsEmpty = regionIdList == null || regionIdList.isEmpty();
 

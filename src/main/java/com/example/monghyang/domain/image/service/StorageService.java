@@ -6,6 +6,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 public interface StorageService {
+    static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    static final int BREWERY_IMAGE_MAX_WIDTH = 1920;
+    static final int BREWERY_IMAGE_MAX_HEIGHT = 1080;
+    static final float BREWERY_IMAGE_QUALITY = 0.90f;
 
     /**
      * 파일을 저장하고, 저장된 파일의 고유한 이름을 반환합니다.
