@@ -43,47 +43,42 @@ public class ImageController {
      */
     @GetMapping("/{imageFullName}")
     @Operation(summary = "실제 이미지 파일 요청 API", description = "확장자명을 포함한 이미지 전체 이름을 파라메터에 넣어주세요.")
-    public ResponseEntity<?> loadImage(@PathVariable String imageFullName, HttpServletRequest request) {
+    public ResponseEntity<StreamingResponseBody> loadImage(@PathVariable String imageFullName, HttpServletRequest request) {
         try {
             Resource image = storageService.load(imageFullName);
 
-            // (1) UrlResource인 경우: presigned URL(원격)을 서버가 직접 열어 스트리밍
             if (image instanceof UrlResource urlRes) {
-                var url = urlRes.getURL();
-                var conn = url.openConnection(); // 서버에서 s3와의 통로를 연다.
-                conn.setConnectTimeout(3000); // 연결 대기 시간 timeout
-                conn.setReadTimeout(15000); // 읽기 대기 시간 timeout
+                var url  = urlRes.getURL();
+                var conn = url.openConnection();
+                conn.setConnectTimeout(3000);
+                conn.setReadTimeout(15000);
 
                 String contentType = Optional.ofNullable(conn.getContentType())
                         .orElseGet(() -> guessContentType(request, imageFullName));
-                long contentLength = getSafeContentLength(conn.getContentLengthLong());
+                long contentLength = conn.getContentLengthLong();
 
-                InputStream in = conn.getInputStream(); // try-with-resources는 StreamingResponseBody에서 닫음
-                StreamingResponseBody body = out -> {
-                    try (in) { in.transferTo(out); }
-                };
+                InputStream in = conn.getInputStream();
+                StreamingResponseBody body = out -> { try (in) { in.transferTo(out); } };
 
-                var builder = ResponseEntity.ok()
+                var headers = ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(contentType))
                         .header(HttpHeaders.CONTENT_DISPOSITION, inlineFilename(imageFullName))
-                        .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic()); // 브라우저에서 이미지를 캐싱하도록 설정
+                        .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic());
+                if (contentLength >= 0) headers = headers.contentLength(contentLength);
 
-                if (contentLength >= 0) builder = builder.contentLength(contentLength);
-                return builder.body(body);
+                return headers.body(body);
             }
 
-
-
-            // (2) UrlResource가 아닌 경우(로컬 파일 등): Resource 자체를 바디에 싣는다.
-            // 주의: 여기서도 getFile()을 호출하지 않고, Content-Type만 추정해서 헤더에 넣는다.
+            // 로컬 리소스도 동일하게 '스트리밍'으로 통일 (getFile() 절대 금지)
+            StreamingResponseBody body = out -> {
+                try (InputStream in = image.getInputStream()) { in.transferTo(out); }
+            };
             String contentType = guessContentType(request, imageFullName);
-
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, inlineFilename(imageFullName))
-                    // 로컬은 매 요청 최신을 원하면 no-cache 권장. 필요시 max-age로 조정.
                     .cacheControl(CacheControl.noCache())
-                    .body(image);
+                    .body(body);
 
         } catch (IOException e) {
             log.error("이미지 로드 에러: 반환하려는 파일의 타입을 결정할 수 없습니다. {}", e.getMessage());
