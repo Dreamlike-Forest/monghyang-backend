@@ -18,6 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/user")
 @Tag(name = "회원 공통 API")
@@ -35,8 +37,8 @@ public class UsersController {
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Email로 회원을 조회합니다.")
-    public ResponseEntity<ResponseDataDto<ResUsersDto>> getUsersByEmail(@PathVariable String email) {
-        ResUsersDto resUsersDto = usersService.getUsersByEmail(email);
+    public ResponseEntity<ResponseDataDto<List<ResUsersDto>>> getUsersByEmail(@PathVariable String email) {
+        List<ResUsersDto> resUsersDto = usersService.getUsersByEmail(email);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(resUsersDto));
     }
 

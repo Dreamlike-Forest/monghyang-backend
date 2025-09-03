@@ -6,11 +6,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UsersRepository extends JpaRepository<Users, Long> {
     @Query("select u from Users u join fetch u.role where u.email like %:email%")
-    Optional<Users> findByEmailJoinedRole(@Param("email") String email);
+    List<Users> findByEmailJoinedRole(@Param("email") String email);
 
     @Query("select u from Users u join fetch u.role where u.email like %:email% and u.isDeleted = false")
     Optional<Users> findByEmailActiveJoinedRole(@Param("email") String email);

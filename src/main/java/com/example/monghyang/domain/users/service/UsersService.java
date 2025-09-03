@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 public class UsersService {
@@ -33,10 +35,12 @@ public class UsersService {
         this.breweryRepository = breweryRepository;
     }
 
-    public ResUsersDto getUsersByEmail(String email) {
-        Users users = usersRepository.findByEmailJoinedRole(email).orElseThrow(() ->
-                new ApplicationException(ApplicationError.USER_NOT_FOUND));
-        return ResUsersDto.usersJoinedWithRoleToDto(users);
+    public List<ResUsersDto> getUsersByEmail(String email) {
+        List<Users> users = usersRepository.findByEmailJoinedRole(email);
+        if(users.isEmpty()) {
+            throw new ApplicationException(ApplicationError.USER_NOT_FOUND);
+        }
+        return users.stream().map(ResUsersDto::usersJoinedWithRoleToDto).toList();
     }
 
     @Transactional
