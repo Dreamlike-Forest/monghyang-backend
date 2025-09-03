@@ -175,6 +175,9 @@ public class BreweryService {
         Pageable pageable = PageRequest.of(startOffset, BREWERY_PAGE_SIZE, sort);
         List<ResBreweryListDto> result = breweryRepository.findBreweryIdByDynamicFiltering(pageable, tagListIsEmpty, regionListIsEmpty,
                 keyword, minPrice, maxPrice, tagIdList, regionIdList);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.BREWERY_NOT_FOUND);
+        }
 
         // 2. 각 양조장의 태그 정보를 조회하기 위해 추가적인 쿼리문 실행
         List<Long> breweryIdList = result.stream().map(ResBreweryListDto::getBrewery_id).toList();

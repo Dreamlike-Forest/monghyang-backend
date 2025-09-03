@@ -38,7 +38,7 @@ public class ImageController {
 
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(image);
         } catch (IOException e) {
-            log.error("이미지 로드 에러: 반환하려는 파일의 타입을 결정할 수 없습니다. {}", imageFullName);
+            log.error("이미지 로드 에러: 반환하려는 파일의 타입을 결정할 수 없습니다. {}", e.getMessage());
             throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR);
         }
     }
