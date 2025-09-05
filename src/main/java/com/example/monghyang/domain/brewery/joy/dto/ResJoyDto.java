@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 public class ResJoyDto {
     private final Long joy_id;
-    private final Long brewery_id;
     private final String joy_name;
     private final String joy_place;
     private final String joy_detail;
@@ -18,7 +17,6 @@ public class ResJoyDto {
 
     private ResJoyDto(Joy joy) {
         this.joy_id = joy.getId();
-        this.brewery_id = joy.getBrewery().getId();
         this.joy_name = joy.getName();
         this.joy_place = joy.getPlace();
         this.joy_detail = joy.getDetail();

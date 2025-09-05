@@ -13,5 +13,4 @@ public class ReqUpdateJoyDto extends ReqJoyDto {
     private Long id;
     private Integer discount_rate;
     private Boolean is_soldout;
-    private Boolean is_deleted;
 }

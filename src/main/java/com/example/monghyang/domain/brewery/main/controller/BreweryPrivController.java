@@ -65,14 +65,14 @@ public class BreweryPrivController {
 
     @PostMapping("/joy-add")
     @Operation(summary = "체험 추가")
-    public ResponseEntity<ResponseDataDto<Void>> createJoy(@LoginUserId Long userId, @RequestBody ReqJoyDto reqJoyDto) {
+    public ResponseEntity<ResponseDataDto<Void>> createJoy(@LoginUserId Long userId, @ModelAttribute ReqJoyDto reqJoyDto) {
         joyService.createJoy(userId, reqJoyDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 추가되었습니다."));
     }
 
     @PostMapping("/joy-update")
     @Operation(summary = "체험 내용 수정", description = "가격, 할인율, 기타 체험 정보, 매진 처리 등")
-    public ResponseEntity<ResponseDataDto<Void>> updateJoy(@LoginUserId Long userId, @RequestBody ReqUpdateJoyDto reqUpdateJoyDto) {
+    public ResponseEntity<ResponseDataDto<Void>> updateJoy(@LoginUserId Long userId, @ModelAttribute ReqUpdateJoyDto reqUpdateJoyDto) {
         joyService.updateJoy(userId, reqUpdateJoyDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험정보가 수정되었습니다."));
     }

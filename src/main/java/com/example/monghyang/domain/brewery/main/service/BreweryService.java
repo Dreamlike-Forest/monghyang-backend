@@ -1,6 +1,9 @@
 package com.example.monghyang.domain.brewery.main.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.brewery.joy.dto.ResJoyDto;
+import com.example.monghyang.domain.brewery.joy.entity.Joy;
+import com.example.monghyang.domain.brewery.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
@@ -41,15 +44,17 @@ public class BreweryService {
     private final StorageService storageService;
     private final int BREWERY_PAGE_SIZE = 12;
     private final BreweryTagRepository breweryTagRepository;
+    private final JoyRepository joyRepository;
 
     @Autowired
-    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository) {
+    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository, JoyRepository joyRepository) {
         this.breweryRepository = breweryRepository;
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.breweryImageRepository = breweryImageRepository;
         this.storageService = storageService;
         this.breweryTagRepository = breweryTagRepository;
+        this.joyRepository = joyRepository;
     }
 
     // 양조장 검색 (필터링 옵션 종류: 지역 타입, 가격 범위, 주종(태그), 배지(태그)): 이때 각 양조장의 이미지는 '대표 이미지'만 조회되도록
@@ -202,6 +207,8 @@ public class BreweryService {
         ResBreweryDto result = ResBreweryDto.activeBreweryFrom(brewery);
         result.setBrewery_image_image_key(breweryImageRepository.findImageKeyByBrewery(brewery.getId()));
         result.setTags_name(breweryTagRepository.findTagListByBreweryId(breweryId));
+        List<Joy> joyList = joyRepository.findActiveByBreweryId(breweryId);
+        result.setJoy(joyList.stream().map(ResJoyDto::joyFrom).toList());
         return result;
     }
 

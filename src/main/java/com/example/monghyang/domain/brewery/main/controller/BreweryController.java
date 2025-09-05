@@ -37,12 +37,6 @@ public class BreweryController {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryTagService.getBreweryTags(breweryId)));
     }
 
-    @GetMapping("/joy-list/{breweryId}")
-    @Operation(summary = "특정 양조장의 체험 리스트 조회")
-    public ResponseEntity<ResponseDataDto<List<ResJoyDto>>> getBreweryJoyList(@PathVariable Long breweryId) {
-        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyService.getJoyListByBreweryId(breweryId)));
-    }
-
     @GetMapping("/search/{startOffset}")
     @Operation(summary = "필터링 검색", description = "keyword: 양조장 이름 키워드, min_price: 체험 최소가격, max_price: 체험 최대가격, tag_id_list: 태그(주종, 배지 등) 식별자, region_id_list: 지역 식별자")
     public ResponseEntity<ResponseDataDto<List<ResBreweryListDto>>> filteringBreweryList(@PathVariable Integer startOffset,
@@ -53,7 +47,7 @@ public class BreweryController {
         )));
     }
     @GetMapping("/{breweryId}")
-    @Operation(summary = "양조장 식별자로 양조장 검색")
+    @Operation(summary = "양조장 식별자로 양조장 검색", description = "제공 정보: 양조장에 대한 정보, 태그, 이미지 key 및 순서, 체험 정보")
     public ResponseEntity<ResponseDataDto<ResBreweryDto>> getBreweryById(@PathVariable Long breweryId) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getBreweryById(breweryId)));
     }

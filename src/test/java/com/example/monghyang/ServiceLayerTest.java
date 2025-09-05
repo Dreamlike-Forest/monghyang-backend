@@ -3,9 +3,11 @@ package com.example.monghyang;
 import com.example.monghyang.domain.brewery.joy.dto.ReqJoyDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyDto;
 import com.example.monghyang.domain.brewery.joy.dto.ResJoyDto;
+import com.example.monghyang.domain.brewery.joy.entity.Joy;
 import com.example.monghyang.domain.brewery.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryImageDto;
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.main.service.BreweryService;
@@ -87,10 +89,6 @@ public class ServiceLayerTest {
 //        reqUpdateJoyDto.setDiscount_rate(10);
 //        joyService.updateJoy(1L, reqUpdateJoyDto);
 
-        List<ResJoyDto> result = joyService.getJoyListByBreweryId(1L);
-        for(ResJoyDto resJoyDto : result){
-            System.out.println(resJoyDto.getJoy_id()+" "+resJoyDto.getJoy_name());
-        }
 
 
     }

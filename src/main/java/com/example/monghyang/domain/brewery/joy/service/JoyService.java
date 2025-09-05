@@ -28,15 +28,6 @@ public class JoyService {
         this.breweryRepository = breweryRepository;
     }
 
-    // 특정 양조장의 체험 정보 조회
-    public List<ResJoyDto> getJoyListByBreweryId(Long breweryId) {
-        List<Joy> joyList = joyRepository.findActiveByBreweryId(breweryId);
-        if(joyList.isEmpty()) {
-            throw new ApplicationException(ApplicationError.JOY_NOT_FOUND);
-        }
-        return joyList.stream().map(ResJoyDto::joyFrom).toList();
-    }
-
     // 체험 등록
     @Transactional
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
