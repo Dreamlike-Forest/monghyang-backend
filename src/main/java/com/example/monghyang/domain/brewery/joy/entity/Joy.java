@@ -52,43 +52,37 @@ public class Joy { // 양조장 체험
         return originPrice - (int)(originPrice * discountRate / 100.0);
     }
 
-    public void update(ReqUpdateJoyDto reqUpdateJoyDto) {
-        if(reqUpdateJoyDto.getName() != null) {
-            this.name = reqUpdateJoyDto.getName();
-        }
-        if(reqUpdateJoyDto.getPlace() != null) {
-            this.place = reqUpdateJoyDto.getPlace();
-        }
-        if(reqUpdateJoyDto.getDetail() != null) {
-            this.detail = reqUpdateJoyDto.getDetail();
-        }
-        if(reqUpdateJoyDto.getOrigin_price() != null) {
-            this.originPrice = reqUpdateJoyDto.getOrigin_price();
-            this.finalPrice = calFinalPrice(this.originPrice, this.discountRate);
-        }
-        if(reqUpdateJoyDto.getDiscount_rate() != null) {
-            this.discountRate = reqUpdateJoyDto.getDiscount_rate();
-            // 할인율이 반영된 최종 판매자 계산. 정수부만 취급
-            this.finalPrice = calFinalPrice(this.originPrice, reqUpdateJoyDto.getDiscount_rate());
-        }
-        if(reqUpdateJoyDto.getIs_soldout() != null) {
-            this.isSoldout = reqUpdateJoyDto.getIs_soldout();
-        }
-    }
-
-    public void setSoldout() {
-        this.isSoldout = Boolean.TRUE;
-    }
-
     public void setDeleted() {
         this.isDeleted = Boolean.TRUE;
     }
 
-    public void unSetSoldout() {
-        this.isSoldout = Boolean.FALSE;
-    }
-
     public void unSetDeleted() {
         this.isDeleted = Boolean.FALSE;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updatePlace(String place) {
+        this.place = place;
+    }
+
+    public void updateDetail(String detail) {
+        this.detail = detail;
+    }
+
+    public void updateOriginPrice(Integer originPrice) {
+        this.originPrice = originPrice;
+        this.finalPrice = calFinalPrice(originPrice, this.discountRate);
+    }
+
+    public void updateDiscountRate(Integer discountRate) {
+        this.discountRate = discountRate;
+        this.finalPrice = calFinalPrice(this.originPrice, discountRate);
+    }
+
+    public void updateSoldout(Boolean isSoldout) {
+        this.isSoldout = isSoldout;
     }
 }

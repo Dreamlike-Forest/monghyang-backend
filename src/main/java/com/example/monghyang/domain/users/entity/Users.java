@@ -79,40 +79,6 @@ public class Users {
         this.password = "oAuth2User";
     }
 
-    public void updateUsers(ReqUsersDto reqUsersDto) {
-        if(reqUsersDto.getEmail() != null) {
-            this.email = reqUsersDto.getEmail();
-        }
-        if(reqUsersDto.getNewPassword() != null) {
-            this.password = reqUsersDto.getNewPassword();
-        }
-        if(reqUsersDto.getNickname() != null) {
-            this.nickname = reqUsersDto.getNickname();
-        }
-        if(reqUsersDto.getName() != null) {
-            this.name = reqUsersDto.getName();
-        }
-        if(reqUsersDto.getPhone() != null) {
-            this.phone = reqUsersDto.getPhone();
-        }
-        if(reqUsersDto.getBirth() != null) {
-            this.birth = reqUsersDto.getBirth();
-        }
-        if(reqUsersDto.getGender() != null) {
-            if(reqUsersDto.getGender().equals("man")) {
-                this.gender = Boolean.FALSE;
-            } else {
-                this.gender = Boolean.TRUE;
-            }
-        }
-        if(reqUsersDto.getAddress() != null) {
-            this.address = reqUsersDto.getAddress();
-        }
-        if(reqUsersDto.getAddress_detail() != null) {
-            this.addressDetail = reqUsersDto.getAddress_detail();
-        }
-    }
-
     public void updateEmail(String email) {
         this.email = email;
     }

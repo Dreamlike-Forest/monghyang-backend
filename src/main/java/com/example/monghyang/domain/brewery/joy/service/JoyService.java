@@ -73,7 +73,25 @@ public class JoyService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), reqUpdateJoyDto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
-        joy.update(reqUpdateJoyDto);
+        if(reqUpdateJoyDto.getName() != null) {
+            joy.updateName(reqUpdateJoyDto.getName());
+        }
+        if(reqUpdateJoyDto.getPlace() != null) {
+            joy.updatePlace(reqUpdateJoyDto.getPlace());
+        }
+        if(reqUpdateJoyDto.getDetail() != null) {
+            joy.updateDetail(reqUpdateJoyDto.getDetail());
+        }
+        if(reqUpdateJoyDto.getOrigin_price() != null) {
+            joy.updateOriginPrice(reqUpdateJoyDto.getOrigin_price());
+        }
+        if(reqUpdateJoyDto.getDiscount_rate() != null) {
+            joy.updateDiscountRate(reqUpdateJoyDto.getDiscount_rate());
+        }
+        if(reqUpdateJoyDto.getIs_soldout() != null) {
+            joy.updateSoldout(reqUpdateJoyDto.getIs_soldout());
+        }
+
         if(joy.getFinalPrice() < brewery.getMinJoyPrice()) {
             // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
             brewery.updateMinJoyPrice(joy.getFinalPrice());

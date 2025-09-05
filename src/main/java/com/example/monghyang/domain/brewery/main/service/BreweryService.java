@@ -138,7 +138,39 @@ public class BreweryService {
             }
         }
 
-        brewery.updateBrewery(reqBreweryDto);
+        if(reqBreweryDto.getBrewery_name() != null){
+            brewery.updateBreweryName(reqBreweryDto.getBrewery_name());
+            brewery.getUser().updateNickname(reqBreweryDto.getBrewery_name()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBrewery_address() != null){
+            brewery.updateBreweryAddress(reqBreweryDto.getBrewery_address());
+            brewery.getUser().updateAddress(reqBreweryDto.getBrewery_address()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBrewery_address_detail() != null){
+            brewery.updateBreweryAddressDetail(reqBreweryDto.getBrewery_address_detail());
+            brewery.getUser().updateAddressDetail(reqBreweryDto.getBrewery_address_detail()); // 회원 테이블에도 같이 반영
+        }
+        if(reqBreweryDto.getBusiness_registration_number() != null){
+            brewery.updateBusinessRegistrationNumber(reqBreweryDto.getBusiness_registration_number());
+        }
+        if(reqBreweryDto.getBrewery_depositor() != null){
+            brewery.updateBreweryDepositor(reqBreweryDto.getBrewery_depositor());
+        }
+        if(reqBreweryDto.getBrewery_account_number() != null){
+            brewery.updateBreweryAccountNumber(reqBreweryDto.getBrewery_account_number());
+        }
+        if(reqBreweryDto.getBrewery_bank_name() != null){
+            brewery.updateBreweryBankName(reqBreweryDto.getBrewery_bank_name());
+        }
+        if(reqBreweryDto.getIntroduction() != null){
+            brewery.updateIntroduction(reqBreweryDto.getIntroduction());
+        }
+        if(reqBreweryDto.getBrewery_website() != null){
+            brewery.updateBreweryWebsite(reqBreweryDto.getBrewery_website());
+        }
+        if(reqBreweryDto.getIs_regular_visit() != null){
+            brewery.updateRegularVisit(reqBreweryDto.getIs_regular_visit());
+        }
     }
 
 
