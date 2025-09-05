@@ -2,6 +2,7 @@ package com.example.monghyang.domain.brewery.main.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
+import com.example.monghyang.domain.brewery.main.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.entity.BreweryImage;
@@ -181,7 +182,7 @@ public class BreweryService {
 
         // 2. 각 양조장의 태그 정보를 조회하기 위해 추가적인 쿼리문 실행
         List<Long> breweryIdList = result.stream().map(ResBreweryListDto::getBrewery_id).toList();
-        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryId(breweryIdList);
+        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
         HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
         // key가 존재하면 기존 리스트에 값 삽입, 존재하지 않으면 key값으로 리스트 생성 후 값 삽입
         for(TagNameDto cur : breweryTagList) {
@@ -195,6 +196,13 @@ public class BreweryService {
         return result;
     }
 
-
+    public ResBreweryDto getBreweryById(Long breweryId) {
+        Brewery brewery = breweryRepository.findActiveById(breweryId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        ResBreweryDto result = ResBreweryDto.activeBreweryFrom(brewery);
+        result.setBrewery_image_image_key(breweryImageRepository.findImageKeyByBrewery(brewery.getId()));
+        result.setTags_name(breweryTagRepository.findTagListByBreweryId(breweryId));
+        return result;
+    }
 
 }

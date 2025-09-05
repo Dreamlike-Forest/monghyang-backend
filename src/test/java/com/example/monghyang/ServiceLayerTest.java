@@ -4,8 +4,11 @@ import com.example.monghyang.domain.brewery.joy.dto.ReqJoyDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyDto;
 import com.example.monghyang.domain.brewery.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.brewery.joy.service.JoyService;
+import com.example.monghyang.domain.brewery.main.dto.ResBreweryDto;
+import com.example.monghyang.domain.brewery.main.dto.ResBreweryImageDto;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.main.service.BreweryService;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.tag.service.TagCategoryService;
@@ -38,6 +41,8 @@ public class ServiceLayerTest {
     private TagsService tagsService;
     @Autowired
     private JoyService joyService;
+    @Autowired
+    private BreweryService breweryService;
 
     @Test
     @Transactional
@@ -81,5 +86,12 @@ public class ServiceLayerTest {
 //        reqUpdateJoyDto.setOrigin_price(90);
 //        reqUpdateJoyDto.setDiscount_rate(10);
 //        joyService.updateJoy(1L, reqUpdateJoyDto);
+
+        List<ResJoyDto> result = joyService.getJoyListByBreweryId(1L);
+        for(ResJoyDto resJoyDto : result){
+            System.out.println(resJoyDto.getJoy_id()+" "+resJoyDto.getJoy_name());
+        }
+
+
     }
 }

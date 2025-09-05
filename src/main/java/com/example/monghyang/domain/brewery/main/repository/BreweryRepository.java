@@ -18,6 +18,8 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     @Query("select b from Brewery b where b.user.id = :userId")
     Optional<Brewery> findByUserId(@Param("userId") Long userId);
 
+    @Query("select b from Brewery b join fetch b.regionType join fetch b.user where b.id = :breweryId and b.isDeleted = false")
+    Optional<Brewery> findActiveById(@Param("breweryId") Long breweryId);
 
     /**
      * 가격 기준 필터링 조회 시 '최소 가격'과 '최대 가격' 모두 유효한 값이 전달되어야 합니다.
@@ -49,6 +51,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
                or exists (
                    select 1 from Joy j
                    where j.brewery = b
+                     and j.isDeleted = false
                      and j.finalPrice between :minPrice and :maxPrice
                )
           )

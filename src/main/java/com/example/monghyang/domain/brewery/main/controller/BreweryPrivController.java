@@ -1,6 +1,9 @@
 package com.example.monghyang.domain.brewery.main.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.brewery.joy.dto.ReqJoyDto;
+import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyDto;
+import com.example.monghyang.domain.brewery.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.brewery.tag.ReqBreweryTagDto;
@@ -23,11 +26,13 @@ import java.util.List;
 public class BreweryPrivController {
     private final BreweryService breweryService;
     private final BreweryTagService breweryTagService;
+    private final JoyService joyService;
 
     @Autowired
-    public BreweryPrivController(BreweryService breweryService, BreweryTagService breweryTagService) {
+    public BreweryPrivController(BreweryService breweryService, BreweryTagService breweryTagService, JoyService joyService) {
         this.breweryService = breweryService;
         this.breweryTagService = breweryTagService;
+        this.joyService = joyService;
     }
 
     // 양조장 관련 수정 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 양조장 조회 -> 양조장 식별자 사용)
@@ -56,5 +61,33 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @RequestBody ReqBreweryTagDto reqBreweryTagDto) {
         breweryTagService.updateTag(userId, reqBreweryTagDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
+    }
+
+    @PostMapping("/joy-add")
+    @Operation(summary = "체험 추가")
+    public ResponseEntity<ResponseDataDto<Void>> createJoy(@LoginUserId Long userId, @RequestBody ReqJoyDto reqJoyDto) {
+        joyService.createJoy(userId, reqJoyDto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 추가되었습니다."));
+    }
+
+    @PostMapping("/joy-update")
+    @Operation(summary = "체험 내용 수정", description = "가격, 할인율, 기타 체험 정보, 매진 처리 등")
+    public ResponseEntity<ResponseDataDto<Void>> updateJoy(@LoginUserId Long userId, @RequestBody ReqUpdateJoyDto reqUpdateJoyDto) {
+        joyService.updateJoy(userId, reqUpdateJoyDto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험정보가 수정되었습니다."));
+    }
+
+    @DeleteMapping("/joy/{joyId}")
+    @Operation(summary = "체험 삭제 처리")
+    public ResponseEntity<ResponseDataDto<Void>> deleteJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.deleteJoy(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 삭제 처리되었습니다."));
+    }
+
+    @PostMapping("/joy-restore/{joyId}")
+    @Operation(summary = "체험 삭제 처리")
+    public ResponseEntity<ResponseDataDto<Void>> restoreJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.restoreJoy(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
     }
 }
