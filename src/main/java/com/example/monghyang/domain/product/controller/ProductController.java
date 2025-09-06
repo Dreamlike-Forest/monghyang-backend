@@ -2,7 +2,6 @@ package com.example.monghyang.domain.product.controller;
 
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
-import com.example.monghyang.domain.product.review.dto.ResProductReviewListDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
