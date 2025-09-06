@@ -104,7 +104,7 @@ public class UsersService {
         // 판매자/양조장에 관련된 컬럼에 대한 수정사항 발생 시 판매자/양조장 테이블에 똑같이 반영
         if(needsOtherEntity) {
             if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
-                Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+                Seller seller = sellerRepository.findByUserId(users.getId()).orElseThrow(() ->
                         new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
                 if(reqUsersDto.getNickname() != null) {
                     seller.updateSellerName(reqUsersDto.getNickname());
@@ -139,7 +139,7 @@ public class UsersService {
         users.setDeleted();
         if(userRole.equals(RoleType.ROLE_SELLER.getRoleName())) {
             // 탈퇴 유형이 판매자인 경우 판매자 테이블에서도 삭제 처리
-            Seller seller = sellerRepository.findByUser(users).orElseThrow(() ->
+            Seller seller = sellerRepository.findByUserId(users.getId()).orElseThrow(() ->
                     new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
             seller.setDeleted();
         } else if(userRole.equals(RoleType.ROLE_BREWERY.getRoleName())) {

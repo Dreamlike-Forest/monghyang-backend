@@ -71,13 +71,36 @@ public class Seller {
 
     public void updateSellerName(String sellerName) {
         this.sellerName = sellerName;
+        this.user.updateName(sellerName);
     }
 
     public void updateSellerAddress(String sellerAddress) {
         this.sellerAddress = sellerAddress;
+        this.user.updateAddress(sellerAddress);
     }
 
     public void updateSellerAddressDetail(String sellerAddressDetail) {
         this.sellerAddressDetail = sellerAddressDetail;
+        this.user.updateAddressDetail(sellerAddressDetail);
+    }
+
+    public void updateBusinessRegistrationNumber(String businessRegistrationNumber) {
+        this.businessRegistrationNumber = businessRegistrationNumber;
+    }
+
+    public void updateSellerAccountNumber(String sellerAccountNumber) {
+        this.sellerAccountNumber = sellerAccountNumber;
+    }
+
+    public void updateSellerDepositor(String sellerDepositor) {
+        this.sellerDepositor = sellerDepositor;
+    }
+
+    public void updateSellerBankName(String sellerBankName) {
+        this.sellerBankName = sellerBankName;
+    }
+
+    public void updateIntroduction(String introduction) {
+        this.introduction = introduction;
     }
 }

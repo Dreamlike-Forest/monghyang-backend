@@ -29,12 +29,12 @@ public class BreweryTag {
     @ManyToOne(fetch = FetchType.LAZY)
     private Tags tags;
 
-    private BreweryTag(@NonNull Brewery brewery, @NonNull Tags tags) {
+    private BreweryTag(Brewery brewery, Tags tags) {
         this.brewery = brewery;
         this.tags = tags;
     }
 
-    public static BreweryTag breweryTags(Brewery brewery, Tags tags) {
+    public static BreweryTag breweryTagsOf(@NonNull Brewery brewery, @NonNull Tags tags) {
         return new BreweryTag(brewery, tags);
     }
 }

@@ -9,19 +9,19 @@ import java.util.List;
 
 @Getter
 public class ResBreweryDto {
-    private Long brewery_id;
-    private Long users_id;
-    private String users_email;
-    private String users_phone;
-    private String region_type_name;
-    private String brewery_name;
-    private String brewery_address;
-    private String brewery_address_detail;
-    private String brewery_introduction;
-    private String brewery_website;
-    private LocalDate brewery_registered_at;
-    private Boolean brewery_is_regular_visit;
-    private Boolean brewery_is_visiting_brewery;
+    private final Long brewery_id;
+    private final Long users_id;
+    private final String users_email;
+    private final String users_phone;
+    private final String region_type_name;
+    private final String brewery_name;
+    private final String brewery_address;
+    private final String brewery_address_detail;
+    private final String brewery_introduction;
+    private final String brewery_website;
+    private final LocalDate brewery_registered_at;
+    private final Boolean brewery_is_regular_visit;
+    private final Boolean brewery_is_visiting_brewery;
     private List<ResBreweryImageDto> brewery_image_image_key; // 이미지 리스트
     private List<String> tags_name; // 양조장 주종 태그 이름 리스트
     private List<ResJoyDto> joy;

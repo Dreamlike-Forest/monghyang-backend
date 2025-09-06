@@ -4,6 +4,8 @@ import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.tag.dto.ReqTagDto;
+import com.example.monghyang.domain.tag.dto.ResTagListDto;
 import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.tag.repository.TagsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +32,7 @@ public class BreweryTagService {
 
     // 태그 수정
     @Transactional
-    public void updateTag(Long userId, ReqBreweryTagDto reqBreweryTagDto) throws DataIntegrityViolationException {
+    public void updateTag(Long userId, ReqTagDto reqBreweryTagDto) throws DataIntegrityViolationException {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
 
@@ -38,14 +40,14 @@ public class BreweryTagService {
         for(Integer curTagId : reqBreweryTagDto.getAdd_tag_list()) {
             Tags tags = tagsRepository.findById(curTagId).orElseThrow(() ->
                     new ApplicationException(ApplicationError.TAG_NOT_FOUND));
-            breweryTagRepository.save(BreweryTag.breweryTags(brewery, tags));
+            breweryTagRepository.save(BreweryTag.breweryTagsOf(brewery, tags));
         }
 
         // 태그 삭제: 일괄 삭제 벌크 쿼리
         breweryTagRepository.deleteByBreweryIdAndTagId(brewery.getId(), reqBreweryTagDto.getDelete_tag_list());
     }
 
-    public List<ResBreweryTagDto> getBreweryTags(Long breweryId) {
+    public List<ResTagListDto> getBreweryTagsById(Long breweryId) {
         List<BreweryTag> result = breweryTagRepository.findByBreweryId(breweryId);
         if(result.isEmpty()) {
             throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
@@ -53,7 +55,7 @@ public class BreweryTagService {
 
         return result.stream().
                 map(breweryTag ->
-                        ResBreweryTagDto.tagIdTagName(breweryTag.getTags().getId(), breweryTag.getTags().getName()))
+                        ResTagListDto.tagIdTagName(breweryTag.getTags().getId(), breweryTag.getTags().getName()))
                 .toList();
     }
 

@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.brewery.tag;
+package com.example.monghyang.domain.tag.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReqBreweryTagDto {
+public class ReqTagDto {
     private List<Integer> add_tag_list = new ArrayList<>();
     private List<Integer> delete_tag_list = new ArrayList<>();
 }

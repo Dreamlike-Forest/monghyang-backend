@@ -37,7 +37,7 @@ public class BreweryImage {
 
 
     /**
-     * BreweryImage 엔티티를 저장하고 저장된 엔티티를 반환합니다.
+     * BreweryImage 엔티티를 생성하고 반환합니다.
      * @param brewery 양조장 Entity
      * @param imageKey 이미지 업로드 후 반환된 UUID 값
      * @param seq 해당 이미지의 순서 정보
