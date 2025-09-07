@@ -30,13 +30,14 @@ public class Joy { // 양조장 체험
     private Integer finalPrice;
     @Column(nullable = false)
     private Integer salesVolume;
+    private String imageKey;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isSoldout = Boolean.FALSE;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "joyBuilder")
-    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull Integer originPrice) {
+    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull Integer originPrice, String imageKey) {
         this.brewery = brewery;
         this.name = name;
         this.place = place;
@@ -45,6 +46,7 @@ public class Joy { // 양조장 체험
         this.discountRate = 0; // 초기 할인율 기본값: 0%
         this.finalPrice = originPrice;
         this.salesVolume = 0; // 초기 판매(예약)량: 0
+        this.imageKey = imageKey;
     }
 
     // 정가와 할인비율 값을 받아 최종 판매가를 계산하는 메소드
@@ -84,5 +86,9 @@ public class Joy { // 양조장 체험
 
     public void updateSoldout(Boolean isSoldout) {
         this.isSoldout = isSoldout;
+    }
+
+    public void updateImageKey(String imageKey) {
+        this.imageKey = imageKey;
     }
 }

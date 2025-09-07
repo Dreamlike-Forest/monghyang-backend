@@ -13,6 +13,7 @@ public class ResJoyDto {
     private final Integer joy_discount_rate;
     private final Integer joy_final_price;
     private final Integer joy_sales_volume;
+    private final String joy_image_key;
     private final Boolean joy_is_soldout;
 
     private ResJoyDto(Joy joy) {
@@ -25,6 +26,7 @@ public class ResJoyDto {
         this.joy_final_price = joy.getFinalPrice();
         this.joy_sales_volume = joy.getSalesVolume();
         this.joy_is_soldout = joy.getIsSoldout();
+        this.joy_image_key = joy.getImageKey();
     }
 
     public static ResJoyDto joyFrom(Joy joy) {

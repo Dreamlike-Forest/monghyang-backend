@@ -9,6 +9,8 @@ import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.image.service.ImageType;
+import com.example.monghyang.domain.image.service.StorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,11 +23,13 @@ import java.util.List;
 public class JoyService {
     private final JoyRepository joyRepository;
     private final BreweryRepository breweryRepository;
+    private final StorageService storageService;
 
     @Autowired
-    public JoyService(JoyRepository joyRepository, BreweryRepository breweryRepository) {
+    public JoyService(JoyRepository joyRepository, BreweryRepository breweryRepository, StorageService storageService) {
         this.joyRepository = joyRepository;
         this.breweryRepository = breweryRepository;
+        this.storageService = storageService;
     }
 
     // 체험 등록
@@ -33,10 +37,16 @@ public class JoyService {
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        String imageKey = null;
+        if(reqJoyDto.getImage() != null) {
+            imageKey = storageService.upload(reqJoyDto.getImage(), ImageType.JOY_IMAGE);
+        }
         Joy joy = Joy.joyBuilder()
                 .brewery(brewery).name(reqJoyDto.getName())
                 .place(reqJoyDto.getPlace()).detail(reqJoyDto.getDetail())
-                .originPrice(reqJoyDto.getOrigin_price()).build();
+                .originPrice(reqJoyDto.getOrigin_price())
+                .imageKey(imageKey)
+                .build();
         joyRepository.save(joy);
         if(joy.getFinalPrice() < brewery.getMinJoyPrice()) {
             // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
@@ -73,6 +83,11 @@ public class JoyService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), reqUpdateJoyDto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        if(reqUpdateJoyDto.getImage() != null) {
+            storageService.remove(joy.getImageKey());
+            String newImageKey = storageService.upload(reqUpdateJoyDto.getImage(), ImageType.JOY_IMAGE);
+            joy.updateImageKey(newImageKey);
+        }
         if(reqUpdateJoyDto.getName() != null) {
             joy.updateName(reqUpdateJoyDto.getName());
         }
@@ -91,7 +106,6 @@ public class JoyService {
         if(reqUpdateJoyDto.getIs_soldout() != null) {
             joy.updateSoldout(reqUpdateJoyDto.getIs_soldout());
         }
-
         if(joy.getFinalPrice() < brewery.getMinJoyPrice()) {
             // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
             brewery.updateMinJoyPrice(joy.getFinalPrice());
