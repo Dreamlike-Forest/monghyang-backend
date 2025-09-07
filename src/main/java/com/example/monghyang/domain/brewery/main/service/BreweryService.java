@@ -24,6 +24,7 @@ import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -85,7 +86,7 @@ public class BreweryService {
                 throw new ApplicationException(ApplicationError.IMAGE_COUNT_INVALID);
             }
 
-            // 이미지 삭제 로직
+            // 이미지 삭제
             for(Long removeImageId : reqBreweryDto.getRemove_images()) {
                 if(!imageListIds.contains(removeImageId)) {
                     throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌것은 삭제 불가
@@ -99,9 +100,7 @@ public class BreweryService {
 
             breweryImageRepository.flush(); // 삭제 정보 선반영: 이미지 순서 수정 혹은 생성 시 uk 제약조건 위배를 피하기 위함
 
-            // 이미지 순서 정보 수정 로직 - saveAndFlush() 메소드 사용하여 Entity 수정사항을 즉시 DB로 전송
-                 // 더티체킹하도록 그대로 놔두면 아래의 insert문보다 늦게 실행되므로 uk 제약조건 위배 발생
-                // save()는 새로운 엔티티에 대해 호출되는것이 아니라면 더티체킹하는 것과 다를 바 없으므로 사용하지 않는다.
+            // 이미지 순서 정보 수정
             for(ModifySeqImageDto cur : reqBreweryDto.getModify_images()) {
                 if(!imageListIds.contains(cur.getImage_id())) {
                     throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌 것은 수정 불가
@@ -119,9 +118,9 @@ public class BreweryService {
                     // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
                     throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
                 }
-                }
+            }
 
-            // 이미지 업로드 로직
+            // 이미지 업로드
             for(AddImageDto cur : reqBreweryDto.getAdd_images()) {
                 if(cur.getSeq() > 5 || cur.getSeq() < 1) {
                     throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
@@ -138,17 +137,15 @@ public class BreweryService {
             }
         }
 
+        // Brewery 테이블 컬럼에 대한 수정사항 반영
         if(reqBreweryDto.getBrewery_name() != null){
             brewery.updateBreweryName(reqBreweryDto.getBrewery_name());
-            brewery.getUser().updateNickname(reqBreweryDto.getBrewery_name()); // 회원 테이블에도 같이 반영
         }
         if(reqBreweryDto.getBrewery_address() != null){
             brewery.updateBreweryAddress(reqBreweryDto.getBrewery_address());
-            brewery.getUser().updateAddress(reqBreweryDto.getBrewery_address()); // 회원 테이블에도 같이 반영
         }
         if(reqBreweryDto.getBrewery_address_detail() != null){
             brewery.updateBreweryAddressDetail(reqBreweryDto.getBrewery_address_detail());
-            brewery.getUser().updateAddressDetail(reqBreweryDto.getBrewery_address_detail()); // 회원 테이블에도 같이 반영
         }
         if(reqBreweryDto.getBusiness_registration_number() != null){
             brewery.updateBusinessRegistrationNumber(reqBreweryDto.getBusiness_registration_number());
@@ -187,6 +184,18 @@ public class BreweryService {
         brewery.setDeleted();
     }
 
+    @Transactional
+    public void breweryRestore(Long userId, VerifyAuthDto restoreRequestDto) {
+        Users users = usersRepository.findById(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        if(!bCryptPasswordEncoder.matches(restoreRequestDto.getPassword(), users.getPassword())) {
+            throw new ApplicationException(ApplicationError.NOT_MATCH_CUR_PASSWORD);
+        }
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        brewery.unSetDeleted();
+    }
+
 
     // 양조장 개별 상세 조회: 양조장 모든 이미지, 양조장 소개글, 주소, 주종 태그, 연락처(회원 entity), 이메일(회원 entity), 홈페이지 링크
     // 체험 프로그램 리스트 반환 api: 체험 이름, 체험 장소, 체험 내용, 체험 인당 비용(단위: 원), 매진 여부
@@ -197,9 +206,8 @@ public class BreweryService {
             // 해당 리뷰 태그 종, 해당 리뷰 이미지 수
 
     // 페이징 단위: 12개
-
     @Transactional(readOnly = true)
-    public List<ResBreweryListDto> getFilteringSearch(Integer startOffset, String keyword, Integer minPrice, Integer maxPrice,
+    public Page<ResBreweryListDto> getFilteringSearch(Integer startOffset, String keyword, Integer minPrice, Integer maxPrice,
                                                       List<Integer> tagIdList, List<Integer> regionIdList) {
         if (startOffset == null) {
             startOffset = 0;
@@ -209,16 +217,16 @@ public class BreweryService {
         boolean regionListIsEmpty = regionIdList == null || regionIdList.isEmpty();
 
         // 1. 필터링과 페이징을 적용해서 양조장 조회
-        Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 정렬 기준: 기본키 기준으로 내림차순 정렬
+        Sort sort = Sort.by(Sort.Direction.DESC, "registeredAt"); // 정렬 기준: 등록일자 기준으로 내림차순 정렬
         Pageable pageable = PageRequest.of(startOffset, BREWERY_PAGE_SIZE, sort);
-        List<ResBreweryListDto> result = breweryRepository.findBreweryIdByDynamicFiltering(pageable, tagListIsEmpty, regionListIsEmpty,
+        Page<ResBreweryListDto> result = breweryRepository.findByDynamicFiltering(pageable, tagListIsEmpty, regionListIsEmpty,
                 keyword, minPrice, maxPrice, tagIdList, regionIdList);
         if(result.isEmpty()) {
             throw new ApplicationException(ApplicationError.BREWERY_NOT_FOUND);
         }
 
         // 2. 각 양조장의 태그 정보를 조회하기 위해 추가적인 쿼리문 실행
-        List<Long> breweryIdList = result.stream().map(ResBreweryListDto::getBrewery_id).toList();
+        List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();
         List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
         HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
         // key가 존재하면 기존 리스트에 값 삽입, 존재하지 않으면 key값으로 리스트 생성 후 값 삽입
@@ -230,6 +238,30 @@ public class BreweryService {
             dto.setTag_name(breweryIdTagMap.get(dto.getBrewery_id()));
         }
 
+        return result;
+    }
+
+    // 최신순 조회: 필터링 조회와 로직 흡사
+    public Page<ResBreweryListDto> getLatest(Integer startOffset) {
+        if(startOffset == null) {
+            startOffset = 0;
+        }
+        Sort sort = Sort.by(Sort.Direction.DESC, "registeredAt");
+        Pageable pageable = PageRequest.of(startOffset, BREWERY_PAGE_SIZE, sort);
+        Page<ResBreweryListDto> result = breweryRepository.findBreweryLatest(pageable);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.BREWERY_NOT_FOUND);
+        }
+
+        List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();
+        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
+        HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
+        for(TagNameDto cur : breweryTagList) {
+            breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
+        }
+        for(ResBreweryListDto dto : result) {
+            dto.setTag_name(breweryIdTagMap.get(dto.getBrewery_id()));
+        }
         return result;
     }
 

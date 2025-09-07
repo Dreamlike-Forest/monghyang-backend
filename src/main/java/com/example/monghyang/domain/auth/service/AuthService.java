@@ -163,7 +163,7 @@ public class AuthService {
         breweryRepository.save(brewery);
 
         // 양조장 이미지 추가 로직
-        if(!breweryJoinDto.getImages().isEmpty()) {
+        if(breweryJoinDto.getImages() != null) {
             for(AddImageDto image : breweryJoinDto.getImages()) {
                 Integer seq = image.getSeq();
                 if(seq == null) {

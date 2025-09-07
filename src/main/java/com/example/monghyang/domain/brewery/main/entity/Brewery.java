@@ -105,14 +105,17 @@ public class Brewery {
 
     public void updateBreweryName(String breweryName) {
         this.breweryName = breweryName;
+        this.user.updateName(breweryName); // 회원 테이블에도 같이 반영
     }
 
     public void updateBreweryAddress(String breweryAddress) {
         this.breweryAddress = breweryAddress;
+        this.user.updateAddress(breweryAddress); // 회원 테이블에도 같이 반영
     }
 
     public void updateBreweryAddressDetail(String breweryAddressDetail) {
         this.breweryAddressDetail = breweryAddressDetail;
+        this.user.updateAddressDetail(breweryAddressDetail); // 회원 테이블에도 같이 반영
     }
 
     public void updateMinJoyPrice(Integer minJoyPrice) {

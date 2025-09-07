@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +19,6 @@ public class Product {
     @JoinColumn(name = "USER_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Users user;
-    private String imageKey;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
@@ -28,6 +28,7 @@ public class Product {
     @Column(nullable = false)
     private Integer salesVolume;
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime registeredAt;
     @Column(nullable = false)
     private Integer volume;
@@ -37,24 +38,26 @@ public class Product {
     private Integer discountRate;
     @Column(nullable = false)
     private Integer finalPrice;
+    @Column(columnDefinition = "TEXT")
+    private String description;
     @Column(nullable = false)
     private Boolean isSoldout;
     @Column(nullable = false)
     private Boolean isDeleted;
 
     @Builder
-    public Product(Users user, String imageKey, String name, Double alcohol, Boolean isOnlineSell, Integer salesVolume,
-                   Integer volume, Integer originPrice) {
+    public Product(Users user, String name, Double alcohol, Boolean isOnlineSell,
+                   Integer volume, Integer originPrice, String description) {
         this.user = user;
-        this.imageKey = imageKey;
         this.name = name;
         this.alcohol = alcohol;
         this.isOnlineSell = isOnlineSell;
-        this.salesVolume = salesVolume;
+        this.salesVolume = 0;
         this.volume = volume;
         this.originPrice = originPrice;
         this.discountRate = 0;
         this.finalPrice = originPrice;
+        this.description = description;
         this.isSoldout = false;
         this.isDeleted = false;
     }
@@ -62,10 +65,6 @@ public class Product {
     // 정가와 할인비율 값을 받아 최종 판매가를 계산하는 메소드
     public Integer calFinalPrice(Integer originPrice, Integer discountRate) {
         return originPrice - (int)(originPrice * discountRate / 100.0);
-    }
-
-    public void updateImageKey(String imageKey) {
-        this.imageKey = imageKey;
     }
 
     public void updateName(String name) {
@@ -98,7 +97,7 @@ public class Product {
         this.finalPrice = calFinalPrice(this.originPrice, discountRate);
     }
 
-    public void setSoldout(Boolean soldout) {
+    public void updateSoldout(Boolean soldout) {
         this.isSoldout = soldout;
     }
 
@@ -108,5 +107,9 @@ public class Product {
 
     public void unSetDeleted() {
         this.isDeleted = Boolean.FALSE;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
     }
 }

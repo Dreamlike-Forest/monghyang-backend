@@ -7,7 +7,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class ReqJoyDto {
     @NotNull(message = "체험의 이름 정보를 입력해주세요.")
     private String name;

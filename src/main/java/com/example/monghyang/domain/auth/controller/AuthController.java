@@ -63,7 +63,7 @@ public class AuthController {
     }
 
     @PostMapping(value = "/brewery-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "양조장 회원의 회원가입", description = "nickname: 양조장 상호명, name: 양조장 대표자명")
+    @Operation(summary = "양조장 회원의 회원가입(첫번째 이미지: 대표 이미지)", description = "nickname: 양조장 상호명, name: 양조장 대표자명")
     public ResponseEntity<ResponseDataDto<Void>> breweryJoin(@Valid @ModelAttribute BreweryJoinDto breweryJoinDto) {
         authService.breweryJoin(breweryJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 회원가입이 완료되었습니다."));

@@ -6,17 +6,17 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ResTagDto {
-    private Integer id;
+    private Integer tags_id;
     private String tag_category_name;
-    private String name;
+    private String tags_name;
 
-    private ResTagDto(Integer id, String tag_category_name, String name) {
-        this.id = id;
+    private ResTagDto(Integer tags_id, String tag_category_name, String tags_name) {
+        this.tags_id = tags_id;
         this.tag_category_name = tag_category_name;
-        this.name = name;
+        this.tags_name = tags_name;
     }
 
-    public static ResTagDto idTagCategoryNameName(Integer id, String tag_category_name, String name) {
-        return new ResTagDto(id, tag_category_name, name);
+    public static ResTagDto idTagCategoryNameName(Integer tags_id, String tag_category_name, String tags_name) {
+        return new ResTagDto(tags_id, tag_category_name, tags_name);
     }
 }

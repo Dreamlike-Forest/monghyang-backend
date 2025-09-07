@@ -11,7 +11,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class ReqBreweryDto {
     private String brewery_name; // 회원 엔티티 중복 값
     private String brewery_address; // 회원 엔티티 중복 값

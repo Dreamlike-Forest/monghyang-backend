@@ -3,6 +3,7 @@ package com.example.monghyang.domain.brewery.main.repository;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.users.entity.Users;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,7 +35,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      * @param regionIdList 지역 식별자 리스트 필터링 조건
      */
     @Query("""
-        select distinct new com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto(b.id, b.breweryName, r.name, b.introduction, b.minJoyPrice, b.joyCount, bi.imageKey)
+        select distinct new com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto(b.id, b.breweryName, r.name, b.introduction, b.minJoyPrice, b.joyCount, bi.imageKey, b.isVisitingBrewery, b.isRegularVisit)
         from Brewery b
         join b.regionType r
         left join BreweryImage bi on b.id = bi.brewery.id and bi.seq = 1
@@ -55,8 +56,18 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
                      and j.finalPrice between :minPrice and :maxPrice
                )
           )
+          and b.isDeleted = false
     """)
-    List<ResBreweryListDto> findBreweryIdByDynamicFiltering(Pageable pageable, @Param("tagListIsEmpty") boolean tagListIsEmpty, @Param("regionListIdEmpty") boolean regionListIsEmpty,
+    Page<ResBreweryListDto> findByDynamicFiltering(Pageable pageable, @Param("tagListIsEmpty") boolean tagListIsEmpty, @Param("regionListIdEmpty") boolean regionListIsEmpty,
                                                             @Param("keyword") String keyword, @Param("minPrice") Integer minPrice, @Param("maxPrice") Integer maxPrice,
                                                             @Param("tagIdList") List<Integer> tagIdList, @Param("regionIdList") List<Integer> regionIdList);
+
+    @Query("""
+        select distinct new com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto(b.id, b.breweryName, r.name, b.introduction, b.minJoyPrice, b.joyCount, bi.imageKey, b.isVisitingBrewery, b.isRegularVisit)
+        from Brewery b
+        join b.regionType r
+        left join BreweryImage bi on b.id = bi.brewery.id and bi.seq = 1
+        where b.isDeleted = false
+    """)
+    Page<ResBreweryListDto> findBreweryLatest(Pageable pageable);
 }
