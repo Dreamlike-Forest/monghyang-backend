@@ -29,7 +29,7 @@ public class ProductController {
          @RequestParam(required = false) String keyword, @RequestParam(required = false) Integer min_price, @RequestParam(required = false) Integer max_price,
          @RequestParam(required = false) List<Integer> tag_id_list, @RequestParam(required = false) Double min_alcohol, @RequestParam(required = false) Double max_alcohol) {
 
-        return null;
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productService.dynamicSearch(startOffset, keyword, min_price, max_price, min_alcohol, max_alcohol, tag_id_list)));
     }
 
     // 상품 최신순 조회

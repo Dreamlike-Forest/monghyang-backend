@@ -52,6 +52,19 @@ public class ProductService {
         this.productTagRepository = productTagRepository;
     }
 
+    private void addTagListToResult(Page<ResProductListDto> result) {
+        List<Long> productIdList = result.getContent().stream().map(ResProductListDto::getProduct_id).toList();
+        // 상품 ID 리스트 추출하여 상품들이 가진 '인증' 태그 조회
+        List<TagNameDto> productAuthTagList = productTagRepository.findAuthTagListByProductIdList(productIdList);
+        HashMap<Long, List<String>> productIdTagMap = new HashMap<>();
+        for(TagNameDto cur : productAuthTagList) { // 결과를 Map에 저장
+            productIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
+        }
+        for(ResProductListDto dto : result) { // Map에 저장된 태그 리스트들을 각각의 상품 dto에 알맞게 추가
+            dto.setTag_name(productIdTagMap.get(dto.getProduct_id()));
+        }
+    }
+
     // 상품 최신순 조회 페이징
     public Page<ResProductListDto> getProductLatest(Integer startOffset) {
         if(startOffset == null) {
@@ -80,6 +93,21 @@ public class ProductService {
     }
 
     // 상품 필터링 검색 페이징
+    public Page<ResProductListDto> dynamicSearch(Integer startOffset, String keyword,
+                 Integer minPrice, Integer maxPrice, Double minAlcohol, Double maxAlcohol, List<Integer> tagIdList) {
+        if(startOffset == null) {
+            startOffset = 0;
+        }
+        boolean tagListIsEmpty = tagIdList == null || tagIdList.isEmpty();
+        Sort sort = Sort.by(Sort.Direction.DESC, "registeredAt");
+        Pageable pageable = PageRequest.of(startOffset, PRODUCT_PAGE_SIZE, sort);
+        Page<ResProductListDto> result = productRepository.findByDynamicFiltering(pageable, tagListIsEmpty, keyword, minPrice, maxPrice, minAlcohol, maxAlcohol, tagIdList);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
+        }
+        addTagListToResult(result);
+        return result;
+    }
 
     // 상품 상세 조회(식별자 기준)
 
@@ -93,6 +121,17 @@ public class ProductService {
         Page<ResProductListDto> result = productRepository.findActiveByUserId(userId, pageable);
         if(result.isEmpty()) {
             throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
+        }
+
+        List<Long> productIdList = result.getContent().stream().map(ResProductListDto::getProduct_id).toList();
+        // 상품 ID 리스트 추출하여 상품들이 가진 '인증' 태그 조회
+        List<TagNameDto> productAuthTagList = productTagRepository.findAuthTagListByProductIdList(productIdList);
+        HashMap<Long, List<String>> productIdTagMap = new HashMap<>();
+        for(TagNameDto cur : productAuthTagList) { // 결과를 Map에 저장
+            productIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
+        }
+        for(ResProductListDto dto : result) { // Map에 저장된 태그 리스트들을 각각의 상품 dto에 알맞게 추가
+            dto.setTag_name(productIdTagMap.get(dto.getProduct_id()));
         }
         return result;
     }

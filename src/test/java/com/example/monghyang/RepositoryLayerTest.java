@@ -48,10 +48,13 @@ public class RepositoryLayerTest {
     void test() {
         Sort sort = Sort.by(Sort.Direction.DESC, "registeredAt");
         Pageable pageable = PageRequest.of(0, 12, sort);
-        Page<ResProductListDto> result = productRepository.findActiveLatest(pageable);
+        List<Integer> tagIdList = new ArrayList<>();
+        tagIdList.add(1);
+        tagIdList.add(2);
+        Page<ResProductListDto> result = productRepository.findByDynamicFiltering(pageable, false, null, 0, null, 0.0, 6.0, tagIdList);
         List<ResProductListDto> productList = result.getContent();
         for(ResProductListDto dto : productList) {
-            System.out.println(dto.getProduct_id()+" "+dto.getProduct_review_count()+" "+dto.getProduct_review_star());
+            System.out.println("id: "+dto.getProduct_id()+", review count: "+dto.getProduct_review_count()+", avg star: "+dto.getProduct_review_star()+", name: "+dto.getProduct_name());
         }
     }
 }
