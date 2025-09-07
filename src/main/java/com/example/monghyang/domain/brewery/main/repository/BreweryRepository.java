@@ -23,8 +23,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     Optional<Brewery> findActiveById(@Param("breweryId") Long breweryId);
 
     /**
-     * 가격 기준 필터링 조회 시 '최소 가격'과 '최대 가격' 모두 유효한 값이 전달되어야 합니다.
-     * 모든 파라메터는 반드시 전달되어야 합니다. 적용되지 않는 필터링 요소에 대해서는 null 값을 대입하여 넘겨주세요.
+     * 메소드 호출 시 모든 파라메터는 반드시 전달되어야 합니다. 적용되지 않는 필터링 요소에 대해서는 null 값을 대입하여 넘겨주세요.
      * @param pageable 페이징 크기 및 기준을 의미하는 인스턴스
      * @param tagListIsEmpty 태그 기준 필터링이 적용되었는지 여부를 나타내는 플래그 변수
      * @param regionListIsEmpty 지역 기준 필터링이 적용되었는지 여부를 나타내는 플래그 변수
@@ -42,8 +41,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
         where
           (:tagListIsEmpty = true or exists (
              select 1
-             from BreweryTag bt2 join bt2.tags t2
-             where bt2.brewery = b and t2.id in (:tagIdList)
+             from BreweryTag bt where bt.brewery = b and bt.tags.id in (:tagIdList)
           ))
           and (:keyword is null or b.breweryName like concat('%', :keyword, '%'))
           and (:regionListIdEmpty = true or r.id in (:regionIdList))
@@ -53,7 +51,8 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
                    select 1 from Joy j
                    where j.brewery = b
                      and j.isDeleted = false
-                     and j.finalPrice between :minPrice and :maxPrice
+                     and (:minPrice is null or j.finalPrice >= :minPrice)
+                     and (:maxPrice is null or j.finalPrice <= :maxPrice)
                )
           )
           and b.isDeleted = false

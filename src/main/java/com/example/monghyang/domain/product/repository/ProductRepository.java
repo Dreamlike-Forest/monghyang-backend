@@ -41,6 +41,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     """)
     Page<ResProductListDto> findActiveByUserId(@Param("userId") Long userId, Pageable pageable);
 
+
+    /**
+     * 메소드 호출 시 모든 파라메터는 반드시 전달되어야 합니다. 적용되지 않는 필터링 요소에 대해서는 null 값을 대입하여 넘겨주세요.
+     * @param pageable 페이징 크기 및 기준을 의미하는 인스턴스
+     * @param tagListIsEmpty 태그 기준 필터링이 적용되었는지 여부를 나타내는 플래그 변수
+     * @param keyword 양조장 이름 키워드 필터링 조건
+     * @param minPrice 최소 체험 가격 필터링 조건
+     * @param maxPrice 최대 체험 가격 필터링 조건
+     * @param minAlcohol 최소 도수 필터링 조건
+     * @param maxAlcohol 최대 도수 필터링 조건
+     * @param tagIdList 태그 식별자 리스트 필터링 조건
+     */
     @Query("""
         select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
         from Product p
