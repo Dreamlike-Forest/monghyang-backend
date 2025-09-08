@@ -88,16 +88,7 @@ public class ProductService {
             throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
         }
 
-        List<Long> productIdList = result.getContent().stream().map(ResProductListDto::getProduct_id).toList();
-        // 상품 ID 리스트 추출하여 상품들이 가진 '인증' 태그 조회
-        List<TagNameDto> productAuthTagList = productTagRepository.findAuthTagListByProductIdList(productIdList);
-        HashMap<Long, List<String>> productIdTagMap = new HashMap<>();
-        for(TagNameDto cur : productAuthTagList) { // 결과를 Map에 저장
-            productIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
-        }
-        for(ResProductListDto dto : result) { // Map에 저장된 태그 리스트들을 각각의 상품 dto에 알맞게 추가
-            dto.setTag_name(productIdTagMap.get(dto.getProduct_id()));
-        }
+        addTagListToResult(result);
         return result;
     }
 
@@ -129,7 +120,17 @@ public class ProductService {
         // 이 role type에 따라서 판매자/양조장 중 하나의 테이블을 조회
         UserSimpleInfoDto userInfo = usersRepository.findNicknameAndRoleType(product.getUser().getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
-        // 3. 판매자의 회원 타입 유형에 따라 상품의 '소유자' 간단 정보를 dto에 삽입
+        result.setUser_nickname(userInfo.nickname());
+
+        // 3. 상품이 가진 모든 태그 리스트 반환
+        List<String> productTagList = productTagRepository.findTagListByProductId(productId);
+        result.setTags_name(productTagList);
+
+        // 4. 상품이 가진 모든 이미지 key 리스트 반환
+        List<ResProductImageDto> productImageKeyList = productImageRepository.findSimpleByProductId(productId);
+        result.setProduct_image_image_key(productImageKeyList);
+
+        // 5. 판매자의 회원 타입 유형에 따라 상품의 '소유자' 간단 정보를 dto에 삽입
         if(userInfo.roleType().equals(RoleType.ROLE_BREWERY)) {
             ResProductOwnerDto owner = breweryRepository.findSimpleInfoByUserId(product.getUser().getId()).orElseThrow(() ->
                     new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
@@ -160,16 +161,7 @@ public class ProductService {
             throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
         }
 
-        List<Long> productIdList = result.getContent().stream().map(ResProductListDto::getProduct_id).toList();
-        // 상품 ID 리스트 추출하여 상품들이 가진 '인증' 태그 조회
-        List<TagNameDto> productAuthTagList = productTagRepository.findAuthTagListByProductIdList(productIdList);
-        HashMap<Long, List<String>> productIdTagMap = new HashMap<>();
-        for(TagNameDto cur : productAuthTagList) { // 결과를 Map에 저장
-            productIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
-        }
-        for(ResProductListDto dto : result) { // Map에 저장된 태그 리스트들을 각각의 상품 dto에 알맞게 추가
-            dto.setTag_name(productIdTagMap.get(dto.getProduct_id()));
-        }
+        addTagListToResult(result);
         return result;
     }
 

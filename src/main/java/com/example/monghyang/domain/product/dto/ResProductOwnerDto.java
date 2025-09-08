@@ -2,9 +2,7 @@ package com.example.monghyang.domain.product.dto;
 
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;

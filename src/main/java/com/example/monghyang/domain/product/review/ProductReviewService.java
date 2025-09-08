@@ -52,6 +52,9 @@ public class ProductReviewService {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(startOffset, PRODUCT_REVIEW_PAGE_SIZE, sort);
         Page<ProductReview> result = productReviewRepository.findActiveByProductId(productId, pageable);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.REVIEW_NOT_FOUND);
+        }
         return result.map(ResProductReviewListDto::productReviewFrom);
     }
 

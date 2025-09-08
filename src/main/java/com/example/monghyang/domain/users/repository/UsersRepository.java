@@ -19,6 +19,6 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByoAuth2Id(String oAuth2Id);
     boolean existsByEmail(String email);
 
-    @Query("select new com.example.monghyang.domain.users.dto.UserSimpleInfoDto(u.nickname, r.name) from Users u join u.role r on u.role.id = r.id and u.id = :userId")
+    @Query("select new com.example.monghyang.domain.users.dto.UserSimpleInfoDto(u.nickname, r.name) from Users u join u.role r where u.id = :userId")
     Optional<UserSimpleInfoDto> findNicknameAndRoleType(@Param("userId") Long userId);
 }

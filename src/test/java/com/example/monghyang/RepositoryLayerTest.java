@@ -4,11 +4,16 @@ import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
+import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
+import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.product.review.ProductReviewRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
+import com.example.monghyang.domain.users.dto.UserSimpleInfoDto;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,15 +51,21 @@ public class RepositoryLayerTest {
     @Test
     @Transactional
     void test() {
-        Sort sort = Sort.by(Sort.Direction.DESC, "registeredAt");
-        Pageable pageable = PageRequest.of(0, 12, sort);
-        List<Integer> tagIdList = new ArrayList<>();
-        tagIdList.add(1);
-        tagIdList.add(2);
-        Page<ResProductListDto> result = productRepository.findByDynamicFiltering(pageable, false, null, 0, null, 0.0, 6.0, tagIdList);
-        List<ResProductListDto> productList = result.getContent();
-        for(ResProductListDto dto : productList) {
-            System.out.println("id: "+dto.getProduct_id()+", review count: "+dto.getProduct_review_count()+", avg star: "+dto.getProduct_review_star()+", name: "+dto.getProduct_name());
+        Long productId = 152L;
+        Product product = productRepository.findById(productId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        UserSimpleInfoDto userInfo = usersRepository.findNicknameAndRoleType(product.getUser().getId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+
+        System.out.println(userInfo.nickname()+" "+userInfo.roleType());
+
+        ResProductOwnerDto owner = breweryRepository.findSimpleInfoByUserId(product.getUser().getId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        System.out.println(owner.getOwner_id()+" "+owner.getOwner_region());
+
+        List<String> tagList = breweryTagRepository.findTagListByBreweryId(owner.getOwner_id());
+        for(String tag : tagList){
+            System.out.println(tag);
         }
     }
 }

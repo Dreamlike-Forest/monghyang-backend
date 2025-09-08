@@ -68,6 +68,6 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     """)
     Page<ResBreweryListDto> findBreweryLatest(Pageable pageable);
 
-    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(b.id, r.name, bi.imageKey) from Brewery b left join b.regionType r on r.id = b.regionType.id left join BreweryImage bi on bi.brewery = b and bi.seq = 1")
+    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(b.id, r.name, bi.imageKey) from Brewery b left join b.regionType r left join BreweryImage bi on bi.brewery = b and bi.seq = 1 where b.user.id = :userId")
     Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 }

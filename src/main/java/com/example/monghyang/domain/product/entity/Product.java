@@ -23,7 +23,7 @@ public class Product {
     private String name;
     @Column(nullable = false)
     private Double alcohol;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isOnlineSell;
     @Column(nullable = false)
     private Integer salesVolume;
@@ -40,9 +40,9 @@ public class Product {
     private Integer finalPrice;
     @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isSoldout;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isDeleted;
 
     @Builder

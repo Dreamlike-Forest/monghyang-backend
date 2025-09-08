@@ -23,6 +23,6 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
     @Query("select s from Seller s where s.isDeleted = false")
     Page<Seller> findActiveLatest(Pageable pageable);
 
-    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(s.id) from Seller s")
+    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(s.id) from Seller s where s.user.id = :userId")
     Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 }
