@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.product.controller;
 
 import com.example.monghyang.domain.global.response.ResponseDataDto;
+import com.example.monghyang.domain.product.dto.ResProductDto;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,4 +48,9 @@ public class ProductController {
     }
 
     // 특정 상품 세부조회(식별자 기준)
+    @GetMapping("/{productId}")
+    @Operation(summary = "상품 식별자 기준 세부 조회")
+    public ResponseEntity<ResponseDataDto<ResProductDto>> getProductById(@PathVariable Long productId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productService.getProductById(productId)));
+    }
 }

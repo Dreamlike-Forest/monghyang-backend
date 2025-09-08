@@ -1,20 +1,23 @@
 package com.example.monghyang.domain.product.service;
 
+import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
-import com.example.monghyang.domain.product.dto.ReqProductDto;
-import com.example.monghyang.domain.product.dto.ResProductListDto;
-import com.example.monghyang.domain.product.dto.UpdateProductDto;
+import com.example.monghyang.domain.product.dto.*;
 import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.product.entity.ProductImage;
 import com.example.monghyang.domain.product.repository.ProductImageRepository;
 import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.product.tag.ProductTagRepository;
+import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
+import com.example.monghyang.domain.users.dto.UserSimpleInfoDto;
+import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -42,14 +45,20 @@ public class ProductService {
     private final StorageService storageService;
     private final ProductImageRepository productImageRepository;
     private final ProductTagRepository productTagRepository;
+    private final BreweryRepository breweryRepository;
+    private final SellerRepository sellerRepository;
+    private final BreweryTagRepository breweryTagRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository) {
+    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository) {
         this.productRepository = productRepository;
         this.usersRepository = usersRepository;
         this.storageService = storageService;
         this.productImageRepository = productImageRepository;
         this.productTagRepository = productTagRepository;
+        this.breweryRepository = breweryRepository;
+        this.sellerRepository = sellerRepository;
+        this.breweryTagRepository = breweryTagRepository;
     }
 
     private void addTagListToResult(Page<ResProductListDto> result) {
@@ -110,6 +119,34 @@ public class ProductService {
     }
 
     // 상품 상세 조회(식별자 기준)
+    public ResProductDto getProductById(Long productId) {
+        // 1. 상품 조회
+        Product product = productRepository.findById(productId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        ResProductDto result = ResProductDto.productFrom(product);
+
+        // 2. 회원 테이블에서 'username'과 'role_type'만 조회하기
+        // 이 role type에 따라서 판매자/양조장 중 하나의 테이블을 조회
+        UserSimpleInfoDto userInfo = usersRepository.findNicknameAndRoleType(product.getUser().getId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        // 3. 판매자의 회원 타입 유형에 따라 상품의 '소유자' 간단 정보를 dto에 삽입
+        if(userInfo.roleType().equals(RoleType.ROLE_BREWERY)) {
+            ResProductOwnerDto owner = breweryRepository.findSimpleInfoByUserId(product.getUser().getId()).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+            result.setOwner(owner);
+            // 양조장의 경우 태그 리스트까지 조회하여 반환
+            List<String> tagList = breweryTagRepository.findTagListByBreweryId(owner.getOwner_id());
+            result.getOwner().setTags_name(tagList);
+        } else if(userInfo.roleType().equals(RoleType.ROLE_SELLER)) {
+            ResProductOwnerDto owner = sellerRepository.findSimpleInfoByUserId(product.getUser().getId()).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+            result.setOwner(owner);
+        } else {
+            // role 정보가 잘못됨.
+            throw new ApplicationException(ApplicationError.SERVER_ERROR);
+        }
+        return result;
+    }
 
     // 특정 판매자(혹은 양조장)의 모든 상품 조회
     public Page<ResProductListDto> getProductByUserId(Long userId, Integer startOffset) {

@@ -8,7 +8,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonInclude(JsonInclude.Include.NON_NULL) // null 필드는 json 직렬화하지 않게 설정
 public class ResponseDataDto<T> {
     // 모든 데이터 조회 응답에 사용되는 dto

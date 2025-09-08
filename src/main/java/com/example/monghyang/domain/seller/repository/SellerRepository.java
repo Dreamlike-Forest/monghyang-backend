@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.seller.repository;
 
+import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.users.entity.Users;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,7 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
 
     @Query("select s from Seller s where s.isDeleted = false")
     Page<Seller> findActiveLatest(Pageable pageable);
+
+    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(s.id) from Seller s")
+    Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 }

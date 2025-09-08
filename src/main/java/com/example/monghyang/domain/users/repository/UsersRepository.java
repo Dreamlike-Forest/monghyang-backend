@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.users.repository;
 
+import com.example.monghyang.domain.users.dto.UserSimpleInfoDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,4 +18,7 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Optional<Users> findByEmailActiveJoinedRole(@Param("email") String email);
     Optional<Users> findByoAuth2Id(String oAuth2Id);
     boolean existsByEmail(String email);
+
+    @Query("select new com.example.monghyang.domain.users.dto.UserSimpleInfoDto(u.nickname, r.name) from Users u join u.role r on u.role.id = r.id and u.id = :userId")
+    Optional<UserSimpleInfoDto> findNicknameAndRoleType(@Param("userId") Long userId);
 }

@@ -2,6 +2,7 @@ package com.example.monghyang.domain.brewery.main.repository;
 
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
 import com.example.monghyang.domain.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BreweryRepository extends JpaRepository<Brewery, Long> {
-    @Query("select b.user.phone from Brewery b where b.id = :breweryId")
-    Optional<String> findPhoneById(@Param("breweryId") Long breweryId);
-
     @Query("select b from Brewery b where b.user.id = :userId")
     Optional<Brewery> findByUserId(@Param("userId") Long userId);
 
@@ -69,4 +67,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
         where b.isDeleted = false
     """)
     Page<ResBreweryListDto> findBreweryLatest(Pageable pageable);
+
+    @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(b.id, r.name, bi.imageKey) from Brewery b left join b.regionType r on r.id = b.regionType.id left join BreweryImage bi on bi.brewery = b and bi.seq = 1")
+    Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 }

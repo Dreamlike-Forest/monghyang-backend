@@ -42,7 +42,8 @@ public enum ApplicationError {
     NEW_PASSWORD_NULL(HttpStatus.NOT_FOUND, "새 비밀번호를 입력해주세요."),
     NOT_MATCH_CUR_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호가 일치하지 않습니다."),
     SESSION_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 파싱 중 에러가 발생했습니다."),
-    SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다.");
+    SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다."),
+    SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 알 수 없는 에러가 발생했습니다.");
 
 
     private final HttpStatus status;
