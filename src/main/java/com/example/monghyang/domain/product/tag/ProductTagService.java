@@ -30,8 +30,8 @@ public class ProductTagService {
     }
 
     // 태그 추가 및 삭제
-    public void updateTag(Long userId, ReqTagDto reqTagDto) {
-        Product product = productRepository.findByUserId(userId).orElseThrow(() ->
+    public void updateTag(Long userId, Long productId, ReqTagDto reqTagDto) {
+        Product product = productRepository.findByUserId(userId, productId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
         // 태그 추가
         for(Integer curTagId : reqTagDto.getAdd_tag_list()) {
