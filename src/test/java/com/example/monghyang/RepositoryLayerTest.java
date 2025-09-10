@@ -11,7 +11,9 @@ import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
 import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.product.review.ProductReviewRepository;
+import com.example.monghyang.domain.product.tag.ProductTagRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
+import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.users.dto.UserSimpleInfoDto;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -47,25 +49,19 @@ public class RepositoryLayerTest {
     private ProductReviewRepository productReviewRepository;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private ProductTagRepository productTagRepository;
 
     @Test
     @Transactional
     void test() {
-        Long productId = 152L;
-        Product product = productRepository.findById(productId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
-        UserSimpleInfoDto userInfo = usersRepository.findNicknameAndRoleType(product.getUser().getId()).orElseThrow(() ->
-                new ApplicationException(ApplicationError.USER_NOT_FOUND));
-
-        System.out.println(userInfo.nickname()+" "+userInfo.roleType());
-
-        ResProductOwnerDto owner = breweryRepository.findSimpleInfoByUserId(product.getUser().getId()).orElseThrow(() ->
-                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        System.out.println(owner.getOwner_id()+" "+owner.getOwner_region());
-
-        List<String> tagList = breweryTagRepository.findTagListByBreweryId(owner.getOwner_id());
-        for(String tag : tagList){
-            System.out.println(tag);
+        List<Long> idList = new ArrayList<>();
+        idList.add(155L);
+        idList.add(156L);
+        List<TagNameDto> list = productTagRepository.findAuthTagListByProductIdList(idList);
+        for(TagNameDto dto : list){
+            System.out.println(dto.ownerId()+" "+dto.tagName());
         }
+
     }
 }
