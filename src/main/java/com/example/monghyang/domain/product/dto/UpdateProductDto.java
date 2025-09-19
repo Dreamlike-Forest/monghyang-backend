@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +19,8 @@ public class UpdateProductDto {
     private Double alcohol;
     private Boolean is_online_sell;
     private Integer volume;
-    private Integer origin_price;
-    private Integer discount_rate;
+    private BigDecimal origin_price;
+    private BigDecimal discount_rate;
     private Boolean is_soldout;
     private String description;
     private List<AddImageDto> add_images = new ArrayList<>(); // 새로 추가할 이미지 리스트

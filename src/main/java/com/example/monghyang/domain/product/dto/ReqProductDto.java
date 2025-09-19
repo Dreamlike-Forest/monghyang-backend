@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -20,7 +21,7 @@ public class ReqProductDto {
     @NotNull(message = "상품의 용량을 입력해주세요.")
     private Integer volume;
     @NotNull(message = "상품의 정가를 입력해주세요.")
-    private Integer origin_price;
+    private BigDecimal origin_price;
     private String description;
     private List<AddImageDto> images; // 새로 추가할 이미지 리스트(seq가 1인 이미지가 대표 이미지)
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class Brewery {
     private String breweryWebsite;
 
     @Column(nullable = false)
-    private Integer minJoyPrice = 0;
+    private BigDecimal minJoyPrice = BigDecimal.ZERO;
     @Column(nullable = false)
     private Integer joyCount = 0;
 
@@ -118,7 +119,7 @@ public class Brewery {
         this.user.updateAddressDetail(breweryAddressDetail); // 회원 테이블에도 같이 반영
     }
 
-    public void updateMinJoyPrice(Integer minJoyPrice) {
+    public void updateMinJoyPrice(BigDecimal minJoyPrice) {
         this.minJoyPrice = minJoyPrice;
     }
 

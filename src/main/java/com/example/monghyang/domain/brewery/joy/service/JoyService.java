@@ -48,10 +48,13 @@ public class JoyService {
                 .imageKey(imageKey)
                 .build();
         joyRepository.save(joy);
-        if(joy.getFinalPrice() < brewery.getMinJoyPrice()) {
+        if(brewery.getJoyCount() == 0) {
+            brewery.updateMinJoyPrice(joy.getFinalPrice());
+        } else if(joy.getFinalPrice().compareTo(brewery.getMinJoyPrice()) < 0){
             // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
             brewery.updateMinJoyPrice(joy.getFinalPrice());
         }
+
         brewery.increaseJoyCount(); // 양조장의 체험 개수 카운트 1 증가
     }
 
@@ -106,7 +109,7 @@ public class JoyService {
         if(reqUpdateJoyDto.getIs_soldout() != null) {
             joy.updateSoldout(reqUpdateJoyDto.getIs_soldout());
         }
-        if(joy.getFinalPrice() < brewery.getMinJoyPrice()) {
+        if(joy.getFinalPrice().compareTo(brewery.getMinJoyPrice()) < 0) {
             // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
             brewery.updateMinJoyPrice(joy.getFinalPrice());
         }

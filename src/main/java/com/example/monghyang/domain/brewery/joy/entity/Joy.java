@@ -5,6 +5,9 @@ import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -22,12 +25,12 @@ public class Joy { // 양조장 체험
     private String place;
     @Column(nullable = false)
     private String detail;
-    @Column(nullable = false)
-    private Integer originPrice;
-    @Column(nullable = false)
-    private Integer discountRate;
-    @Column(nullable = false)
-    private Integer finalPrice;
+    @Column(nullable = false, precision = 8)
+    private BigDecimal originPrice;
+    @Column(nullable = false, precision = 3, scale = 1)
+    private BigDecimal discountRate;
+    @Column(nullable = false, precision = 8)
+    private BigDecimal finalPrice;
     @Column(nullable = false)
     private Integer salesVolume;
     private String imageKey;
@@ -37,21 +40,21 @@ public class Joy { // 양조장 체험
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "joyBuilder")
-    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull Integer originPrice, String imageKey) {
+    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, String imageKey) {
         this.brewery = brewery;
         this.name = name;
         this.place = place;
         this.detail = detail;
         this.originPrice = originPrice;
-        this.discountRate = 0; // 초기 할인율 기본값: 0%
+        this.discountRate = BigDecimal.ZERO; // 초기 할인율 기본값: 0%
         this.finalPrice = originPrice;
         this.salesVolume = 0; // 초기 판매(예약)량: 0
         this.imageKey = imageKey;
     }
 
     // 정가와 할인비율 값을 받아 최종 판매가를 계산하는 메소드
-    public Integer calFinalPrice(Integer originPrice, Integer discountRate) {
-        return originPrice - (int)(originPrice * discountRate / 100.0);
+    public BigDecimal calFinalPrice(BigDecimal originPrice, BigDecimal discountRate) {
+        return originPrice.subtract((originPrice.multiply(discountRate).divide(BigDecimal.valueOf(100.0), 1, RoundingMode.UP)));
     }
 
     public void setDeleted() {
@@ -74,12 +77,12 @@ public class Joy { // 양조장 체험
         this.detail = detail;
     }
 
-    public void updateOriginPrice(Integer originPrice) {
+    public void updateOriginPrice(BigDecimal originPrice) {
         this.originPrice = originPrice;
         this.finalPrice = calFinalPrice(originPrice, this.discountRate);
     }
 
-    public void updateDiscountRate(Integer discountRate) {
+    public void updateDiscountRate(BigDecimal discountRate) {
         this.discountRate = discountRate;
         this.finalPrice = calFinalPrice(this.originPrice, discountRate);
     }
