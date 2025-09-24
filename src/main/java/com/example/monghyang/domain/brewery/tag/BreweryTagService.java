@@ -1,0 +1,62 @@
+package com.example.monghyang.domain.brewery.tag;
+
+import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.tag.dto.ReqTagDto;
+import com.example.monghyang.domain.tag.dto.ResTagListDto;
+import com.example.monghyang.domain.tag.entity.Tags;
+import com.example.monghyang.domain.tag.repository.TagsRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class BreweryTagService {
+    private final BreweryTagRepository breweryTagRepository;
+    private final BreweryRepository breweryRepository;
+    private final TagsRepository tagsRepository;
+
+    @Autowired
+    public BreweryTagService(BreweryTagRepository breweryTagRepository, BreweryRepository breweryRepository, TagsRepository tagsRepository) {
+        this.breweryTagRepository = breweryTagRepository;
+        this.breweryRepository = breweryRepository;
+        this.tagsRepository = tagsRepository;
+    }
+
+    // 태그 수정
+    @Transactional
+    public void updateTag(Long userId, ReqTagDto reqBreweryTagDto) throws DataIntegrityViolationException {
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+
+        // 태그 추가
+        for(Integer curTagId : reqBreweryTagDto.getAdd_tag_list()) {
+            Tags tags = tagsRepository.findById(curTagId).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.TAG_NOT_FOUND));
+            breweryTagRepository.save(BreweryTag.breweryTagsOf(brewery, tags));
+        }
+
+        // 태그 삭제: 일괄 삭제 벌크 쿼리
+        breweryTagRepository.deleteByBreweryIdAndTagId(brewery.getId(), reqBreweryTagDto.getDelete_tag_list());
+    }
+
+    public List<ResTagListDto> getBreweryTagsById(Long breweryId) {
+        List<BreweryTag> result = breweryTagRepository.findByBreweryId(breweryId);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.TAG_NOT_FOUND);
+        }
+
+        return result.stream().
+                map(breweryTag ->
+                        ResTagListDto.tagIdTagName(breweryTag.getTags().getId(), breweryTag.getTags().getName()))
+                .toList();
+    }
+
+}

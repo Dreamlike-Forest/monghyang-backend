@@ -11,6 +11,8 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+    sourceCompatibility JavaVersion.VERSION_21
+    targetCompatibility JavaVersion.VERSION_21
 }
 
 configurations {
@@ -24,6 +26,7 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -37,13 +40,41 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
+	testImplementation 'org.mockito:mockito-inline:5.2.0'
+	testRuntimeOnly 'net.bytebuddy:byte-buddy-agent:1.17.6'
+	testImplementation 'org.testcontainers:junit-jupiter:1.20.2'
+	testImplementation 'org.testcontainers:mariadb:1.20.2'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // API 정의 제공. jjwt 모듈 사용 시 기본적으로 필요
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT의 실제 구현을 포함
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Jackson을 통한 JWT의 직렬화 및 역직렬화 지원
 	implementation 'org.springframework.boot:spring-boot-starter-validation' // Validation
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+	implementation 'software.amazon.awssdk:s3:2.25.47'
 }
 
-tasks.named('test') {
+tasks.withType(Test).configureEach {
+	// devtest 패키지는 테스트 실행 제외
+	exclude '**/com/example/monghyang/devtest/**'
+
 	useJUnitPlatform()
+
+	testLogging {
+		events 'FAILED', 'SKIPPED'
+		exceptionFormat = 'FULL'
+		showExceptions = true
+		showCauses = true
+		showStackTraces = true
+	}
+
+	// byte-buddy-agent를 자바 에이전트로 주입
+	// 구성 시점에 classpath가 아직 완전히 정리되지 않은 경우를 대비해 doFirst 안에서 처리
+	doFirst {
+		def agentFile = configurations.testRuntimeClasspath.files.find { it.name.startsWith('byte-buddy-agent') }
+		if (agentFile) {
+			jvmArgs "-javaagent:${agentFile.absolutePath}"
+		} else {
+			logger.lifecycle('[test] byte-buddy-agent not found on testRuntimeClasspath; skipping -javaagent')
+		}
+	}
 }

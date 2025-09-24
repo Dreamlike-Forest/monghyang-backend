@@ -1,10 +1,9 @@
 package com.example.monghyang.domain.users.entity;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -28,7 +27,7 @@ public class Users {
     private String nickname;
     @Column(nullable = false)
     private String name;
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false, unique = true)
     private String phone;
     @Column(nullable = false)
     private LocalDate birth;
@@ -47,10 +46,14 @@ public class Users {
     @CreationTimestamp
     private LocalDate createdAt;
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
-    private Boolean isDeleted = false;
+    private Boolean isDeleted = Boolean.FALSE;
 
-    @Builder(builderMethodName = "generalBuilder") // 플랫폼 회원가입
-    public Users(Role role, String email, String password, String nickname, String name, String phone, LocalDate birth, Boolean gender, String address, String address_detail, Boolean isAgreed) {
+    @Builder(builderMethodName = "generalBuilder") // 일반 회원 플랫폼 회원가입
+    public Users(@NonNull Role role, @NonNull String email, @NonNull String password, @NonNull String nickname, @NonNull String name, @NonNull String phone, @NonNull LocalDate birth, @NonNull Boolean gender, @NonNull String address, @NonNull String address_detail, @NonNull Boolean isAgreed) {
+        if(isAgreed == Boolean.FALSE) {
+            // 약관에 동의하지 않으면 회원가입 불가
+            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
+        }
         this.role = role;
         this.email = email;
         this.password = password;
@@ -73,51 +76,57 @@ public class Users {
         this.password = "oAuth2User";
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public void setEmail(String email) {
+    public void updateEmail(String email) {
         this.email = email;
     }
 
-    public void setPassword(String password) {
+    public void updatePassword(String password) {
         this.password = password;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public void setName(String name) {
+    public void updateName(String name) {
         this.name = name;
     }
 
-    public void setPhone(String phone) {
+    public void updatePhone(String phone) {
         this.phone = phone;
     }
 
-    public void setBirth(LocalDate birth) {
+    public void updateBirth(LocalDate birth) {
         this.birth = birth;
     }
 
-    public void setGender(Boolean gender) {
-        this.gender = gender;
+    public void updateGender(String gender) {
+        if(gender.equals("man")) {
+            this.gender = Boolean.FALSE;
+        } else {
+            this.gender = Boolean.TRUE;
+        }
     }
 
-    public void setAddress(String address) {
+    public void updateRole(Role role) {
+        // 권한 변경
+        this.role = role;
+    }
+
+    public void setDeleted() {
+        // 유저 삭제 처리
+        this.isDeleted = Boolean.TRUE;
+    }
+    public void unSetDeleted() {
+        // 유저 삭제 처리 복구(휴면 회원 복구 등에 사용)
+        this.isDeleted = Boolean.FALSE;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateAddress(String address) {
         this.address = address;
     }
 
-    public void setAgreed(Boolean agreed) {
-        isAgreed = agreed;
-    }
-
-    public void setAddressDetail(String addressDetail) {
+    public void updateAddressDetail(String addressDetail) {
         this.addressDetail = addressDetail;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        isDeleted = deleted;
     }
 }

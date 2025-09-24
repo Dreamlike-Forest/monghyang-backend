@@ -2,14 +2,20 @@ package com.example.monghyang.domain.redis;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.util.DeviceTypeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class RedisService {
     private final Long refreshTokenExpiration; // Redis 요소 수명
@@ -86,6 +92,33 @@ public class RedisService {
         String sessionId = getSessionIdWithUserIdAndDeviceType(userId, deviceType);
         deleteSessionId(sessionId);
         stringRedisTemplate.delete(key);
+    }
+
+    public void deleteAllInfo(Long userId) {
+        int maxInfoNum = DeviceTypeUtil.DeviceType.values().length; // 한 유저가 가질 수 있는 최대 로그인 상태의 개수
+
+        // 해당 유저의 모든 세션 제거
+        String loginInfoKeyPattern = "auth:"+userId+":*";
+        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(loginInfoKeyPattern).count(maxInfoNum).build())) {
+            while (cursor.hasNext()) {
+                String curLoginInfoKey = cursor.next();
+                String curSessionId = "spring:session:sessions:" + stringRedisTemplate.opsForValue().get(curLoginInfoKey);
+                stringRedisTemplate.delete(curSessionId);
+                stringRedisTemplate.delete(curLoginInfoKey);
+            }
+        }
+
+        // 해당 유저의 모든 RT 제거
+        String refreshTokenKeyPattern = "refresh:"+userId+":*";
+        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshTokenKeyPattern).count(maxInfoNum).build())) {
+            while (cursor.hasNext()) {
+                String curRefreshTokenKey = cursor.next();
+                if(curRefreshTokenKey != null){
+                    stringRedisTemplate.delete(curRefreshTokenKey);
+                }
+            }
+        }
+
     }
 
 }
