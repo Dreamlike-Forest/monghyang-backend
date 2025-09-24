@@ -11,9 +11,16 @@ public enum ApplicationError {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원 정보가 존재하지 않습니다."),
     SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "판매자 정보가 존재하지 않습니다."),
     BREWERY_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 정보가 존재하지 않습니다."),
+    BREWERY_OPENING_TIME_INVALID(HttpStatus.BAD_REQUEST, "양조장 운영 시간대가 잘못되었습니다."),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 정보가 존재하지 않습니다."),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰 정보가 존재하지 않습니다."),
     JOY_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 정보가 존재하지 않습니다."),
+    JOY_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 예약 내역 정보가 존재하지 않습니다."),
+    JOY_ORDER_TIME_UPDATE_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 변경할 수 있습니다."),
+    JOY_ORDER_CANCEL_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 취소할 수 있습니다."),
+    JOY_ORDER_DELETE_ERROR(HttpStatus.BAD_REQUEST, "체험 종료 이후부터 예약 내역을 삭제할 수 있습니다."),
+    JOY_ORDER_TIME_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 체험 시간대입니다."),
+    JOY_TIME_DUPLICATE(HttpStatus.CONFLICT, "이미 해당 시간에 다른 예약이 존재합니다. 다른 시간대를 선택해주세요."),
     AUTH_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "세션(인증) 정보가 존재하지 않습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),
@@ -43,6 +50,7 @@ public enum ApplicationError {
     NOT_MATCH_CUR_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호가 일치하지 않습니다."),
     SESSION_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 파싱 중 에러가 발생했습니다."),
     SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다."),
+    MANIPULATE_ORDER_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "주문 금액이 조작된 요청입니다."),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 알 수 없는 에러가 발생했습니다.");
 
 

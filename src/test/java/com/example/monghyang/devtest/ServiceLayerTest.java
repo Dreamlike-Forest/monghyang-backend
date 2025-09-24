@@ -1,10 +1,9 @@
-package com.example.monghyang;
+package com.example.monghyang.devtest;
 
 import com.example.monghyang.domain.brewery.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.main.service.BreweryService;
-import com.example.monghyang.domain.product.dto.ReqProductDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
@@ -16,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

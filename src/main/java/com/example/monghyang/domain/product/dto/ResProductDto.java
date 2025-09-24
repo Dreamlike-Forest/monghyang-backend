@@ -3,6 +3,7 @@ package com.example.monghyang.domain.product.dto;
 import com.example.monghyang.domain.product.entity.Product;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,9 +16,9 @@ public class ResProductDto {
     private Integer product_volume;
     private String product_description;
     private LocalDateTime product_registered_at;
-    private Integer product_final_price;
-    private Integer product_discount_rate;
-    private Integer product_origin_price;
+    private BigDecimal product_final_price;
+    private BigDecimal product_discount_rate;
+    private BigDecimal product_origin_price;
 
     private String user_nickname; // 상호명
     private List<ResProductImageDto> product_image_image_key; // 상품 이미지 리스트

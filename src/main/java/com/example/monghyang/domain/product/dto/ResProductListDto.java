@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -17,9 +18,9 @@ public class ResProductListDto {
     private final Double product_alcohol;
     private final Integer product_volume;
     private final Integer product_sales_volume; // 판매량
-    private final Integer product_origin_price;
-    private final Integer product_discount_rate;
-    private final Integer product_final_price;
+    private final BigDecimal product_origin_price;
+    private final BigDecimal product_discount_rate;
+    private final BigDecimal product_final_price;
     private final String image_key; // 상품 대표 이미지
     @Setter
     private List<String> tag_name;

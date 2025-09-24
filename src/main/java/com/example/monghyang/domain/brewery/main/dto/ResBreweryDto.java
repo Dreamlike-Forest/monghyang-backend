@@ -5,6 +5,7 @@ import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -22,6 +23,8 @@ public class ResBreweryDto {
     private final LocalDate brewery_registered_at;
     private final Boolean brewery_is_regular_visit;
     private final Boolean brewery_is_visiting_brewery;
+    private final LocalTime brewery_start_time;
+    private final LocalTime brewery_end_time;
     private List<ResBreweryImageDto> brewery_image_image_key; // 이미지 리스트
     private List<String> tags_name; // 양조장 주종 태그 이름 리스트
     private List<ResJoyDto> joy;
@@ -40,6 +43,8 @@ public class ResBreweryDto {
         this.brewery_registered_at = brewery.getRegisteredAt();
         this.brewery_is_regular_visit = brewery.getIsRegularVisit();
         this.brewery_is_visiting_brewery = brewery.getIsVisitingBrewery();
+        this.brewery_start_time = brewery.getStartTime();
+        this.brewery_end_time = brewery.getEndTime();
     }
 
     /**

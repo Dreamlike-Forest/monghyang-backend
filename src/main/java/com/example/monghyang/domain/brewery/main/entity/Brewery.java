@@ -1,9 +1,7 @@
 package com.example.monghyang.domain.brewery.main.entity;
 
-import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,8 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalTime;
 
 @Entity
 @Getter
@@ -43,6 +40,10 @@ public class Brewery {
     private String breweryAccountNumber;
     @Column(nullable = false)
     private String breweryBankName;
+    @Column(nullable = false)
+    private LocalTime startTime;
+    @Column(nullable = false)
+    private LocalTime endTime;
 
     @Column(columnDefinition = "TEXT")
     private String introduction;
@@ -66,7 +67,7 @@ public class Brewery {
     private Boolean isDeleted = Boolean.FALSE;
     
     @Builder(builderMethodName = "breweryBuilder")
-    public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery) {
+    public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery, @NonNull LocalTime startTime, @NonNull LocalTime endTime) {
         if(isAgreedBrewery == Boolean.FALSE){
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
@@ -83,6 +84,9 @@ public class Brewery {
         this.breweryWebsite = breweryWebsite;
         this.isRegularVisit = isRegularVisit;
         this.isAgreedBrewery = isAgreedBrewery;
+        // 운영시간은 '분' 단위까지만 취급
+        this.startTime = startTime.withSecond(0).withNano(0);
+        this.endTime = endTime.withSecond(0).withNano(0);
     }
 
     public void setVisitingBrewery() {
@@ -159,4 +163,11 @@ public class Brewery {
         isRegularVisit = regularVisit;
     }
 
+    public void updateEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public void updateStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
 }

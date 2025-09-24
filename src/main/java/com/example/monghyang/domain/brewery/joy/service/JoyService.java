@@ -44,7 +44,7 @@ public class JoyService {
         Joy joy = Joy.joyBuilder()
                 .brewery(brewery).name(reqJoyDto.getName())
                 .place(reqJoyDto.getPlace()).detail(reqJoyDto.getDetail())
-                .originPrice(reqJoyDto.getOrigin_price())
+                .originPrice(reqJoyDto.getOrigin_price()).timeUnit(reqJoyDto.getTime_unit())
                 .imageKey(imageKey)
                 .build();
         joyRepository.save(joy);
@@ -109,9 +109,8 @@ public class JoyService {
         if(reqUpdateJoyDto.getIs_soldout() != null) {
             joy.updateSoldout(reqUpdateJoyDto.getIs_soldout());
         }
-        if(joy.getFinalPrice().compareTo(brewery.getMinJoyPrice()) < 0) {
-            // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
-            brewery.updateMinJoyPrice(joy.getFinalPrice());
+        if(reqUpdateJoyDto.getTime_unit() != null) {
+            joy.updateTimeUnit(reqUpdateJoyDto.getTime_unit());
         }
     }
 }

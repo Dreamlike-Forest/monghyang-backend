@@ -3,15 +3,17 @@ package com.example.monghyang.domain.brewery.joy.dto;
 import com.example.monghyang.domain.brewery.joy.entity.Joy;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+
 @Getter
 public class ResJoyDto {
     private final Long joy_id;
     private final String joy_name;
     private final String joy_place;
     private final String joy_detail;
-    private final Integer joy_origin_price;
-    private final Integer joy_discount_rate;
-    private final Integer joy_final_price;
+    private final BigDecimal joy_origin_price;
+    private final BigDecimal joy_discount_rate;
+    private final BigDecimal joy_final_price;
     private final Integer joy_sales_volume;
     private final String joy_image_key;
     private final Boolean joy_is_soldout;

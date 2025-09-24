@@ -32,6 +32,8 @@ public class Joy { // 양조장 체험
     @Column(nullable = false, precision = 8)
     private BigDecimal finalPrice;
     @Column(nullable = false)
+    private Integer timeUnit;
+    @Column(nullable = false)
     private Integer salesVolume;
     private String imageKey;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
@@ -40,7 +42,7 @@ public class Joy { // 양조장 체험
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "joyBuilder")
-    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, String imageKey) {
+    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, @NonNull Integer timeUnit, String imageKey) {
         this.brewery = brewery;
         this.name = name;
         this.place = place;
@@ -49,6 +51,7 @@ public class Joy { // 양조장 체험
         this.discountRate = BigDecimal.ZERO; // 초기 할인율 기본값: 0%
         this.finalPrice = originPrice;
         this.salesVolume = 0; // 초기 판매(예약)량: 0
+        this.timeUnit = timeUnit;
         this.imageKey = imageKey;
     }
 
@@ -80,6 +83,10 @@ public class Joy { // 양조장 체험
     public void updateOriginPrice(BigDecimal originPrice) {
         this.originPrice = originPrice;
         this.finalPrice = calFinalPrice(originPrice, this.discountRate);
+        // 양조장 최소 체험 가격 갱신 여부 검증 후 갱신
+        if(this.finalPrice.compareTo(this.brewery.getMinJoyPrice()) < 0) {
+            this.brewery.updateMinJoyPrice(this.finalPrice);
+        }
     }
 
     public void updateDiscountRate(BigDecimal discountRate) {
@@ -93,5 +100,9 @@ public class Joy { // 양조장 체험
 
     public void updateImageKey(String imageKey) {
         this.imageKey = imageKey;
+    }
+
+    public void updateTimeUnit(Integer timeUnit) {
+        this.timeUnit = timeUnit;
     }
 }

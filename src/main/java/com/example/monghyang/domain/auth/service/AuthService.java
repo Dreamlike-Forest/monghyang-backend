@@ -145,6 +145,10 @@ public class AuthService {
 
     @Transactional
     public void breweryJoin(BreweryJoinDto breweryJoinDto) {
+        if(breweryJoinDto.getStart_time().isAfter(breweryJoinDto.getEnd_time())) {
+            // 양조장 운영 종료 시간대가 운영 시작 시간대보다 더 크지 않다면 예외 발생
+            throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+        }
         // 양조장 회원 플랫폼 회원가입
         Users users = createUser(breweryJoinDto, RoleType.ROLE_BREWERY);
         usersRepository.save(users);
@@ -159,6 +163,7 @@ public class AuthService {
                 .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
                 .breweryBankName(breweryJoinDto.getBrewery_bank_name()).introduction(breweryJoinDto.getIntroduction())
                 .breweryWebsite(breweryJoinDto.getBrewery_website()).isRegularVisit(breweryJoinDto.getIs_regular_visit()).isAgreedBrewery(breweryJoinDto.getIs_agreed_brewery())
+                .startTime(breweryJoinDto.getStart_time()).endTime(breweryJoinDto.getEnd_time())
                 .build();
         breweryRepository.save(brewery);
 

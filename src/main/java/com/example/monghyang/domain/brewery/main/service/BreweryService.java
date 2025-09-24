@@ -4,7 +4,7 @@ import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.brewery.joy.entity.Joy;
 import com.example.monghyang.domain.brewery.joy.repository.JoyRepository;
-import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
+import com.example.monghyang.domain.brewery.main.dto.ReqUpdateBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.main.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.main.entity.Brewery;
@@ -32,6 +32,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,7 @@ public class BreweryService {
         // 동일한 이미지 순서값을 여러 개 받을 경우(ex: 순서가 1인 이미지를 2개 이상 받는 경우) DB 레벨 예외 발생 -> 처리 로직 필요
         // 로직을 실제로 수행하기 전 애플리케이션 레벨에서 '삭제 리스트 삭제' -> '추가 리스트 추가'를 실행한 시나리오를 실행하여 이미지 개수가 5개 이하인지 검증
     @Transactional
-    public void breweryUpdate(Long userId, ReqBreweryDto reqBreweryDto) {
+    public void breweryUpdate(Long userId, ReqUpdateBreweryDto reqBreweryDto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
 
@@ -167,6 +168,20 @@ public class BreweryService {
         }
         if(reqBreweryDto.getIs_regular_visit() != null){
             brewery.updateRegularVisit(reqBreweryDto.getIs_regular_visit());
+        }
+
+        // 운영 시간대 수정 사항 존재 시 반영
+        if(reqBreweryDto.getStart_time() != null){
+            LocalTime endTime = (reqBreweryDto.getEnd_time() == null) ? brewery.getEndTime() : reqBreweryDto.getEnd_time();
+            if(reqBreweryDto.getStart_time().isAfter(endTime)) {
+                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
+        }
+        if(reqBreweryDto.getEnd_time() != null){
+            LocalTime startTime = (reqBreweryDto.getStart_time() == null) ? brewery.getStartTime() : reqBreweryDto.getStart_time();
+            if(startTime.isAfter(reqBreweryDto.getEnd_time())) {
+                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
         }
     }
 

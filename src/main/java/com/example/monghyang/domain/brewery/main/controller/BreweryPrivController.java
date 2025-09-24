@@ -3,8 +3,11 @@ package com.example.monghyang.domain.brewery.main.controller;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqJoyDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyDto;
+import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyOrderDto;
+import com.example.monghyang.domain.brewery.joy.dto.ResJoyOrderDto;
+import com.example.monghyang.domain.brewery.joy.service.JoyOrderService;
 import com.example.monghyang.domain.brewery.joy.service.JoyService;
-import com.example.monghyang.domain.brewery.main.dto.ReqBreweryDto;
+import com.example.monghyang.domain.brewery.main.dto.ReqUpdateBreweryDto;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import com.example.monghyang.domain.global.annotation.LoginUserId;
@@ -14,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,12 +28,14 @@ public class BreweryPrivController {
     private final BreweryService breweryService;
     private final BreweryTagService breweryTagService;
     private final JoyService joyService;
+    private final JoyOrderService joyOrderService;
 
     @Autowired
-    public BreweryPrivController(BreweryService breweryService, BreweryTagService breweryTagService, JoyService joyService) {
+    public BreweryPrivController(BreweryService breweryService, BreweryTagService breweryTagService, JoyService joyService, JoyOrderService joyOrderService) {
         this.breweryService = breweryService;
         this.breweryTagService = breweryTagService;
         this.joyService = joyService;
+        this.joyOrderService = joyOrderService;
     }
 
     // 양조장 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 양조장 조회 -> 양조장 식별자 사용)
@@ -37,7 +43,7 @@ public class BreweryPrivController {
     // 양조장 수정 로직(이미지 추가/삭제 또한 한번에 가능하도록)
     @PostMapping("/update")
     @Operation(summary = "양조장 정보 수정(첫번째 이미지: 대표 이미지")
-    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @ModelAttribute ReqBreweryDto reqBreweryDto) {
+    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
         breweryService.breweryUpdate(userId, reqBreweryDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보를 업데이트했습니다."));
     }
@@ -91,5 +97,25 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Void>> restoreJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
         joyService.restoreJoy(userId, joyId);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
+    }
+
+    @PostMapping("/joy-order/change-time")
+    @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
+    public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
+        joyOrderService.changeTimeByBrewery(userId, reqUpdateJoyOrderDto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
+    }
+
+    @DeleteMapping("/joy-order/history/{joyOrderId}")
+    @Operation(summary = "체험 예약 내역 삭제 요청 API")
+    public ResponseEntity<ResponseDataDto<Void>> deleteHistory(@LoginUserId Long userId, @PathVariable Long joyOrderId) {
+        joyOrderService.cancelByBrewery(userId, joyOrderId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("예약 내역 삭제가 완료되었습니다."));
+    }
+
+    @GetMapping("/joy-order/history/{startOffset}")
+    @Operation(summary = "자신의 양조장의 체험 예약 현황 및 내역 최신순 확인", description = "페이지 크기: 12")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBrewery(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBrewery(userId, startOffset)));
     }
 }
