@@ -1,17 +1,18 @@
 package com.example.monghyang.mocktest;
 
-import com.example.monghyang.domain.brewery.joy.dto.ReqJoyOrderDto;
-import com.example.monghyang.domain.brewery.joy.dto.ReqOrderDto;
-import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyOrderDto;
-import com.example.monghyang.domain.brewery.joy.entity.Joy;
-import com.example.monghyang.domain.brewery.joy.entity.JoyOrder;
-import com.example.monghyang.domain.brewery.joy.entity.JoySlot;
-import com.example.monghyang.domain.brewery.joy.repository.JoyOrderRepository;
-import com.example.monghyang.domain.brewery.joy.repository.JoyRepository;
-import com.example.monghyang.domain.brewery.joy.repository.JoySlotRepository;
-import com.example.monghyang.domain.brewery.joy.service.JoyOrderService;
-import com.example.monghyang.domain.brewery.main.dto.OpeningHourDto;
-import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.joy.dto.ReqJoyOrderDto;
+import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
+import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.entity.JoyOrder;
+import com.example.monghyang.domain.joy.entity.JoySlot;
+import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
+import com.example.monghyang.domain.joy.repository.JoyRepository;
+import com.example.monghyang.domain.joy.repository.JoySlotRepository;
+import com.example.monghyang.domain.joy.service.JoyOrderService;
+import com.example.monghyang.domain.brewery.dto.OpeningHourDto;
+import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.entity.Role;
@@ -89,7 +90,7 @@ public class JoyOrderServiceTest {
     }
 
     private Joy joy(int timeUnit, BigDecimal originPrice) {
-        var brewery = Mockito.mock(com.example.monghyang.domain.brewery.main.entity.Brewery.class);
+        var brewery = Mockito.mock(Brewery.class);
         Joy j = Joy.joyBuilder()
                 .brewery(brewery)
                 .name("체험")

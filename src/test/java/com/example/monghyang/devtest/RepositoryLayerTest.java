@@ -1,7 +1,7 @@
 package com.example.monghyang.devtest;
 
-import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
-import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.product.review.ProductReviewRepository;

@@ -2,12 +2,12 @@ package com.example.monghyang.domain.auth.service;
 
 import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.brewery.main.entity.Brewery;
-import com.example.monghyang.domain.brewery.main.entity.BreweryImage;
-import com.example.monghyang.domain.brewery.main.entity.RegionType;
-import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
-import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
-import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
+import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryImage;
+import com.example.monghyang.domain.brewery.entity.RegionType;
+import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
@@ -34,8 +34,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @Slf4j
