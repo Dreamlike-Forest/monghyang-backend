@@ -1,7 +1,7 @@
 package com.example.monghyang.devtest;
 
-import com.example.monghyang.domain.brewery.main.entity.RegionType;
-import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;
+import com.example.monghyang.domain.brewery.entity.RegionType;
+import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.tag.entity.TagCategory;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.users.entity.Role;

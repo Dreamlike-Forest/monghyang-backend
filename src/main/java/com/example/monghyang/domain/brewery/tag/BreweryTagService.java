@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.brewery.tag;
 
-import com.example.monghyang.domain.brewery.main.entity.Brewery;
-import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.tag.dto.ReqTagDto;

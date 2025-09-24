@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.brewery.tag;
 
-import com.example.monghyang.domain.brewery.main.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.tag.entity.Tags;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
