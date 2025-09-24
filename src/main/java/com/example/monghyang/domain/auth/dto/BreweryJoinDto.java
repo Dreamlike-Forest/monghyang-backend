@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -23,6 +24,10 @@ public class BreweryJoinDto extends JoinDto {
     private String brewery_bank_name;
     private String introduction;
     private String brewery_website;
+    @NotNull(message = "운영 시작 시간을 입력해주세요.")
+    private LocalTime start_time;
+    @NotNull(message = "운영 종료 시간을 입력해주세요.")
+    private LocalTime end_time;
 
     private List<AddImageDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 

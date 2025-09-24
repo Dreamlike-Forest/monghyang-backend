@@ -15,4 +15,7 @@ public interface JoyRepository extends JpaRepository<Joy, Long> {
 
     @Query("select j from Joy j where j.id = :joyId and j.brewery.id = :breweryId")
     Optional<Joy> findByBreweryIdAndJoyId(@Param("breweryId") Long breweryId, @Param("joyId") Long joyId);
+
+    @Query("select j.timeUnit from Joy j where j.id = :joyId")
+    Optional<Integer> findTimeUnitbyId(@Param("joyId") Long joyId);
 }

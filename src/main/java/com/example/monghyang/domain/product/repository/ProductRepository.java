@@ -16,8 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("select p from Product p where p.id = :productId and p.user.id = :userId")
     Optional<Product> findByIdAndUserId(@Param("userId") Long userId, @Param("productId") Long productId);
 
-    @Query("select p from Product p where p.user.id = :userId")
-    Optional<Product> findByUserId(@Param("userId") Long userId);
+    @Query("select p from Product p where p.id = :productId and p.user.id = :userId")
+    Optional<Product> findByUserId(@Param("userId") Long userId, @Param("productId") Long productId);
 
     @Query("""
     select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
@@ -25,10 +25,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         join Users u on p.user.id = u.id
         left join ProductReview pr on pr.product.id = p.id
         left join ProductImage pi on pi.product.id = p.id and pi.seq = 1
-        where p.isDeleted = false
+        where p.isOnlineSell = true and p.isDeleted = false
         group by p.id
     """)
-    Page<ResProductListDto> findActiveLatest(Pageable pageable);
+    Page<ResProductListDto> findActiveLatest(Pageable pageable); // 상품 리스트 최신순 조회
 
     @Query("""
     select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
@@ -39,7 +39,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         where p.isDeleted = false
         group by p.id
     """)
-    Page<ResProductListDto> findActiveByUserId(@Param("userId") Long userId, Pageable pageable);
+    Page<ResProductListDto> findActiveByUserId(@Param("userId") Long userId, Pageable pageable); // 특정 유저가 업로드한 상품 조회
 
 
     /**
@@ -69,11 +69,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             and (:maxPrice is null or p.finalPrice <= :maxPrice)
             and (:minAlcohol is null or p.alcohol >= :minAlcohol)
             and (:maxAlcohol is null or p.alcohol <= :maxAlcohol)
-            and p.isDeleted = false
+            and p.isOnlineSell = true and p.isDeleted = false
         group by p.id
     """)
     Page<ResProductListDto> findByDynamicFiltering(Pageable pageable, @Param("tagListIsEmpty") boolean tagListIsEmpty, @Param("keyword") String keyword,
                                                    @Param("minPrice") Integer minPrice, @Param("maxPrice") Integer maxPrice,
                                                    @Param("minAlcohol") Double minAlcohol, @Param("maxAlcohol") Double maxAlcohol,
-                                                   @Param("tagIdList") List<Integer> tagIdList);
+                                                   @Param("tagIdList") List<Integer> tagIdList); // 상품 필터링 조회
 }

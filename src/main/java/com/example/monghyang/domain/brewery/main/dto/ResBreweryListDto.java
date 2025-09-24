@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -13,7 +14,7 @@ public class ResBreweryListDto {
     private final String brewery_brewery_name;
     private final String region_type_name;
     private final String brewery_introduction;
-    private final Integer brewery_joy_min_price;
+    private final BigDecimal brewery_joy_min_price;
     private final Integer brewery_joy_count;
     private final String image_key;
     private final Boolean is_visiting_brewery;

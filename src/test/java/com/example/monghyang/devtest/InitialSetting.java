@@ -1,4 +1,4 @@
-package com.example.monghyang;
+package com.example.monghyang.devtest;
 
 import com.example.monghyang.domain.brewery.main.entity.RegionType;
 import com.example.monghyang.domain.brewery.main.repository.RegionTypeRepository;

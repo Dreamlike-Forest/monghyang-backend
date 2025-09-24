@@ -1,27 +1,27 @@
-package com.example.monghyang;
+package com.example.monghyang.devtest;
 
-import com.example.monghyang.domain.brewery.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.main.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
-import com.example.monghyang.domain.brewery.main.service.BreweryService;
-import com.example.monghyang.domain.product.dto.ReqProductDto;
-import com.example.monghyang.domain.product.service.ProductService;
+import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
+import com.example.monghyang.domain.product.repository.ProductRepository;
+import com.example.monghyang.domain.product.review.ProductReviewRepository;
+import com.example.monghyang.domain.product.tag.ProductTagRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
+import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
-import com.example.monghyang.domain.tag.service.TagCategoryService;
-import com.example.monghyang.domain.tag.service.TagsService;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@SpringBootTest
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class ServiceLayerTest {
+public class RepositoryLayerTest {
     @Autowired
     private UsersRepository usersRepository;
     @Autowired
@@ -31,21 +31,26 @@ public class ServiceLayerTest {
     @Autowired
     private BreweryRepository breweryRepository;
     @Autowired
-    private TagCategoryService tagCategoryService;
-    @Autowired
     private TagCategoryRepository tagCategoryRepository;
     @Autowired
-    private TagsService tagsService;
+    private BreweryTagRepository breweryTagRepository;
     @Autowired
-    private JoyService joyService;
+    private ProductReviewRepository productReviewRepository;
     @Autowired
-    private BreweryService breweryService;
+    private ProductRepository productRepository;
     @Autowired
-    private ProductService productService;
+    private ProductTagRepository productTagRepository;
 
     @Test
     @Transactional
     void test() {
+        List<Long> idList = new ArrayList<>();
+        idList.add(155L);
+        idList.add(156L);
+        List<TagNameDto> list = productTagRepository.findAuthTagListByProductIdList(idList);
+        for(TagNameDto dto : list){
+            System.out.println(dto.ownerId()+" "+dto.tagName());
+        }
 
     }
 }

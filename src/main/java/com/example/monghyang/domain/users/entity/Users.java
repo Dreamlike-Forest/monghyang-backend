@@ -1,10 +1,7 @@
 package com.example.monghyang.domain.users.entity;
 
-import com.example.monghyang.domain.brewery.main.entity.Brewery;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.seller.entity.Seller;
-import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

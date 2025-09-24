@@ -1,4 +1,4 @@
-package com.example.monghyang;
+package com.example.monghyang.devtest;
 
 import com.example.monghyang.domain.redis.RedisService;
 import org.junit.jupiter.api.Test;

@@ -21,7 +21,7 @@ public interface ProductTagRepository extends JpaRepository<ProductTag, Long> {
      * @param productIdList
      * @return 인증 태그 리스트
      */
-    @Query("select new com.example.monghyang.domain.tag.dto.TagNameDto(pt.product.id, pt.tags.name) from ProductTag pt where pt.product.id in :productIdList and pt.tags.category.id = 2")
+    @Query("select new com.example.monghyang.domain.tag.dto.TagNameDto(pt.product.id, pt.tags.name) from ProductTag pt where pt.product.id in :productIdList and pt.tags.category.id = (select tc.id from TagCategory tc where tc.name = '인증')")
     List<TagNameDto> findAuthTagListByProductIdList(@Param("productIdList") List<Long> productIdList);
 
     @Query("select pt.tags.name from ProductTag pt where pt.product.id = :productId")

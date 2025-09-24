@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,12 +34,12 @@ public class Product {
     private LocalDateTime registeredAt;
     @Column(nullable = false)
     private Integer volume;
-    @Column(nullable = false)
-    private Integer originPrice;
-    @Column(nullable = false)
-    private Integer discountRate;
-    @Column(nullable = false)
-    private Integer finalPrice;
+    @Column(nullable = false, precision = 8)
+    private BigDecimal originPrice;
+    @Column(nullable = false, precision = 3, scale = 1)
+    private BigDecimal discountRate;
+    @Column(nullable = false, precision = 8)
+    private BigDecimal finalPrice;
     @Column(columnDefinition = "TEXT")
     private String description;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
@@ -47,7 +49,7 @@ public class Product {
 
     @Builder
     public Product(Users user, String name, Double alcohol, Boolean isOnlineSell,
-                   Integer volume, Integer originPrice, String description) {
+                   Integer volume, BigDecimal originPrice, String description) {
         this.user = user;
         this.name = name;
         this.alcohol = alcohol;
@@ -55,7 +57,7 @@ public class Product {
         this.salesVolume = 0;
         this.volume = volume;
         this.originPrice = originPrice;
-        this.discountRate = 0;
+        this.discountRate = BigDecimal.ZERO;
         this.finalPrice = originPrice;
         this.description = description;
         this.isSoldout = false;
@@ -63,8 +65,8 @@ public class Product {
     }
 
     // 정가와 할인비율 값을 받아 최종 판매가를 계산하는 메소드
-    public Integer calFinalPrice(Integer originPrice, Integer discountRate) {
-        return originPrice - (int)(originPrice * discountRate / 100.0);
+    public BigDecimal calFinalPrice(BigDecimal originPrice, BigDecimal discountRate) {
+        return originPrice.subtract((originPrice.multiply(discountRate).divide(BigDecimal.valueOf(100.0), 1, RoundingMode.UP)));
     }
 
     public void updateName(String name) {
@@ -87,12 +89,12 @@ public class Product {
         this.volume = volume;
     }
 
-    public void updateOriginPrice(Integer originPrice) {
+    public void updateOriginPrice(BigDecimal originPrice) {
         this.originPrice = originPrice;
         this.finalPrice = calFinalPrice(originPrice, this.discountRate);
     }
 
-    public void updateDiscountRate(Integer discountRate) {
+    public void updateDiscountRate(BigDecimal discountRate) {
         this.discountRate = discountRate;
         this.finalPrice = calFinalPrice(this.originPrice, discountRate);
     }

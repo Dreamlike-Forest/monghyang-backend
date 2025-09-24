@@ -92,10 +92,10 @@ public class SellerPrivController {
 
 
     // 상품에 대한 태그 추가 및 삭제
-    @PostMapping("/product-tag")
+    @PostMapping("/product-tag/{productId}")
     @Operation(summary = "상품에 태그를 추가하거나 기존의 태그를 삭제합니다.", description = "추가 대상 태그 식별자 리스트와 삭제 대상 태그 식별자 리스트를 json으로 보내주세요.")
-    public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @RequestBody ReqTagDto reqTagDto) {
-        productTagService.updateTag(userId, reqTagDto);
+    public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @PathVariable Long productId, @RequestBody ReqTagDto reqTagDto) {
+        productTagService.updateTag(userId, productId, reqTagDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
     }
 }
