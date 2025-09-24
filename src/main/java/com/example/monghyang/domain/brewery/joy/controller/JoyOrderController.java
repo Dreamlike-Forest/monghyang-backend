@@ -3,12 +3,14 @@ package com.example.monghyang.domain.brewery.joy.controller;
 import com.example.monghyang.domain.brewery.joy.dto.ReqJoyOrderDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqOrderDto;
 import com.example.monghyang.domain.brewery.joy.dto.ReqUpdateJoyOrderDto;
+import com.example.monghyang.domain.brewery.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.brewery.joy.service.JoyOrderService;
 import com.example.monghyang.domain.global.annotation.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,12 @@ public class JoyOrderController {
     @Autowired
     public JoyOrderController(JoyOrderService joyOrderService) {
         this.joyOrderService = joyOrderService;
+    }
+
+    @GetMapping("/my/{startOffset}")
+    @Operation(summary = "자신의 체험 예약 내역 조회", description = "페이지 크기: 12")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getMyOrders(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfUser(userId, startOffset)));
     }
 
     // 체험 예약 요청, uuid를 클라이언트로 반환

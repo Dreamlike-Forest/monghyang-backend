@@ -241,7 +241,20 @@ public class JoyOrderService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 생성일자(예약 시점) 기준 내림차순
         Pageable pageable = PageRequest.of(startOffset, JOY_ORDER_PAGE_SIZE, sort);
-        Page<ResJoyOrderDto> result = joyOrderRepository.findByBrewery(brewery.getId(), pageable);
+        Page<ResJoyOrderDto> result = joyOrderRepository.findByBreweryId(brewery.getId(), pageable);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND);
+        }
+        return result;
+    }
+
+    // 자신의 예약 내역 조회
+    public Page<ResJoyOrderDto> getHistoryOfUser(Long userId, Integer startOffset) {
+        Users user = usersRepository.findById(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 생성일자(예약 시점) 기준 내림차순
+        Pageable pageable = PageRequest.of(startOffset, JOY_ORDER_PAGE_SIZE, sort);
+        Page<ResJoyOrderDto> result = joyOrderRepository.findByUserId(user.getId(), pageable);
         if(result.isEmpty()) {
             throw new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND);
         }
