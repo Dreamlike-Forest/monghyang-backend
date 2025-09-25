@@ -27,7 +27,7 @@ public class JoyReview {
     @Column(nullable = false)
     private Integer view;
     @Column(nullable = false)
-    private Integer like;
+    private Integer likes;
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -35,13 +35,13 @@ public class JoyReview {
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder
-    public JoyReview(@NonNull Users user, @NonNull Joy joy, @NonNull String content, @NonNull Double star, @NonNull Integer view, @NonNull Integer like) {
+    public JoyReview(@NonNull Users user, @NonNull Joy joy, @NonNull String content, @NonNull Double star) {
         this.user = user;
         this.joy = joy;
         this.content = content;
         this.star = star;
-        this.view = view;
-        this.like = like;
+        this.view = 0;
+        this.likes = 0;
     }
 
     public void updateContent(String content) {
