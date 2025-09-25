@@ -121,7 +121,7 @@ public class JoyOrderServiceTest {
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(2);
             req.setPayer_name("홍길동");
             req.setPayer_phone("010-1111-2222");
@@ -148,7 +148,7 @@ public class JoyOrderServiceTest {
             when(usersRepository.findById(10L)).thenReturn(Optional.empty());
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
             req.setPayer_phone("p");
@@ -165,7 +165,7 @@ public class JoyOrderServiceTest {
             when(joyRepository.findById(1L)).thenReturn(Optional.empty());
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
             req.setPayer_phone("p");
@@ -183,7 +183,7 @@ public class JoyOrderServiceTest {
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.empty());
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
             req.setPayer_phone("p");
@@ -201,7 +201,7 @@ public class JoyOrderServiceTest {
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
             req.setPayer_phone("p");
@@ -220,7 +220,7 @@ public class JoyOrderServiceTest {
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
             ReqJoyOrderDto req = new ReqJoyOrderDto();
-            req.setJoy_id(1L);
+            req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
             req.setPayer_phone("p");
