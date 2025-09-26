@@ -39,8 +39,9 @@ public class JoyOrder {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime reservation;
-    @Column(nullable = false, columnDefinition = "TINYINT(1)")
-    private Boolean isCanceled = false;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private JoyPaymentStatus joyPaymentStatus;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isDeleted = false;
 
@@ -55,10 +56,11 @@ public class JoyOrder {
         this.payerPhone = payerPhone;
         this.reservation = reservation.withSecond(0).withNano(0); // 분 단위까지 저장
         this.totalPrice = joy.getFinalPrice().multiply(BigDecimal.valueOf(count)); // 최종 결제 금액
+        this.joyPaymentStatus = JoyPaymentStatus.PENDING;
     }
 
     public void setCanceled() {
-        this.isCanceled = true;
+        this.joyPaymentStatus = JoyPaymentStatus.CANCELED;
     }
     public void setDeleted() {
         this.isDeleted = true;
@@ -76,5 +78,13 @@ public class JoyOrder {
             // 딱 한번만 수정 가능
             this.pgPaymentKey = pgPaymentKey;
         }
+    }
+
+    public void setPaid() {
+        this.joyPaymentStatus = JoyPaymentStatus.PAID;
+    }
+
+    public void setFailed() {
+        this.joyPaymentStatus = JoyPaymentStatus.FAILED;
     }
 }

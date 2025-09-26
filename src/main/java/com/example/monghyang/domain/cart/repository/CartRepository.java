@@ -17,4 +17,7 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("select c from Cart c where c.user.id = :userId")
     List<Cart> findByUserId(@Param("userId") Long userId);
+
+    @Query("select c from Cart c where c.id in :idList and c.user.id = :userId")
+    List<Cart> findByIdListAndUserId(@Param("idList") List<Long> idList, @Param("userId") Long userId);
 }

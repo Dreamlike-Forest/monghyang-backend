@@ -1,12 +1,10 @@
 package com.example.monghyang.domain.joy.service;
 
-import com.example.monghyang.domain.joy.dto.ReqJoyOrderDto;
+import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
-import com.example.monghyang.domain.joy.entity.Joy;
-import com.example.monghyang.domain.joy.entity.JoyOrder;
-import com.example.monghyang.domain.joy.entity.JoySlot;
+import com.example.monghyang.domain.joy.entity.*;
 import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.repository.JoySlotRepository;
@@ -15,6 +13,7 @@ import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -41,14 +40,16 @@ public class JoyOrderService {
     private final JoyRepository joyRepository;
     private final JoySlotRepository joySlotRepository;
     private final BreweryRepository breweryRepository;
+    private final JoyStatusHistoryRepository joyStatusHistoryRepository;
 
     @Autowired
-    public JoyOrderService(JoyOrderRepository joyOrderRepository, UsersRepository usersRepository, JoyRepository joyRepository, JoySlotRepository joySlotRepository, BreweryRepository breweryRepository) {
+    public JoyOrderService(JoyOrderRepository joyOrderRepository, UsersRepository usersRepository, JoyRepository joyRepository, JoySlotRepository joySlotRepository, BreweryRepository breweryRepository, JoyStatusHistoryRepository joyStatusHistoryRepository) {
         this.joyOrderRepository = joyOrderRepository;
         this.usersRepository = usersRepository;
         this.joyRepository = joyRepository;
         this.joySlotRepository = joySlotRepository;
         this.breweryRepository = breweryRepository;
+        this.joyStatusHistoryRepository = joyStatusHistoryRepository;
     }
 
 
@@ -75,7 +76,7 @@ public class JoyOrderService {
     }
 
     // 체험 예약 요청 -> 본 서버에서 발급한 pgOrderId(UUID) 발급하여 반환
-    public UUID prepareOrder(Long userId, ReqJoyOrderDto reqJoyOrderDto) {
+    public UUID prepareOrder(Long userId, ReqJoyPreOrderDto reqJoyOrderDto) {
         Users user = usersRepository.findById(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         Joy joy = joyRepository.findById(reqJoyOrderDto.getId()).orElseThrow(() ->
@@ -91,6 +92,9 @@ public class JoyOrderService {
         try{
             joySlotRepository.save(JoySlot.joyReservationOf(joy, reqJoyOrderDto.getReservation())); // uk 검증
             joyOrderRepository.save(joyOrder);
+            JoyStatusHistory history = JoyStatusHistory
+                    .joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.PENDING, "pending");
+            joyStatusHistoryRepository.save(history);
         } catch (DataIntegrityViolationException e) {
             throw new ApplicationException(ApplicationError.JOY_TIME_DUPLICATE);
         }
@@ -115,8 +119,14 @@ public class JoyOrderService {
 
          PG사로 실제 결제를 요청하고 응답 결과를 처리하는 로직(외부 api 호출)
          => 별도의 메소드로 분리해서 컨트롤러에서 각각 따로따로 호출하도록 할 필요가 있어보임(DB 커넥션 과점유 방지)
+         실패 시 history 테이블에도 저장
 
          */
+
+        joyOrder.setPaid();
+        JoyStatusHistory history = JoyStatusHistory
+                .joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.PAID, "paid");
+        joyStatusHistoryRepository.save(history);
     }
 
     // 체험 시간 변경 요청(예약 전날까지만 가능)
@@ -197,6 +207,9 @@ public class JoyOrderService {
         JoySlot slot = joySlotRepository.findByJoyIdAndReservation(joyOrder.getJoy().getId(), joyOrder.getReservation()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
         joySlotRepository.delete(slot);
+        JoyStatusHistory history = JoyStatusHistory
+                .joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.CANCELED, "canceled by user");
+        joyStatusHistoryRepository.save(history);
     }
 
     // 관리자 권한 체험 취소 수행(조건 없음)
@@ -211,6 +224,9 @@ public class JoyOrderService {
         JoySlot slot = joySlotRepository.findByJoyIdAndReservation(joyOrder.getJoy().getId(), joyOrder.getReservation()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
         joySlotRepository.delete(slot);
+        JoyStatusHistory history = JoyStatusHistory
+                .joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.CANCELED, "canceled by brewery");
+        joyStatusHistoryRepository.save(history);
     }
 
     // 취소 수수료 로직 구현(예정)
@@ -220,7 +236,7 @@ public class JoyOrderService {
     public void deleteHistory(Long userId, Long joyOrderId) {
         JoyOrder joyOrder = joyOrderRepository.findByIdAndUserId(joyOrderId, userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
-        if(joyOrder.getIsCanceled() == true) {
+        if(joyOrder.getJoyPaymentStatus() == JoyPaymentStatus.CANCELED) {
             // 취소 처리된 예약 내역은 조건 없이 삭제 처리 가능
             joyOrder.setCanceled();
             return;

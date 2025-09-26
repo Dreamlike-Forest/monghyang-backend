@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReqJoyOrderDto {
+public class ReqJoyPreOrderDto {
     @NotNull(message = "체험 식별자를 입력해주세요.")
     private Long id;
     @NotNull(message = "체험 인원 정보를 입력해주세요.")

@@ -12,7 +12,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
-    Optional<JoyOrder> findByPgOrderId(UUID pgOrderId);
+
+    @Query("select jo from JoyOrder jo join fetch jo.users where jo.pgOrderId = :pgOrderId")
+    Optional<JoyOrder> findByPgOrderId(@Param("pgOrderId") UUID pgOrderId);
 
     @Query("select jo from JoyOrder jo join jo.joy.brewery b where jo.id = :joyOrderId and b.user.id = :userId")
     Optional<JoyOrder> findByIdAndBreweryUserId(@Param("joyOrderId") Long joyOrderId, @Param("userId") Long userId);
