@@ -18,6 +18,7 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @Query("select c from Cart c where c.user.id = :userId")
     List<Cart> findByUserId(@Param("userId") Long userId);
 
-    @Query("select c from Cart c where c.id in :idList and c.user.id = :userId")
+    // 해당 유저의 장바구니의 주문 목록 중 '삭제 처리되지 않은' 요소를 조회
+    @Query("select c from Cart c join fetch c.product p where c.id in :idList and c.user.id = :userId and p.isDeleted = false")
     List<Cart> findByIdListAndUserId(@Param("idList") List<Long> idList, @Param("userId") Long userId);
 }

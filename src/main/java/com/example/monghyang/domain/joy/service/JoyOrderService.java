@@ -1,7 +1,8 @@
 package com.example.monghyang.domain.joy.service;
 
+import com.example.monghyang.domain.global.order.PaymentManager;
 import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.*;
@@ -33,7 +34,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
-public class JoyOrderService {
+public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private static final int JOY_ORDER_PAGE_SIZE = 12;
     private final JoyOrderRepository joyOrderRepository;
     private final UsersRepository usersRepository;
@@ -75,22 +76,23 @@ public class JoyOrderService {
         }
     }
 
-    // 체험 예약 요청 -> 본 서버에서 발급한 pgOrderId(UUID) 발급하여 반환
-    public UUID prepareOrder(Long userId, ReqJoyPreOrderDto reqJoyOrderDto) {
+    @Override
+    @Transactional
+    public UUID prepareOrder(Long userId, ReqJoyPreOrderDto dto) {
         Users user = usersRepository.findById(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
-        Joy joy = joyRepository.findById(reqJoyOrderDto.getId()).orElseThrow(() ->
+        Joy joy = joyRepository.findById(dto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
 
-        verifyReservationTime(joy.getId(), reqJoyOrderDto.getReservation(), joy.getTimeUnit());
+        verifyReservationTime(joy.getId(), dto.getReservation(), joy.getTimeUnit());
 
         UUID pgOrderId = UUID.randomUUID();
         JoyOrder joyOrder = JoyOrder.builder()
-                .users(user).joy(joy).count(reqJoyOrderDto.getCount())
-                .pgOrderId(pgOrderId).payerName(reqJoyOrderDto.getPayer_name())
-                .payerPhone(reqJoyOrderDto.getPayer_phone()).reservation(reqJoyOrderDto.getReservation()).build();
+                .users(user).joy(joy).count(dto.getCount())
+                .pgOrderId(pgOrderId).payerName(dto.getPayer_name())
+                .payerPhone(dto.getPayer_phone()).reservation(dto.getReservation()).build();
         try{
-            joySlotRepository.save(JoySlot.joyReservationOf(joy, reqJoyOrderDto.getReservation())); // uk 검증
+            joySlotRepository.save(JoySlot.joyReservationOf(joy, dto.getReservation())); // uk 검증
             joyOrderRepository.save(joyOrder);
             JoyStatusHistory history = JoyStatusHistory
                     .joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.PENDING, "pending");
@@ -101,7 +103,9 @@ public class JoyOrderService {
         return pgOrderId;
     }
 
+
     // 클라이언트에게 pgPaymentKey와 가격 정보를 받아 PG사로 결제 요청
+    @Override
     @Transactional
     public void requestOrderToPG(Long userId, ReqOrderDto reqOrderDto) {
         JoyOrder joyOrder = joyOrderRepository.findByPgOrderId(reqOrderDto.getPg_order_id()).orElseThrow(() ->
@@ -109,7 +113,7 @@ public class JoyOrderService {
         if(!joyOrder.getUsers().getId().equals(userId)) {
             throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
         }
-        if(!joyOrder.getTotalPrice().equals(reqOrderDto.getTotal_price())) {
+        if(!joyOrder.getTotalAmount().equals(reqOrderDto.getTotal_amount())) {
             // 클라이언트에게 받은 가격 정보와 DB의 '총 결제 금액'이 일치하는지 검증
             throw new ApplicationException(ApplicationError.MANIPULATE_ORDER_TOTAL_PRICE);
         }

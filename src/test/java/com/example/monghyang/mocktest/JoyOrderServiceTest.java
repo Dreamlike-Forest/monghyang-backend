@@ -2,7 +2,7 @@ package com.example.monghyang.mocktest;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoyOrder;

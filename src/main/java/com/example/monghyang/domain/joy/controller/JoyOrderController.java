@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.joy.controller;
 
 import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.service.JoyOrderService;

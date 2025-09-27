@@ -2,9 +2,8 @@ package com.example.monghyang.domain.orders.entity;
 
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Positive;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -22,8 +21,8 @@ public class Orders {
     @ManyToOne(fetch = FetchType.LAZY)
     private Users user;
     @Column(nullable = false, precision = 16, scale = 2)
-    private BigDecimal totalPrice;
-    @Column(nullable = false)
+    @Positive
+    private BigDecimal totalAmount;
     private String currency;
     @Column(unique = true)
     private String pgPaymentKey;
@@ -50,14 +49,14 @@ public class Orders {
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private Boolean isDeleted = Boolean.FALSE;
 
-    public Orders(Users user, BigDecimal totalPrice, String currency, String pgOrderId, String payerName, String payerPhone, PaymentStatus paymentStatus, String address, String addressDetail) {
+    @Builder
+    public Orders(@NonNull Users user, @NonNull BigDecimal totalAmount, @NonNull UUID pgOrderId, @NonNull String payerName, @NonNull String payerPhone, @NonNull String address, @NonNull String addressDetail) {
         this.user = user;
-        this.totalPrice = totalPrice;
-        this.currency = currency;
-        this.pgPaymentKey = pgOrderId;
+        this.totalAmount = totalAmount;
+        this.pgOrderId = pgOrderId;
         this.payerName = payerName;
         this.payerPhone = payerPhone;
-        this.paymentStatus = paymentStatus;
+        this.paymentStatus = PaymentStatus.PENDING;
         this.address = address;
         this.addressDetail = addressDetail;
     }

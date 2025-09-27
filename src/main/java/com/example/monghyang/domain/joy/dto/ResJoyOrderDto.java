@@ -1,10 +1,13 @@
 package com.example.monghyang.domain.joy.dto;
 
+import com.example.monghyang.domain.joy.entity.JoyPaymentStatus;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter
 @RequiredArgsConstructor
 public class ResJoyOrderDto {
     private final Long joy_order_id;
@@ -17,5 +20,5 @@ public class ResJoyOrderDto {
     private final String joy_order_payer_phone;
     private final LocalDateTime joy_order_created_at;
     private final LocalDateTime joy_order_reservation;
-    private final Boolean joy_order_is_canceled;
+    private final JoyPaymentStatus joy_payment_status;
 }

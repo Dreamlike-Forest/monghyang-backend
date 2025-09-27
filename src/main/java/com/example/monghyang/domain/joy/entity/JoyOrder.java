@@ -24,9 +24,9 @@ public class JoyOrder {
     @ManyToOne(fetch = FetchType.LAZY)
     private Joy joy;
     private Integer count;
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 16, scale = 2)
     @Positive
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
     @Column(unique = true)
     private String pgPaymentKey; // pg사에서 발급받은 key. 실제 결제 식별에 사용됨.
     @Column(nullable = false, unique = true, updatable = false)
@@ -55,7 +55,7 @@ public class JoyOrder {
         this.payerName = payerName;
         this.payerPhone = payerPhone;
         this.reservation = reservation.withSecond(0).withNano(0); // 분 단위까지 저장
-        this.totalPrice = joy.getFinalPrice().multiply(BigDecimal.valueOf(count)); // 최종 결제 금액
+        this.totalAmount = joy.getFinalPrice().multiply(BigDecimal.valueOf(count)); // 최종 결제 금액
         this.joyPaymentStatus = JoyPaymentStatus.PENDING;
     }
 
