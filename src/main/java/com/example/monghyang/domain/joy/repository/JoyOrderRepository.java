@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
 
-    @Query("select jo from JoyOrder jo join fetch jo.users where jo.pgOrderId = :pgOrderId")
+    @Query("select jo from JoyOrder jo where jo.pgOrderId = :pgOrderId")
     Optional<JoyOrder> findByPgOrderId(@Param("pgOrderId") UUID pgOrderId);
 
     @Query("select jo from JoyOrder jo join jo.joy.brewery b where jo.id = :joyOrderId and b.user.id = :userId")

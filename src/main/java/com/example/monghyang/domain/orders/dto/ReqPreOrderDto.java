@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReqProductPreOrderDto {
+public class ReqPreOrderDto {
     @NotEmpty(message = "주문하려는 장바구니 요소의 식별자를 보내주세요.")
     private List<Long> cart_id = new ArrayList<>();
     @NotBlank(message = "주문자명을 입력해주세요.")

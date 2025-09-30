@@ -24,9 +24,9 @@ public class OrderItem {
     @JoinColumn(name = "PRODUCT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
-    @JoinColumn(name = "USER_ID", nullable = false)
+    @JoinColumn(name = "PROVIDER_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Users user;
+    private Users provider;
     @Column(nullable = false)
     @Positive
     private Integer quantity;
@@ -54,13 +54,20 @@ public class OrderItem {
     private Boolean isDeleted;
 
     @Builder
-    public OrderItem(@NonNull Orders orders, @NonNull Product product, @NonNull Users user, @NonNull Integer quantity, @NonNull BigDecimal amount) {
+    public OrderItem(@NonNull Orders orders, @NonNull Product product, @NonNull Users provider, @NonNull Integer quantity, @NonNull BigDecimal amount) {
         this.orders = orders;
         this.product = product;
-        this.user = user;
+        this.provider = provider;
         this.quantity = quantity;
         this.amount = amount;
         this.fulfillmentStatus = FulfillmentStatus.CREATED;
         this.refundStatus = RefundStatus.NONE;
+    }
+
+    public void updateFulfillmentStatus(FulfillmentStatus fulfillmentStatus) {
+        this.fulfillmentStatus = fulfillmentStatus;
+    }
+    public void updateRefundStatus(RefundStatus refundStatus) {
+        this.refundStatus = refundStatus;
     }
 }

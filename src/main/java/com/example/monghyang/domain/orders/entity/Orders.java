@@ -40,7 +40,7 @@ public class Orders {
     @Column(nullable = false)
     private String addressDetail;
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
@@ -59,5 +59,25 @@ public class Orders {
         this.paymentStatus = PaymentStatus.PENDING;
         this.address = address;
         this.addressDetail = addressDetail;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+    public void setPaid() {
+        this.paymentStatus = PaymentStatus.PAID;
+    }
+    public void setRefunded() {
+        this.paymentStatus = PaymentStatus.REFUNDED;
+    }
+    public void setFailed() {
+        this.paymentStatus = PaymentStatus.FAILED;
+    }
+    public void setPartiallyRefunded() {
+        this.paymentStatus = PaymentStatus.PARTIALLY_REFUNDED;
+    }
+
+    public void setDeleted() {
+        this.isDeleted = true;
     }
 }
