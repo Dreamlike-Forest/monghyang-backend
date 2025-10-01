@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CashReceipt {
+public class CashReceipt { // 현금 영수증 정보를 담고 있는 클래스
     // 현금영수증의 키값 (최대 200자)
     private String receiptKey;
 
