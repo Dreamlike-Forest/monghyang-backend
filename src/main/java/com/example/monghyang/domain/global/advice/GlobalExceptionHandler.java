@@ -1,9 +1,12 @@
 package com.example.monghyang.domain.global.advice;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,10 +47,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, "요청 파라미터 '"+paramName+"'를 올바른 타입으로 넘겨주세요."));
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class) // DB 무결성 제약조건 위배 예외 처리(not null, uk, fk 제약조건 위배, 데이터 길이 초과 등)
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<ApplicationErrorDto> transactionSystemException(TransactionSystemException e) {
+        Throwable root = e.getMostSpecificCause();
+        if (root instanceof ConstraintViolationException cve) {
+            // 애플리케이션 레벨 Entity 필드 유효성 검증 예외 처리
+            List<String> errors = new ArrayList<>();
+            for (ConstraintViolation<?> constraintViolation : cve.getConstraintViolations()) {
+                errors.add(constraintViolation.getMessage());
+            }
+            String error = String.join(" ", errors);
+            log.error("{} : {}", cve.getCause(), cve.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, error));
+        }
+
+        log.error("트랜잭션 처리 에러 발생 {} : {}", e.getCause(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApplicationErrorDto.statusMessageOf(HttpStatus.INTERNAL_SERVER_ERROR, "트랜잭션 처리 중 에러가 발생했습니다. 서버 관리자에게 문의하세요."));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class) // DB레벨 무결성 제약조건 위배 예외 처리(not null, uk, fk 제약조건 위배, 데이터 길이 초과 등)
     public ResponseEntity<ApplicationErrorDto> dataIntegrityViolationException(DataIntegrityViolationException e) {
         log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, "DB의 데이터 무결성 제약조건을 위배하는 값입니다. 다른 값을 입력해주세요."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, "DB의 데이터 무결성 제약조건 검증을 통과하지 못한 값입니다. 다른 값을 입력해주세요."));
     }
 
     @ExceptionHandler(Exception.class)

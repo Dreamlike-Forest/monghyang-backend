@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.product.service;
 
-import com.example.monghyang.domain.brewery.main.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
