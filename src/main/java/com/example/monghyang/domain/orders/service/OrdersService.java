@@ -186,8 +186,4 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
 
         return history.stream().map(ResOrderStatusHistoryDto::new).toList();
     }
-
-
-    // 주문 상태 갱신
-        // 해당 orders 레코드에 낙관적 락 -> orders 및 order_status_history 테이블에 쓰기 작업 -> 정합성 검증
 }
