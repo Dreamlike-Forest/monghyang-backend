@@ -15,7 +15,7 @@ public class VirtualAccount {
     private String depositorName;       // 입금자명
     private String dueDate;             // 입금 기한 (ISO 8601)
     private PGRefundStatus refundStatus;        // 환불 처리 상태
-    private boolean expired;            // 가상계좌 만료 여부
+    private Boolean expired;            // 가상계좌 만료 여부
     private String settlementStatus;    // 정산 상태
     private RefundReceiveAccount refundReceiveAccount; // 환불 계좌 정보
 }

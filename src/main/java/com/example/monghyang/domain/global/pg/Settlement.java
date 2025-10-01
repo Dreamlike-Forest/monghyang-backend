@@ -17,12 +17,12 @@ public class Settlement {
     private String orderId;             // 주문번호
     private String currency;            // 결제 통화
     private String method;              // 결제수단(카드, 가상계좌 등)
-    private int amount;                 // 결제 금액
-    private int interestFee;            // 할부 수수료 금액
+    private Integer amount;                 // 결제 금액
+    private Integer interestFee;            // 할부 수수료 금액
     private List<Fee> fees;             // 결제 수수료 상세 정보(배열)
-    private int supplyAmount;           // 결제 수수료 공급가액
-    private int vat;                    // 결제 수수료 부가세
-    private int payOutAmount;           // 지급 금액(수수료 제외)
+    private Integer supplyAmount;           // 결제 수수료 공급가액
+    private Integer vat;                    // 결제 수수료 부가세
+    private Integer payOutAmount;           // 지급 금액(수수료 제외)
     private String approvedAt;          // 거래 승인 시각(ISO 8601)
     private String soldDate;            // 정산 매출일(yyyy-MM-dd)
     private String paidOutDate;         // 정산 지급일(yyyy-MM-dd)

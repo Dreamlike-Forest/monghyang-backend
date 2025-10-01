@@ -22,20 +22,20 @@ public class Payment { // 결제 정보를 담는 객체
     private String mId; // 상점아이디(토스페이먼츠에서 발급)
     private String currency; // 결제 시 사용한 통화
     private MethodType method; // 결제 수단
-    private int totalAmount; // 총 결제 금액
-    private int balanceAmount; // 취소할 수 있는 금액(잔고)
+    private Integer totalAmount; // 총 결제 금액
+    private Integer balanceAmount; // 취소할 수 있는 금액(잔고)
     private PGPaymentStatus status; // 결제 처리 상태
     private String requestedAt; // 결제 발생 날짜와 시간 정보
     private String approvedAt; // 결제 승인이 일어난 날짜와 시간 정보
-    private boolean useEscrow; // 에스크로 사용 여부
+    private Boolean useEscrow; // 에스크로 사용 여부
     private String lastTransactionKey; // 마지막 거래(Transaction)의 키값
     private String suppliedAmount; // 공급가액
-    private int vat; // 부가세. (결제 금액 - 면세 금액) / 11 후 소수점 첫째 자리에서 반올림해서 계산
-    private boolean cultureExpense; // 문화비(도서, 공연 티켓, 박물관 혹은 미술관 입장 등) 지출 여부
-    private int taxFreeAmount; // 면세 금액. 일반 상점인 경우 이 값이 0이다.
-    private int taxExemptionAmount; // 과제 제외한 결제 금액
+    private Integer vat; // 부가세. (결제 금액 - 면세 금액) / 11 후 소수점 첫째 자리에서 반올림해서 계산
+    private Boolean cultureExpense; // 문화비(도서, 공연 티켓, 박물관 혹은 미술관 입장 등) 지출 여부
+    private Integer taxFreeAmount; // 면세 금액. 일반 상점인 경우 이 값이 0이다.
+    private Integer taxExemptionAmount; // 과제 제외한 결제 금액
     private Cancel cancels; // 결제 취소 이력
-    private boolean isPartialCancelable; // 부분 취소 가능 여부: 이 값이 false면 전액 환불만 가능
+    private Boolean isPartialCancelable; // 부분 취소 가능 여부: 이 값이 false면 전액 환불만 가능
     private Card card; // 카드 결제 시 제공되는 정보
     private VirtualAccount virtualAccount; // 가상계좌 결제 시 제공되는 정보
     private String secret; // 웹훅을 검증하는 최대 50자 값

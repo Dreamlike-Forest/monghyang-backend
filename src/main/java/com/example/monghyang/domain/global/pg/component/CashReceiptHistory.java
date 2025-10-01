@@ -17,8 +17,8 @@ public class CashReceiptHistory {
     private String receiptUrl;              // 현금영수증 확인용 URL
     private String businessNumber;          // 사업자등록번호(10자)
     private TransactionType transactionType;  // 발급(CONFIRM), 취소(CANCEL)
-    private int amount;                     // 처리 금액
-    private int taxFreeAmount;              // 면세 처리 금액
+    private Integer amount;                     // 처리 금액
+    private Integer taxFreeAmount;              // 면세 처리 금액
     private IssueStatus issueStatus;        // 발급 상태(IN_PROGRESS, COMPLETED, FAILED)
     private Failure failure;                // 결제 실패 객체
     private String customerIdentityNumber;  // 소비자 인증수단(최대 30자)

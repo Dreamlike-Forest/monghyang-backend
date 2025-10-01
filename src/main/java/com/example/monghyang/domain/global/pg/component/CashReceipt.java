@@ -11,6 +11,6 @@ public class CashReceipt {
     private String receiptKey;              // 현금영수증 키값(최대 200자)
     private String issueNumber;             // 현금영수증 발급번호(최대 9자)
     private String receiptUrl;              // 현금영수증 확인용 URL
-    private int amount;                     // 현금영수증 처리 금액
-    private int taxFreeAmount;              // 면세 처리 금액
+    private Integer amount;                     // 현금영수증 처리 금액
+    private Integer taxFreeAmount;              // 면세 처리 금액
 }

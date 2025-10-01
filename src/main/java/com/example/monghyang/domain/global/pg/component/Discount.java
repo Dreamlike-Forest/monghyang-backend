@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Discount {
-    private int amount;                     // 즉시 할인 프로모션 적용 결제 금액
+    private Integer amount;                     // 즉시 할인 프로모션 적용 결제 금액
 }
