@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.global.pg;
+package com.example.monghyang.domain.global.pg.gateway;
 
 import com.example.monghyang.domain.global.pg.component.AvailableAmount;
 import com.example.monghyang.domain.global.pg.component.PendingAmount;
