@@ -8,6 +8,7 @@ on:
     branches: [main]   # base가 main인 PR만 감시
 
 jobs:
+  # action 식별자: 'enforce'
   enforce:
     # Github가 제공하는 Hosted Runner라는 가상머신에서 실행
     runs-on: ubuntu-latest
