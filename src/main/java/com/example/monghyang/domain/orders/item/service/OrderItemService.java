@@ -48,7 +48,7 @@ public class OrderItemService {
         }
         return orderItem;
     }
-    // fulfillment - packed
+    // '배송 준비' 상태 설정
     @Transactional
     public void updateFulfillmentPacked(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
@@ -56,7 +56,7 @@ public class OrderItemService {
         orderItemFulfillmentHistoryRepository.save(
                 OrderItemFulfillmentHistory.orderItemToStatusReasonCodeOf(orderItem, FulfillmentStatus.PACKED, "packed"));
     }
-    // fulfillment - in_transit
+    // '배송 중' 상태 설정
     @Transactional
     public void updateFulfillmentInTransit(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
@@ -64,7 +64,7 @@ public class OrderItemService {
         orderItemFulfillmentHistoryRepository.save(
                 OrderItemFulfillmentHistory.orderItemToStatusReasonCodeOf(orderItem, FulfillmentStatus.IN_TRANSIT, "in-transit"));
     }
-    // fulfillment - delivered
+    // '배송 완료' 상태 설정
     @Transactional
     public void updateFulfillmentDelivered(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
@@ -72,7 +72,7 @@ public class OrderItemService {
         orderItemFulfillmentHistoryRepository.save(
                 OrderItemFulfillmentHistory.orderItemToStatusReasonCodeOf(orderItem, FulfillmentStatus.DELIVERED, "delivered"));
     }
-    // fulfillment - canceled
+    // '배송 취소' 상태 설정
     @Transactional
     public void updateFulfillmentCanceled(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
@@ -80,7 +80,7 @@ public class OrderItemService {
         orderItemFulfillmentHistoryRepository.save(
                 OrderItemFulfillmentHistory.orderItemToStatusReasonCodeOf(orderItem, FulfillmentStatus.CANCELED, "canceled"));
     }
-    // fulfillment - failed
+    // '배송 실패' 상태 설정
     @Transactional
     public void updateFulfillmentFailed(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
@@ -88,31 +88,32 @@ public class OrderItemService {
         orderItemFulfillmentHistoryRepository.save(
                 OrderItemFulfillmentHistory.orderItemToStatusReasonCodeOf(orderItem, FulfillmentStatus.FAILED, "failed"));
     }
-    // refund - requested
+    // '환불 요청' 상태 설정
     @Transactional
     public void updateRefundRequested(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
         orderItem.updateRefundStatus(RefundStatus.REQUESTED);
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.REQUESTED));
     }
-    // refund - returned
+    // '반품 완료' 상태 설정
     @Transactional
     public void updateRefundReturned(Long providerId, Long orderItemId) {
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
         orderItem.updateRefundStatus(RefundStatus.REQUESTED);
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.RETURNED));
     }
-    // refund - refunded
+    // '환불 처리됨' 상태 설정 및 환불 처리 로직
     @Transactional
     public void updateRefundRefunded(Long providerId, Long orderItemId) {
         /*
             PG사를 통해 해당 주문 요소 결제 금액에 해당하는 금액을 환불
          */
         OrderItem orderItem = verifyOrderItemIsOwn(providerId, orderItemId);
-        orderItem.updateRefundStatus(RefundStatus.REQUESTED);
+        orderItem.updateRefundStatus(RefundStatus.REFUNDED); // 환불 요청 상태
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.REFUNDED));
         // 동일 Orders의 다른 요소를 조회해서 모두 환불 상태면 Orders의 '결제 상태'를 환불 상태로 변경
         // 일부만 환불 상태라면 Orders의 '결제 상태'를 일부 환불 상태로 변경
+
     }
 
     // 특정 유저의 주문 요소 리스트 조회

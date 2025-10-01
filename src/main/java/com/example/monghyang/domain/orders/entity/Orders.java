@@ -67,14 +67,8 @@ public class Orders {
     public void setPaid() {
         this.paymentStatus = PaymentStatus.PAID;
     }
-    public void setRefunded() {
-        this.paymentStatus = PaymentStatus.REFUNDED;
-    }
     public void setFailed() {
         this.paymentStatus = PaymentStatus.FAILED;
-    }
-    public void setPartiallyRefunded() {
-        this.paymentStatus = PaymentStatus.PARTIALLY_REFUNDED;
     }
 
     public void setDeleted() {
