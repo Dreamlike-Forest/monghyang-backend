@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.joy.controller;
 
-import com.example.monghyang.domain.joy.dto.ReqJoyOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
+import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
@@ -36,7 +36,7 @@ public class JoyOrderController {
     // 체험 예약 요청, uuid를 클라이언트로 반환
     @PostMapping("/prepare")
     @Operation(summary = "PG사로 전송할 'orderId' 값을 발급하기 위한 API", description = "프론트엔드에서 PG사로 결제 요청하기 전에 수행해주세요.")
-    public ResponseEntity<ResponseDataDto<UUID>> prepareOrderRequest(@LoginUserId Long userId, @ModelAttribute @Valid ReqJoyOrderDto reqJoyOrderDto) {
+    public ResponseEntity<ResponseDataDto<UUID>> prepareOrderRequest(@LoginUserId Long userId, @ModelAttribute @Valid ReqJoyPreOrderDto reqJoyOrderDto) {
         UUID pgOrderId = joyOrderService.prepareOrder(userId, reqJoyOrderDto);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(pgOrderId));
     }

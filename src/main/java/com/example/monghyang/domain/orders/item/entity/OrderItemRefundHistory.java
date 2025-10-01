@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -19,11 +20,17 @@ public class OrderItemRefundHistory {
     private OrderItem orderItem;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private RefundStatus fromStatus;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     private RefundStatus toStatus;
     @Column(nullable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private OrderItemRefundHistory(OrderItem orderItem, RefundStatus toStatus) {
+        this.orderItem = orderItem;
+        this.toStatus = toStatus;
+    }
+
+    public static OrderItemRefundHistory orderItemToStatusOf(@NonNull OrderItem orderItem, @NonNull RefundStatus toStatus) {
+        return new OrderItemRefundHistory(orderItem, toStatus);
+    }
 }

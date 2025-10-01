@@ -1,8 +1,8 @@
 package com.example.monghyang.mocktest;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
-import com.example.monghyang.domain.joy.dto.ReqJoyOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqOrderDto;
+import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
+import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoyOrder;
@@ -120,7 +120,7 @@ public class JoyOrderServiceTest {
             when(joyRepository.findById(1L)).thenReturn(Optional.of(joy));
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(2);
             req.setPayer_name("홍길동");
@@ -147,7 +147,7 @@ public class JoyOrderServiceTest {
         void userNotFound() {
             when(usersRepository.findById(10L)).thenReturn(Optional.empty());
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
@@ -164,7 +164,7 @@ public class JoyOrderServiceTest {
             when(usersRepository.findById(1L)).thenReturn(Optional.of(user));
             when(joyRepository.findById(1L)).thenReturn(Optional.empty());
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
@@ -182,7 +182,7 @@ public class JoyOrderServiceTest {
             when(joyRepository.findById(1L)).thenReturn(Optional.of(joy));
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.empty());
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
@@ -200,7 +200,7 @@ public class JoyOrderServiceTest {
             when(joyRepository.findById(1L)).thenReturn(Optional.of(joy));
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");
@@ -219,7 +219,7 @@ public class JoyOrderServiceTest {
             when(joyRepository.findById(1L)).thenReturn(Optional.of(joy));
             when(breweryRepository.findOpeningHourByJoyId(1L)).thenReturn(Optional.of(openingHour()));
 
-            ReqJoyOrderDto req = new ReqJoyOrderDto();
+            ReqJoyPreOrderDto req = new ReqJoyPreOrderDto();
             req.setId(1L);
             req.setCount(1);
             req.setPayer_name("n");

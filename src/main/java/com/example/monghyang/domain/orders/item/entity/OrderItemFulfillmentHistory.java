@@ -1,10 +1,10 @@
 package com.example.monghyang.domain.orders.item.entity;
 
-import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -18,12 +18,6 @@ public class OrderItemFulfillmentHistory {
     @JoinColumn(name = "ORDER_ITEM_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private OrderItem orderItem;
-    @JoinColumn(name = "USER_ID", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Users users;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private FulfillmentStatus fromStatus;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private FulfillmentStatus toStatus;
@@ -33,4 +27,13 @@ public class OrderItemFulfillmentHistory {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    private OrderItemFulfillmentHistory(OrderItem orderItem, FulfillmentStatus toStatus, String reasonCode) {
+        this.orderItem = orderItem;
+        this.toStatus = toStatus;
+        this.reasonCode = reasonCode;
+    }
+
+    public static OrderItemFulfillmentHistory orderItemToStatusReasonCodeOf(@NonNull OrderItem orderItem, @NonNull FulfillmentStatus toStatus, @NonNull String reasonCode) {
+        return new OrderItemFulfillmentHistory(orderItem, toStatus, reasonCode);
+    }
 }

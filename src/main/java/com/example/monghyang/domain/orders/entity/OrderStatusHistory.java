@@ -1,11 +1,7 @@
 package com.example.monghyang.domain.orders.entity;
 
-import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -19,37 +15,22 @@ public class OrderStatusHistory {
     @JoinColumn(name = "ORDER_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Orders order;
-    @JoinColumn(name = "USER_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Users user;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentStatus fromStatus;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus toStatus;
     @Column(nullable = false)
-    private String reason_code;
+    private String reasonCode;
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Builder(builderMethodName = "systemCreate")
-    public OrderStatusHistory(Orders order, PaymentStatus fromStatus, PaymentStatus toStatus, String reason_code) {
-        // 시스템에서 생성되는 상태 변경
+    private OrderStatusHistory(Orders order, PaymentStatus toStatus, String reasonCode) {
         this.order = order;
-        this.fromStatus = fromStatus;
         this.toStatus = toStatus;
-        this.reason_code = reason_code;
+        this.reasonCode = reasonCode;
     }
 
-    @Builder(builderMethodName = "userCreate")
-    public OrderStatusHistory(Orders order, Users user, PaymentStatus fromStatus, PaymentStatus toStatus, String reason_code) {
-        // 특정 유저가 요청한 상태 변경
-        this.order = order;
-        this.user = user;
-        this.fromStatus = fromStatus;
-        this.toStatus = toStatus;
-        this.reason_code = reason_code;
+    public static OrderStatusHistory orderToStatusReasonCodeOf(@NonNull Orders order, @NonNull PaymentStatus toStatus, @NonNull String reasonCode) {
+        return new OrderStatusHistory(order, toStatus, reasonCode);
     }
 }

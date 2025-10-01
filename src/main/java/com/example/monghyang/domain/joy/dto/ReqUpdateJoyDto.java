@@ -23,7 +23,7 @@ public class ReqUpdateJoyDto {
     private String detail;
     @Min(value = 0, message = "체험 시간 단위는 음수가 될 수 없습니다.")
     private Integer time_unit;
-    @Digits(integer = 8, fraction = 0, message = "가격 정보를 1억 미만의 정수로 입력해주세요.")
+    @Digits(integer = 8, fraction = 0, message = "가격 정보를 100억 미만의 정수로 입력해주세요.")
     @Min(value = 0, message = "정가는 음수가 될 수 없습니다.")
     private BigDecimal origin_price;
     private MultipartFile image; // 새 체험 이미지
