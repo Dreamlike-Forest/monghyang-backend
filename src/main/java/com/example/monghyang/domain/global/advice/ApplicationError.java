@@ -30,7 +30,7 @@ public enum ApplicationError {
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다. 다시 로그인 해주세요."),
-    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "세션 정보가 존재하지 않습니다."),
+    SESSION_NOT_FOUND(HttpStatus.UNAUTHORIZED, "세션 정보가 존재하지 않습니다."),
     IMAGE_REQUEST_NULL(HttpStatus.BAD_REQUEST, "업로드할 이미지 파일이 null 입니다."),
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "이미지가 존재하지 않습니다."),
     IMAGE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 중 서버에서 에러가 발생했습니다."),
