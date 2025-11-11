@@ -85,7 +85,7 @@ public class AuthService {
     public void updateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
         // 토큰에서 userid, devicetype 추출해서 세션 및 토큰 갱신에 사용
         String refreshToken = request.getHeader("X-Refresh-Token");
-        if(refreshToken == null) {
+        if(refreshToken == null || refreshToken.isEmpty()) {
             throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
         }
 
