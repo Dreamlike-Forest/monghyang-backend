@@ -23,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -63,6 +64,9 @@ public class SecurityConfig {
 
                         // 허용할 HTTP 메서드 설정 ("*": 모든 HTTP 메소드)
                         config.setAllowedMethods(Collections.singletonList("*"));
+
+                        // 브라우저에서 JS로 접근할 수 있는 커스텀 헤더의 목록 정의
+                        config.setExposedHeaders(List.of("X-Session-Id", "X-Refresh-Token"));
 
                         // 요청에 자격 증명(Credentials, 예: 쿠키, HTTP 인증 등)을 포함하도록 허용
                         // 이 설정이 true일 경우, `Access-Control-Allow-Credentials` 헤더가 true
