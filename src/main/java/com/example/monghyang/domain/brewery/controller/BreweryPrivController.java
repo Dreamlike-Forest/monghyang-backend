@@ -43,7 +43,7 @@ public class BreweryPrivController {
     // 양조장 수정 로직(이미지 추가/삭제 또한 한번에 가능하도록)
     @PostMapping("/update")
     @Operation(summary = "양조장 정보 수정(첫번째 이미지: 대표 이미지")
-    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
+    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @Valid @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
         breweryService.breweryUpdate(userId, reqBreweryDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보를 업데이트했습니다."));
     }
