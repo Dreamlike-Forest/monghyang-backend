@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -47,7 +48,7 @@ public class UsersController {
     @Operation(summary = "회원 수정 api", description = "비밀번호 변경 시 '기존 비밀번호'와 '새 비밀번호'를 각각의 필드에 입력하여 전송해주셔야 합니다. 수정 성공 시 해당 유저의 모든 로그인 상태 정보가 서버에서 제거됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> updateUsers(
             @LoginUserId Long userId, @LoginUserRole String userRole,
-            @ModelAttribute ReqUsersDto reqUsersDto,
+            @Valid @ModelAttribute ReqUsersDto reqUsersDto,
             HttpServletRequest request, HttpServletResponse response) {
         System.out.println("유저 식별자: "+userId+", 유저 권한: "+userRole);
 
