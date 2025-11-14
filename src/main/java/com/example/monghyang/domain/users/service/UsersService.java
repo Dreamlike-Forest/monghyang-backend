@@ -57,7 +57,7 @@ public class UsersService {
             // 클라이언트가 보내온 '기존 비밀번호' 값과 DB에 저장된 값이 일치해야 한다.
             if(bCryptPasswordEncoder.matches(reqUsersDto.getCurPassword(), users.getPassword())) {
                 // 비밀번호 변경 요청이 포함되어 있어야 한다.
-                if(reqUsersDto.getNewPassword() != null) {
+                if(reqUsersDto.getNewPassword() != null && !reqUsersDto.getNewPassword().isBlank()) {
                     String newPassword = bCryptPasswordEncoder.encode(reqUsersDto.getNewPassword());
                     users.updatePassword(newPassword);
                 } else {
