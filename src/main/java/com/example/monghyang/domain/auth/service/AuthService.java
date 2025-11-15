@@ -17,6 +17,8 @@ import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.auth.dto.JoinDto;
 import com.example.monghyang.domain.auth.dto.SellerJoinDto;
+import com.example.monghyang.domain.seller.entity.SellerImage;
+import com.example.monghyang.domain.seller.repository.SellerImageRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
@@ -50,9 +52,10 @@ public class AuthService {
     private final RegionTypeRepository regionTypeRepository;
     private final StorageService storageService;
     private final BreweryImageRepository breweryImageRepository;
+    private final SellerImageRepository sellerImageRepository;
 
     @Autowired
-    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository, StorageService storageService, BreweryImageRepository breweryImageRepository) {
+    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository, StorageService storageService, BreweryImageRepository breweryImageRepository, SellerImageRepository sellerImageRepository) {
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.roleRepository = roleRepository;
@@ -64,6 +67,7 @@ public class AuthService {
         this.regionTypeRepository = regionTypeRepository;
         this.storageService = storageService;
         this.breweryImageRepository = breweryImageRepository;
+        this.sellerImageRepository = sellerImageRepository;
     }
 
     public void checkEmail(String email) {
@@ -142,6 +146,28 @@ public class AuthService {
                 .sellerBankName(sellerJoinDto.getSeller_bank_name()).introduction(sellerJoinDto.getIntroduction())
                 .isAgreedSeller(sellerJoinDto.getIs_agreed_seller()).build();
         sellerRepository.save(seller);
+
+        // 판매자 이미지 추가 로직
+        if(sellerJoinDto.getImages() != null) {
+            for(AddImageDto image : sellerJoinDto.getImages()) {
+                Integer seq = image.getSeq();
+                if(seq == null) {
+                    // 이미지 순서 정보 누락되면 업로드 로직 수행 x
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_NULL);
+                } else if(seq > 5 || seq < 1) {
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+                String imageKey = storageService.upload(image.getImage(), ImageType.SELLER_IMAGE);
+                Long volume = image.getImage().getSize();
+                try {
+                    sellerImageRepository.save(SellerImage.sellerKeySeqVolume(seller, imageKey, seq, volume));
+                } catch (DataIntegrityViolationException e) {
+                    // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+
+            }
+        }
     }
 
     @Transactional
