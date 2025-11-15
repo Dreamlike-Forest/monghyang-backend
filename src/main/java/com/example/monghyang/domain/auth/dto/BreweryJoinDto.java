@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.auth.dto;
 
+import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +23,9 @@ public class BreweryJoinDto extends JoinDto {
     private String brewery_account_number;
     @NotBlank(message = "brewery_bank_name 값이 공백일 수 없습니다.")
     private String brewery_bank_name;
+    @AllowNullNotBlankString
     private String introduction;
+    @AllowNullNotBlankString
     private String brewery_website;
     @NotNull(message = "운영 시작 시간을 입력해주세요.")
     private LocalTime start_time;

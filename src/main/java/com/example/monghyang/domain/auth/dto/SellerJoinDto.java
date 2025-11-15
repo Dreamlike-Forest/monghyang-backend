@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.auth.dto;
 
+import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ public class SellerJoinDto extends JoinDto {
     private String seller_depositor;
     @NotBlank(message = "seller_bank_name 값이 공백일 수 없습니다.")
     private String seller_bank_name;
+    @AllowNullNotBlankString
     private String introduction;
     @NotNull(message = "is_agreed_seller 필드가 공백일 수 없습니다.")
     private Boolean is_agreed_seller;

@@ -1,11 +1,11 @@
 package com.example.monghyang.domain.joy.dto;
 
+import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,11 +19,11 @@ public class ReqUpdateJoyDto {
     @Digits(integer = 3, fraction = 1, message = "할인율을 xx.y 형식의 소수로 입력해주세요.")
     @Min(value = 0, message = "할인율은 음수가 될 수 없습니다.")
     private BigDecimal discount_rate;
-    @Pattern(regexp = "^[^\\s].*\\S.*$", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String name;
-    @Pattern(regexp = "^[^\\s].*\\S.*$", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String place;
-    @Pattern(regexp = "^[^\\s].*\\S.*$", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String detail;
     @Min(value = 0, message = "체험 시간 단위는 음수가 될 수 없습니다.")
     private Integer time_unit;
