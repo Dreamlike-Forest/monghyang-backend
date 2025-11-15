@@ -3,7 +3,7 @@ package com.example.monghyang.domain.auth.controller;
 import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
 import com.example.monghyang.domain.auth.dto.SellerJoinDto;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.auth.dto.JoinDto;
 import com.example.monghyang.domain.auth.service.AuthService;

@@ -10,7 +10,7 @@ import com.example.monghyang.domain.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryDto;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.tag.dto.ReqTagDto;
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.brewery.service.BreweryService;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;

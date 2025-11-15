@@ -5,7 +5,7 @@ import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

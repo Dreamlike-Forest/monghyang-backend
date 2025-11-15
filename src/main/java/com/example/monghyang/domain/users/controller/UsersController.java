@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.users.controller;
 
-import com.example.monghyang.domain.global.annotation.LoginUserId;
-import com.example.monghyang.domain.global.annotation.LoginUserRole;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserRole;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
