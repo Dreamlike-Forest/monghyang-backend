@@ -72,6 +72,6 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 
     // 양조장의 운영시간 조회
-    @Query("select new com.example.monghyang.domain.brewery.dto.OpeningHourDto(b.startTime, b.endTime) from JoyOrder jo join jo.joy j on jo.joy.id = j.id and jo.joy.id = :joyId join j.brewery b on j.brewery.id = b.id")
+    @Query("select new com.example.monghyang.domain.brewery.dto.OpeningHourDto(b.startTime, b.endTime) from Brewery b where b.id = (select j.brewery.id from Joy j where j.id = :joyId)")
     Optional<OpeningHourDto> findOpeningHourByJoyId(@Param("joyId") Long joyId);
 }
