@@ -14,6 +14,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,19 +53,21 @@ public class CartService {
     }
 
     // 장바구니 수량 1 증가
+    @Transactional
     public void plusQuantity(Long userId, Long cartId) {
-        Cart cart = cartRepository.findByIdAndUserId(cartId, userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.CART_ITEM_NOT_FOUND));
-        cart.plusOneQuantity();
-        cartRepository.save(cart);
+        int ret = cartRepository.plusOneQuantity(cartId, userId);
+        if(ret == 0) {
+            throw new ApplicationException(ApplicationError.CART_NOT_FOUND);
+        }
     }
 
     // 장바구니 수량 1 감소
+    @Transactional
     public void minusQuantity(Long userId, Long cartId) {
-        Cart cart = cartRepository.findByIdAndUserId(cartId, userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.CART_ITEM_NOT_FOUND));
-        cart.minusOneQuantity();
-        cartRepository.save(cart);
+        int ret = cartRepository.minusOneQuantity(cartId, userId);
+        if(ret == 0) {
+            throw new ApplicationException(ApplicationError.CART_NOT_FOUND);
+        }
     }
 
     // 장바구니 사용자 지정 수량으로 수정
