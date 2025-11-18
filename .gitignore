@@ -5,7 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 **/src/test/com/example/monghyang/devtest/**
-**/src/main/resources/application-local.yml
+/src/main/resources/application-local.yml
 
 ### STS ###
 .apt_generated
