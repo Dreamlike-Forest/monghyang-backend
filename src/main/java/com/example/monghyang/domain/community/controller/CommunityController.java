@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.community.controller;
 
+import com.example.monghyang.domain.community.dto.PageResponseDto;
 import com.example.monghyang.domain.community.dto.ReqCommunityDto;
 import com.example.monghyang.domain.community.dto.ResCommunityDto;
 import com.example.monghyang.domain.community.dto.ResCommunityListDto;
@@ -36,6 +37,14 @@ public class CommunityController {
         return ResponseDataDto.contentFrom(result);
     }
 
+    @GetMapping("/page")
+    @Operation(summary = "전체 커뮤니티 게시글 조회 (페이징)", description = "모든 커뮤니티 게시글을 페이징하여 조회합니다. (12개씩)")
+    public ResponseDataDto<PageResponseDto<ResCommunityListDto>> getAllCommunitiesWithPaging(
+            @RequestParam(defaultValue = "0") int page) {
+        PageResponseDto<ResCommunityListDto> result = communityService.getAllCommunitiesWithPaging(page);
+        return ResponseDataDto.contentFrom(result);
+    }
+
     @GetMapping("/category/{category}")
     @Operation(summary = "카테고리별 커뮤니티 게시글 조회", description = "특정 카테고리의 커뮤니티 게시글을 조회합니다.")
     public ResponseDataDto<List<ResCommunityListDto>> getCommunitiesByCategory(@PathVariable String category) {
@@ -43,10 +52,28 @@ public class CommunityController {
         return ResponseDataDto.contentFrom(result);
     }
 
+    @GetMapping("/category/{category}/page")
+    @Operation(summary = "카테고리별 커뮤니티 게시글 조회 (페이징)", description = "특정 카테고리의 커뮤니티 게시글을 페이징하여 조회합니다. (12개씩)")
+    public ResponseDataDto<PageResponseDto<ResCommunityListDto>> getCommunitiesByCategoryWithPaging(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page) {
+        PageResponseDto<ResCommunityListDto> result = communityService.getCommunitiesByCategoryWithPaging(category, page);
+        return ResponseDataDto.contentFrom(result);
+    }
+
     @GetMapping("/user/{userId}")
     @Operation(summary = "사용자별 커뮤니티 게시글 조회", description = "특정 사용자의 커뮤니티 게시글을 조회합니다.")
     public ResponseDataDto<List<ResCommunityListDto>> getCommunitiesByUser(@PathVariable Long userId) {
         List<ResCommunityListDto> result = communityService.getCommunitiesByUser(userId);
+        return ResponseDataDto.contentFrom(result);
+    }
+
+    @GetMapping("/user/{userId}/page")
+    @Operation(summary = "사용자별 커뮤니티 게시글 조회 (페이징)", description = "특정 사용자의 커뮤니티 게시글을 페이징하여 조회합니다. (12개씩)")
+    public ResponseDataDto<PageResponseDto<ResCommunityListDto>> getCommunitiesByUserWithPaging(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page) {
+        PageResponseDto<ResCommunityListDto> result = communityService.getCommunitiesByUserWithPaging(userId, page);
         return ResponseDataDto.contentFrom(result);
     }
 

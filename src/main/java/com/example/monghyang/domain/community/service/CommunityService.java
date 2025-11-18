@@ -8,6 +8,9 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,8 @@ public class CommunityService {
     private final CommunityRepository communityRepository;
     private final UsersRepository usersRepository;
     private final ImageCommunityService imageCommunityService;
+
+    private static final int PAGE_SIZE = 12;
 
     @Transactional
     public ResCommunityDto createCommunity(Long userId, ReqCommunityDto dto) {
@@ -60,6 +65,13 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
+    public PageResponseDto<ResCommunityListDto> getAllCommunitiesWithPaging(int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        Page<Community> communityPage = communityRepository.findByIsDeletedFalseOrderByCreatedAtDesc(pageable);
+        Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
+        return PageResponseDto.from(dtoPage);
+    }
+
     public List<ResCommunityListDto> getCommunitiesByCategory(String category) {
         return communityRepository.findByCategoryAndIsDeletedFalseOrderByCreatedAtDesc(category)
                 .stream()
@@ -67,11 +79,25 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByCategoryWithPaging(String category, int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        Page<Community> communityPage = communityRepository.findByCategoryAndIsDeletedFalseOrderByCreatedAtDesc(category, pageable);
+        Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
+        return PageResponseDto.from(dtoPage);
+    }
+
     public List<ResCommunityListDto> getCommunitiesByUser(Long userId) {
         return communityRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(ResCommunityListDto::from)
                 .collect(Collectors.toList());
+    }
+
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByUserWithPaging(Long userId, int page) {
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        Page<Community> communityPage = communityRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
+        Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
+        return PageResponseDto.from(dtoPage);
     }
 
     @Transactional

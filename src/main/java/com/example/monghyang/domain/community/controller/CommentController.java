@@ -3,7 +3,7 @@ package com.example.monghyang.domain.community.controller;
 import com.example.monghyang.domain.community.dto.ReqCommentDto;
 import com.example.monghyang.domain.community.dto.ResCommentDto;
 import com.example.monghyang.domain.community.service.CommentService;
-import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
+import com.example.monghyang.domain.global.annotation.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
