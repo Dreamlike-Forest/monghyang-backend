@@ -40,6 +40,11 @@ spring:
           min-idle: 1 # 유휴 커넥션 최소 개수
       username: ${REDIS_USERNAME} # redis 유저네임
       password: ${REDIS_PASSWORD} # redis 유저 비밀번호
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-version: 1              # 기본 버전 숫자: 1
+    baseline-description: "Monghyang Initial DB Schema(by flyway)"
 # JWT 관련 설정
 jwt:
   refresh-secret: ${JWT_REFRESH_SECRET_KEY} # JWT REFRESH 토큰 생성에 사용되는 비밀키
