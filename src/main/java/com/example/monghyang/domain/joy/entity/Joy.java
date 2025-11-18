@@ -11,7 +11,7 @@ import java.math.RoundingMode;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Joy { // 양조장 체험
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @JoinColumn(name = "BREWERY_ID", nullable = false)

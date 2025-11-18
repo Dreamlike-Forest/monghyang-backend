@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -13,5 +14,6 @@ import java.time.LocalDateTime;
 public class ReqUpdateJoyOrderDto {
     @NotNull(message = "수정하려는 양조장 체험 예약 내역 식별자를 입력하세요.")
     private Long id;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime reservation;
 }

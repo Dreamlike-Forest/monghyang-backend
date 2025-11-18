@@ -65,11 +65,13 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         OpeningHourDto openingHourDto = breweryRepository.findOpeningHourByJoyId(joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         long minDiff = ChronoUnit.MINUTES.between(openingHourDto.startTime(), reservation.toLocalTime());
+        System.out.println("양조장 운영시간: "+openingHourDto.startTime()+" "+openingHourDto.endTime());
+        System.out.println("입력받은 시간값: "+reservation.toLocalTime()+" "+reservation.toLocalTime().plusMinutes(timeUnit));
 
         // 주문 요청의 체험 시작 시간이 양조장의 운영시간 내에 있는지 검증
         if(reservation.isBefore(LocalDateTime.now())
                 || reservation.toLocalTime().isBefore(openingHourDto.startTime())
-                || !reservation.toLocalTime().isBefore(openingHourDto.endTime())
+                || !reservation.toLocalTime().plusMinutes(timeUnit).isBefore(openingHourDto.endTime())
                 // 체험 시작 시간이 양조장의 '체험 시간 단위' 간격에 일치하는지 검증
                 || minDiff % timeUnit != 0) {
             throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);

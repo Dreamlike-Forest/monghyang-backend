@@ -18,7 +18,7 @@ import lombok.NonNull;
         )
 })
 public class BreweryTag {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @JoinColumn(name = "BREWERY_ID", nullable = false)

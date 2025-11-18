@@ -106,11 +106,11 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
     }
 
-    @DeleteMapping("/joy-order/history/{joyOrderId}")
+    @DeleteMapping("/joy-order/{joyOrderId}")
     @Operation(summary = "체험 예약 내역 삭제 요청 API")
     public ResponseEntity<ResponseDataDto<Void>> deleteHistory(@LoginUserId Long userId, @PathVariable Long joyOrderId) {
         joyOrderService.cancelByBrewery(userId, joyOrderId);
-        return ResponseEntity.ok().body(ResponseDataDto.success("예약 내역 삭제가 완료되었습니다."));
+        return ResponseEntity.ok().body(ResponseDataDto.success("해당 체험 예약 삭제가 완료되었습니다."));
     }
 
     @GetMapping("/joy-order/history/{startOffset}")
