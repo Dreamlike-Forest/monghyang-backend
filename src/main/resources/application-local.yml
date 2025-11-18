@@ -1,0 +1,33 @@
+# 로컬 데이터베이스에서 개발 시 사용(datasource의 요소를 자신의 로컬 환경에 맞게 수정하세요.)
+spring:
+  datasource:
+    url: ${LOCAL_DB_PATH}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+  # 커넥션 풀 개수 설정
+  hikari:
+    pool-name: HikariCP
+    maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 항상 validate로 설정. 스키마 수정은 flyway를 통해서 수행합니다.
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+  config:
+    import: optional:classpath:/.env[.properties] # .env 파일의 환경변수를 주입하여 빌드(실행)
+app:
+  client-url: http://localhost:3000 # 클라이언트 url
+  storage-path: ${LOCAL_STORAGE_PATH} # 로컬 개발 시 테스트 용 스토리지 경로
+logging:
+  level:
+    #    root: debug
+    org:
+      springframework:
+        security: trace
+        web:
+          servlet: debug
+          multipart: debug
+        validation: debug
