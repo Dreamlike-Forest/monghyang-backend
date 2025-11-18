@@ -6,7 +6,7 @@ spring:
     password: ${RDS_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update # 개발 시에는 'create' or 'update', 실제 운영 시 'validate' or 'none'
+      ddl-auto: validate # 개발 시에는 'create' or 'update', 실제 운영 시 'validate' or 'none'
     properties:
       hibernate:
         show_sql: true
