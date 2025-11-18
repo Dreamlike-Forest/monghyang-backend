@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductImage {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @JoinColumn(name = "PRODUCT_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
         )
 })
 public class JoySlot {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @JoinColumn(name = "JOY_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)

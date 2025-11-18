@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Check(constraints = "quantity BETWEEN 1 AND 99")
 public class Cart {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @JoinColumn(name = "USER_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
