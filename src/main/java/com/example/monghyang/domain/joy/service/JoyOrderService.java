@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -58,21 +59,25 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     /**
      * 체험 시간대 유효성 검증
      * @param joyId 체험 식별자
-     * @param reservation 예약 희망 시간대(혹은 수정 희망 시간대)
+     * @param reservationDate 예약 희망 일자
+     * @param reservationTime 예약 희망 시간대
      * @param timeUnit 해당 체험의 체험 시간 단위
      */
-    private void verifyReservationTime(Long joyId, LocalDateTime reservation, Integer timeUnit) {
+    private void verifyReservationTime(Long joyId, LocalDate reservationDate, LocalTime reservationTime, Integer countPeople, Integer timeUnit) {
         OpeningHourDto openingHourDto = breweryRepository.findOpeningHourByJoyId(joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        long minDiff = ChronoUnit.MINUTES.between(openingHourDto.startTime(), reservation.toLocalTime());
+        long minDiff = ChronoUnit.MINUTES.between(openingHourDto.startTime(), reservationTime);
         System.out.println("양조장 운영시간: "+openingHourDto.startTime()+" "+openingHourDto.endTime());
-        System.out.println("입력받은 시간값: "+reservation.toLocalTime()+" "+reservation.toLocalTime().plusMinutes(timeUnit));
+        System.out.println("입력받은 시간값: "+reservationTime+" "+reservationTime.plusMinutes(timeUnit));
 
-        // 주문 요청의 체험 시작 시간이 양조장의 운영시간 내에 있는지 검증
-        if(reservation.isBefore(LocalDateTime.now())
-                || reservation.toLocalTime().isBefore(openingHourDto.startTime())
-                || !reservation.toLocalTime().plusMinutes(timeUnit).isBefore(openingHourDto.endTime())
-                // 체험 시작 시간이 양조장의 '체험 시간 단위' 간격에 일치하는지 검증
+        // 검증 과정
+        // 1. 예약 일자가 현재보다 이전인지
+        // 2. 예약 시간대가 영업 시작 시간보다 이전인지
+        // 3. 예약의 체험 종료 시간이 영업 종료 시간대와 같거나 이후인지
+        // 4. 체험 시작 시간이 양조장의 '체험 시간 단위' 간격에 일치하는지 검증
+        if(reservationDate.isBefore(LocalDate.now())
+                || reservationTime.isBefore(openingHourDto.startTime())
+                || !reservationTime.plusMinutes(timeUnit).isBefore(openingHourDto.endTime())
                 || minDiff % timeUnit != 0) {
             throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
         }
@@ -86,7 +91,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         Joy joy = joyRepository.findById(dto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
 
-        verifyReservationTime(joy.getId(), dto.getReservation(), joy.getTimeUnit());
+        verifyReservationTime(joy.getId(), dto.getReservation_date(), dto.getReservation_time(), dto.getCount_people(), joy.getTimeUnit());
 
         UUID pgOrderId = UUID.randomUUID();
         JoyOrder joyOrder = JoyOrder.builder()

@@ -30,17 +30,17 @@ public class JoySlot {
     private LocalTime reservationTime;
     @Min(0)
     @Column(nullable = false)
-    private Integer countPeople;
+    private Integer count;
 
-    private JoySlot(Joy joy, LocalDate reservationDate, LocalTime reservationTime, Integer countPeople) {
+    private JoySlot(Joy joy, LocalDate reservationDate, LocalTime reservationTime, Integer count) {
         this.joy = joy;
         this.reservationDate = reservationDate;
         this.reservationTime = reservationTime.withSecond(0);
-        this.countPeople = countPeople;
+        this.count = count;
     }
 
-    public static JoySlot joyReservationOf(Joy joy, LocalDate reservationDate, LocalTime reservationTime, Integer countPeople) {
-        return new JoySlot(joy, reservationDate, reservationTime, countPeople);
+    public static JoySlot joyReservationOf(Joy joy, LocalDate reservationDate, LocalTime reservationTime, Integer count) {
+        return new JoySlot(joy, reservationDate, reservationTime, count);
     }
 
     public void updateReservation(LocalDate reservationDate, LocalTime reservationTime) {
