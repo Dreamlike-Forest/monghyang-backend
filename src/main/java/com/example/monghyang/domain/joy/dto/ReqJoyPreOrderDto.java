@@ -19,7 +19,7 @@ public class ReqJoyPreOrderDto {
     private Long id;
     @NotNull(message = "예약 인원 정보를 입력해주세요.")
     @Min(value = 1, message = "체험 인원은 1명 이상이어야 합니다.")
-    private Integer count_people;
+    private Integer count;
     @NotNull(message = "예약자명을 입력해주세요.")
     private String payer_name;
     @NotNull(message = "예약자 전화번호를 입력해주세요.")

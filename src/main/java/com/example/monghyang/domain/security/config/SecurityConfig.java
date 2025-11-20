@@ -27,12 +27,12 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-    private final String clientUrl;
+    private final List<String> clientUrl;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSecurityContextRepository customSecurityContextRepository;
 
     @Autowired
-    public SecurityConfig(@Value("${app.client-url}") String clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
+    public SecurityConfig(@Value("${app.client-url}") List<String> clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
         this.clientUrl = clientUrl;
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSecurityContextRepository = customSecurityContextRepository;
@@ -59,8 +59,7 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         // 허용할 Origin 설정
-                        // Collections.singletonList() == 단 하나의 요소만 가지는 불변(final) 리스트 생성
-                        config.setAllowedOrigins(Collections.singletonList(clientUrl));
+                        config.setAllowedOrigins(clientUrl);
 
                         // 허용할 HTTP 메서드 설정 ("*": 모든 HTTP 메소드)
                         config.setAllowedMethods(Collections.singletonList("*"));
@@ -98,7 +97,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form // form 로그인
-                        .loginPage(clientUrl + "/?view=login")
+//                        .loginPage(clientUrl + "/?view=login")
                         .loginProcessingUrl("/api/auth/login")
                         .usernameParameter("email")
                         .passwordParameter("password")

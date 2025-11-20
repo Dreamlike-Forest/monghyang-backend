@@ -30,6 +30,8 @@ public class ReqUpdateJoyDto {
     @Digits(integer = 8, fraction = 0, message = "가격 정보를 100억 미만의 정수로 입력해주세요.")
     @Min(value = 0, message = "정가는 음수가 될 수 없습니다.")
     private BigDecimal origin_price;
+    @Min(value = 1, message = "최대 수용 가능 인원 수는 1 이상이어야 합니다.")
+    private Integer max_count;
     private MultipartFile image; // 새 체험 이미지
     private Boolean is_soldout;
 }

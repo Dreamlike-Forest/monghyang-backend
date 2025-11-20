@@ -43,8 +43,4 @@ public class JoySlot {
         return new JoySlot(joy, reservationDate, reservationTime, count);
     }
 
-    public void updateReservation(LocalDate reservationDate, LocalTime reservationTime) {
-        this.reservationDate = reservationDate;
-        this.reservationTime = reservationTime.withSecond(0);
-    }
 }

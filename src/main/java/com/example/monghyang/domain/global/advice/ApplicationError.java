@@ -26,6 +26,7 @@ public enum ApplicationError {
     HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "상태 변경 내역이 존재하지 않습니다."),
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "주문 요소 정보가 존재하지 않습니다."),
     JOY_TIME_DUPLICATE(HttpStatus.CONFLICT, "이미 해당 시간에 다른 예약이 존재합니다. 다른 시간대를 선택해주세요."),
+    JOY_COUNT_OVER(HttpStatus.BAD_REQUEST, "예약 가능 인원수를 초과하였습니다."),
     AUTH_INFO_NOT_FOUND(HttpStatus.UNAUTHORIZED, "세션(인증) 정보가 존재하지 않습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다."),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다."),
