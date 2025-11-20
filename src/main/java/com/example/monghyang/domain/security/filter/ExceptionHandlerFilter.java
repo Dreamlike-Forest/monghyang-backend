@@ -33,10 +33,8 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
             try {
                 filterChain.doFilter(request, response);
             } catch (ApplicationException e) {
-                e.printStackTrace();
                 setApplicationErrorResponse(response, e.getApplicationError());
             } catch (IllegalStateException e) {
-                e.printStackTrace();
                 return;
             }
         } catch (IOException e) {
