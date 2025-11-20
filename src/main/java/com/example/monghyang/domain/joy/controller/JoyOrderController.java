@@ -36,8 +36,11 @@ public class JoyOrderController {
     // 체험 예약 요청, uuid를 클라이언트로 반환
     @PostMapping("/prepare")
     @Operation(summary = "PG사로 전송할 'orderId' 값을 발급하기 위한 API", description = "프론트엔드에서 PG사로 결제 요청하기 전에 수행해주세요.")
-    public ResponseEntity<ResponseDataDto<UUID>> prepareOrderRequest(@LoginUserId Long userId, @ModelAttribute @Valid ReqJoyPreOrderDto reqJoyOrderDto) {
-        UUID pgOrderId = joyOrderService.prepareOrder(userId, reqJoyOrderDto);
+    public ResponseEntity<ResponseDataDto<UUID>> prepareOrderRequest(@LoginUserId Long userId, @ModelAttribute @Valid ReqJoyPreOrderDto dto) {
+        // 1. 예약 슬롯 확보
+        joyOrderService.incrementJoySlotCount(dto.getId(), dto.getReservation_date(), dto.getReservation_time(), dto.getCount());
+        // 2. pgOrderId 발급
+        UUID pgOrderId = joyOrderService.prepareOrder(userId, dto);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(pgOrderId));
     }
 
@@ -50,10 +53,10 @@ public class JoyOrderController {
     }
 
     // 체험 시간 변경 요청(예약 전날까지만 가능)
-    @PostMapping("/change-time")
+    @PostMapping("/change")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "예약 전날까지만 수행 가능, 다른 예약과 충돌하지 않으면 수정됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
-        joyOrderService.changeTime(userId, reqUpdateJoyOrderDto);
+        joyOrderService.updateReservation(userId, reqUpdateJoyOrderDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
     }
 

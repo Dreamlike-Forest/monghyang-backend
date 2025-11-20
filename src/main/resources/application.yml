@@ -10,10 +10,14 @@ spring:
       accept-case-insensitive-enums: true # enum 대소문자 구분없이 매핑
     serialization:
       write-dates-as-timestamps: false
+    time-zone: Asia/Seoul
   servlet:
     multipart:
       max-file-size: 50MB # 한 요청 당 최대 50MB의 파일에 대해서만 업로드를 허용한다.
       max-request-size: 50MB
+  jpa:
+    properties:
+      hibernate.jdbc.time_zone: Asia/Seoul
   security:
     oauth2:
       client:

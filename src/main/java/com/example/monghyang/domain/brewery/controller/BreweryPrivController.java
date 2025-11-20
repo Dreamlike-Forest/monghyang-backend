@@ -102,7 +102,7 @@ public class BreweryPrivController {
     @PostMapping("/joy-order/change-time")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
-        joyOrderService.changeTimeByBrewery(userId, reqUpdateJoyOrderDto);
+        joyOrderService.updateReservationByBrewery(userId, reqUpdateJoyOrderDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
     }
 

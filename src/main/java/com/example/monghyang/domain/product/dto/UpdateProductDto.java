@@ -21,7 +21,6 @@ public class UpdateProductDto {
     private Long id;
     @AllowNullNotBlankString
     private String name;
-    @AllowNullNotBlankString
     private Double alcohol;
     private Boolean is_online_sell;
     @Min(value = 1, message = "술 용량은 0보다 커야 합니다.")

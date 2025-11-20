@@ -12,7 +12,9 @@ import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -42,7 +44,7 @@ public class JoyService {
                 .brewery(brewery).name(reqJoyDto.getName())
                 .place(reqJoyDto.getPlace()).detail(reqJoyDto.getDetail())
                 .originPrice(reqJoyDto.getOrigin_price()).timeUnit(reqJoyDto.getTime_unit())
-                .imageKey(imageKey)
+                .imageKey(imageKey).maxCount(reqJoyDto.getMax_count())
                 .build();
         joyRepository.save(joy);
         if(brewery.getJoyCount() == 0) {
@@ -108,6 +110,9 @@ public class JoyService {
         }
         if(reqUpdateJoyDto.getTime_unit() != null) {
             joy.updateTimeUnit(reqUpdateJoyDto.getTime_unit());
+        }
+        if(reqUpdateJoyDto.getMax_count() != null) {
+            joy.updateMaxCount(reqUpdateJoyDto.getMax_count());
         }
     }
 }
