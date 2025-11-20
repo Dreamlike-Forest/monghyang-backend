@@ -33,12 +33,15 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
             try {
                 filterChain.doFilter(request, response);
             } catch (ApplicationException e) {
+                e.printStackTrace();
                 setApplicationErrorResponse(response, e.getApplicationError());
             } catch (IllegalStateException e) {
+                e.printStackTrace();
                 return;
             }
         } catch (IOException e) {
             log.error(e.getMessage()+"\n response http body 작성 도중 에러가 발생했습니다.");
+            e.printStackTrace();
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
 
