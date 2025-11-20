@@ -14,7 +14,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @Table(uniqueConstraints = {
         @UniqueConstraint(
-                name = "uk_joy_id_date_time",
+                name = "uk_joy_id_reservation_date_time",
                 columnNames = {"joy_id", "reservation_date", "reservation_time"}
         )
 })

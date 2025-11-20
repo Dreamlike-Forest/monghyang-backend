@@ -34,7 +34,7 @@ public class Joy { // 양조장 체험
     @Column(nullable = false)
     private Integer timeUnit;
     @Column(nullable = false)
-    @Min(0)
+    @Min(1)
     private Integer maxCount;
     @Column(nullable = false)
     private Integer salesVolume;
