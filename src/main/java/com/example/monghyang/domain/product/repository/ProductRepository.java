@@ -20,7 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByUserId(@Param("userId") Long userId, @Param("productId") Long productId);
 
     @Query("""
-    select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
+    select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey, p.isOnlineSell, p.isSoldout)
         from Product p
         join Users u on p.user.id = u.id
         left join ProductReview pr on pr.product.id = p.id
@@ -31,7 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<ResProductListDto> findActiveLatest(Pageable pageable); // 상품 리스트 최신순 조회
 
     @Query("""
-    select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
+    select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey, p.isOnlineSell, p.isSoldout)
         from Product p
         join Users u on p.user.id = u.id and u.id = :userId
         left join ProductReview pr on pr.product.id = p.id
@@ -54,7 +54,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @param tagIdList 태그 식별자 리스트 필터링 조건
      */
     @Query("""
-        select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey)
+        select new com.example.monghyang.domain.product.dto.ResProductListDto(p.id, u.name, p.name, avg(pr.star), count(pr.id), p.alcohol, p.volume, p.salesVolume, p.originPrice, p.discountRate, p.finalPrice, pi.imageKey, p.isOnlineSell, p.isSoldout)
         from Product p
         join p.user u on p.user.id = u.id
         left join ProductReview pr on pr.product.id = p.id

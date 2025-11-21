@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.product.review;
 
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.review.dto.ReqProductReviewDto;
 import com.example.monghyang.domain.product.review.dto.ResProductReviewListDto;

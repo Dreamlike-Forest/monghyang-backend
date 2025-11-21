@@ -10,7 +10,7 @@ import com.example.monghyang.domain.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryDto;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
 import com.example.monghyang.domain.tag.dto.ReqTagDto;
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.brewery.service.BreweryService;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +43,7 @@ public class BreweryPrivController {
     // 양조장 수정 로직(이미지 추가/삭제 또한 한번에 가능하도록)
     @PostMapping("/update")
     @Operation(summary = "양조장 정보 수정(첫번째 이미지: 대표 이미지")
-    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
+    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @Valid @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
         breweryService.breweryUpdate(userId, reqBreweryDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보를 업데이트했습니다."));
     }
@@ -99,18 +99,18 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
     }
 
-    @PostMapping("/joy-order/change-time")
+    @PostMapping("/joy-order/change")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
-        joyOrderService.changeTimeByBrewery(userId, reqUpdateJoyOrderDto);
+        joyOrderService.updateReservationByBrewery(userId, reqUpdateJoyOrderDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
     }
 
-    @DeleteMapping("/joy-order/history/{joyOrderId}")
+    @DeleteMapping("/joy-order/{joyOrderId}")
     @Operation(summary = "체험 예약 내역 삭제 요청 API")
     public ResponseEntity<ResponseDataDto<Void>> deleteHistory(@LoginUserId Long userId, @PathVariable Long joyOrderId) {
         joyOrderService.cancelByBrewery(userId, joyOrderId);
-        return ResponseEntity.ok().body(ResponseDataDto.success("예약 내역 삭제가 완료되었습니다."));
+        return ResponseEntity.ok().body(ResponseDataDto.success("해당 체험 예약 삭제가 완료되었습니다."));
     }
 
     @GetMapping("/joy-order/history/{startOffset}")

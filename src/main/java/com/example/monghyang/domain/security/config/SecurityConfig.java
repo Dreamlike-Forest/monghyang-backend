@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -23,15 +24,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-    private final String clientUrl;
+    private final List<String> clientUrl;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSecurityContextRepository customSecurityContextRepository;
 
     @Autowired
-    public SecurityConfig(@Value("${app.client-url}") String clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
+    public SecurityConfig(@Value("${app.client-url}") List<String> clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
         this.clientUrl = clientUrl;
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSecurityContextRepository = customSecurityContextRepository;
@@ -49,8 +51,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, ExceptionHandlerFilter exceptionHandlerFilter) throws Exception {
+    @Order(1)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        // actuator 요청에 대한 Security Filter Chain
+        http
+                .securityContext(c -> c // security context를 세션에 저장하지 않는 설정
+                        .securityContextRepository(customSecurityContextRepository)
+                        .requireExplicitSave(true))
+                .requestCache(AbstractHttpConfigurer::disable) // 요청에 대한 캐시 비활성화
+                .securityMatcher("/actuator/**")
+                .authorizeHttpRequests(auth ->
+                        auth
+                                .requestMatchers("/actuator/health").permitAll()
+                                .anyRequest().hasRole("ADMIN"));
+        return http.build();
+    }
 
+    @Bean
+    @Order(2)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, ExceptionHandlerFilter exceptionHandlerFilter) throws Exception {
+        // application api 요청에 대한 Security Filter Chain
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors((corsCustom) -> corsCustom.configurationSource(new CorsConfigurationSource() {
@@ -58,11 +78,13 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         // 허용할 Origin 설정
-                        // Collections.singletonList() == 단 하나의 요소만 가지는 불변(final) 리스트 생성
-                        config.setAllowedOrigins(Collections.singletonList(clientUrl));
+                        config.setAllowedOrigins(clientUrl);
 
                         // 허용할 HTTP 메서드 설정 ("*": 모든 HTTP 메소드)
                         config.setAllowedMethods(Collections.singletonList("*"));
+
+                        // 브라우저에서 JS로 접근할 수 있는 커스텀 헤더의 목록 정의
+                        config.setExposedHeaders(List.of("X-Session-Id", "X-Refresh-Token"));
 
                         // 요청에 자격 증명(Credentials, 예: 쿠키, HTTP 인증 등)을 포함하도록 허용
                         // 이 설정이 true일 경우, `Access-Control-Allow-Credentials` 헤더가 true
@@ -94,7 +116,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form // form 로그인
-                        .loginPage(clientUrl + "/?view=login")
+//                        .loginPage(clientUrl + "/?view=login")
                         .loginProcessingUrl("/api/auth/login")
                         .usernameParameter("email")
                         .passwordParameter("password")

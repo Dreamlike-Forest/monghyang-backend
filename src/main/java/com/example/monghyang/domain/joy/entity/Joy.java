@@ -2,6 +2,7 @@ package com.example.monghyang.domain.joy.entity;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -11,7 +12,7 @@ import java.math.RoundingMode;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Joy { // 양조장 체험
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @JoinColumn(name = "BREWERY_ID", nullable = false)
@@ -33,6 +34,9 @@ public class Joy { // 양조장 체험
     @Column(nullable = false)
     private Integer timeUnit;
     @Column(nullable = false)
+    @Min(1)
+    private Integer maxCount;
+    @Column(nullable = false)
     private Integer salesVolume;
     private String imageKey;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
@@ -41,7 +45,7 @@ public class Joy { // 양조장 체험
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "joyBuilder")
-    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, @NonNull Integer timeUnit, String imageKey) {
+    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, @NonNull Integer timeUnit, @NonNull Integer maxCount, String imageKey) {
         this.brewery = brewery;
         this.name = name;
         this.place = place;
@@ -51,6 +55,7 @@ public class Joy { // 양조장 체험
         this.finalPrice = originPrice;
         this.salesVolume = 0; // 초기 판매(예약)량: 0
         this.timeUnit = timeUnit;
+        this.maxCount = maxCount;
         this.imageKey = imageKey;
     }
 
@@ -103,5 +108,9 @@ public class Joy { // 양조장 체험
 
     public void updateTimeUnit(Integer timeUnit) {
         this.timeUnit = timeUnit;
+    }
+
+    public void updateMaxCount(Integer maxCount) {
+        this.maxCount = maxCount;
     }
 }

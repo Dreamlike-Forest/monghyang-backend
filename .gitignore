@@ -4,7 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-**/src/test/com/example/monghyang/devtest
+/src/test/com/example/monghyang/devtest/**
 
 ### STS ###
 .apt_generated
@@ -38,3 +38,5 @@ out/
 
 ### VS Code ###
 .vscode/
+
+*.env

@@ -2,7 +2,10 @@ package com.example.monghyang.domain.brewery.dto;
 
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.product.dto.ResProductListDto;
 import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -25,8 +28,13 @@ public class ResBreweryDto {
     private final Boolean brewery_is_visiting_brewery;
     private final LocalTime brewery_start_time;
     private final LocalTime brewery_end_time;
+    @Setter
     private List<ResBreweryImageDto> brewery_image_image_key; // 이미지 리스트
+    @Setter
+    private Page<ResProductListDto> product_list; // 양조장이 취급하는 상품 리스트(온라인판매 안할 수도 있음)
+    @Setter
     private List<String> tags_name; // 양조장 주종 태그 이름 리스트
+    @Setter
     private List<ResJoyDto> joy;
 
     private ResBreweryDto(Brewery brewery) {
@@ -56,15 +64,4 @@ public class ResBreweryDto {
         return new ResBreweryDto(brewery);
     }
 
-    public void setTags_name(List<String> tags_name) {
-        this.tags_name = tags_name;
-    }
-
-    public void setBrewery_image_image_key(List<ResBreweryImageDto> brewery_image_image_key) {
-        this.brewery_image_image_key = brewery_image_image_key;
-    }
-
-    public void setJoy(List<ResJoyDto> joy) {
-        this.joy = joy;
-    }
 }

@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.users.dto;
 
+import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
@@ -14,21 +15,21 @@ import java.time.LocalDate;
 public class ReqUsersDto {
     @Email(message = "이메일 형식이어야 합니다.")
     private String email;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String curPassword; // 변경 전 현재 비밀번호
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String newPassword; // 새 비밀번호
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String nickname;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String name;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String phone;
     private LocalDate birth;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String gender;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String address;
-    @Pattern(regexp = "\\S+", message = "빈 문자열이나 공백만 입력할 수 없습니다")
+    @AllowNullNotBlankString
     private String address_detail;
 }

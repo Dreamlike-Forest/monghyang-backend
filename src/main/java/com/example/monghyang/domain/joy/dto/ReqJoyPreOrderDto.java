@@ -5,8 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -14,13 +17,15 @@ import java.time.LocalDateTime;
 public class ReqJoyPreOrderDto {
     @NotNull(message = "체험 식별자를 입력해주세요.")
     private Long id;
-    @NotNull(message = "체험 인원 정보를 입력해주세요.")
+    @NotNull(message = "예약 인원 정보를 입력해주세요.")
     @Min(value = 1, message = "체험 인원은 1명 이상이어야 합니다.")
     private Integer count;
     @NotNull(message = "예약자명을 입력해주세요.")
     private String payer_name;
     @NotNull(message = "예약자 전화번호를 입력해주세요.")
     private String payer_phone;
-    @NotNull(message = "체험 날짜 및 시간대를 입력해주세요.(30분의 배수)")
-    private LocalDateTime reservation;
+    @NotNull(message = "예약 날짜를 입력해주세요.")
+    private LocalDate reservation_date;
+    @NotNull(message = "예약 시간대를 입력해주세요.")
+    private LocalTime reservation_time;
 }

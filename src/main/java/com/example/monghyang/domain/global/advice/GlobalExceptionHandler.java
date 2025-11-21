@@ -36,7 +36,6 @@ public class GlobalExceptionHandler {
         }
         String error = String.join(" ", errors); // 클라이언트에 반환하기 위해 처리된 최종 에러 메시지 문자열
         log.error("{} : {}", e.getCause(), e.getMessage());
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApplicationErrorDto.statusMessageOf(HttpStatus.BAD_REQUEST, error));
     }
 
@@ -62,6 +61,7 @@ public class GlobalExceptionHandler {
         }
 
         log.error("트랜잭션 처리 에러 발생 {} : {}", e.getCause(), e.getMessage());
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApplicationErrorDto.statusMessageOf(HttpStatus.INTERNAL_SERVER_ERROR, "트랜잭션 처리 중 에러가 발생했습니다. 서버 관리자에게 문의하세요."));
     }
 
@@ -74,6 +74,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApplicationErrorDto> exception(Exception e){
         log.error(e.getMessage());
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApplicationErrorDto.statusMessageOf(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage()));
     }
 

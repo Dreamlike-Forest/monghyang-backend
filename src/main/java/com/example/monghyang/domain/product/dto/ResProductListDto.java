@@ -22,6 +22,9 @@ public class ResProductListDto {
     private final BigDecimal product_discount_rate;
     private final BigDecimal product_final_price;
     private final String image_key; // 상품 대표 이미지
+    private final Boolean product_is_online_sell;
+    private final Boolean product_is_soldout;
     @Setter
     private List<String> tag_name;
+
 }

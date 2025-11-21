@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BreweryImage {
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "BREWERY_ID")
+    @JoinColumn(name = "BREWERY_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Brewery brewery;
     @Column(nullable = false, unique = true)

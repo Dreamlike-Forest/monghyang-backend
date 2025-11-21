@@ -9,8 +9,10 @@ spring:
       ddl-auto: none  # 개발 시에는 'create' or 'update', 실제 운영 시 'validate' or 'none'
   config:
     import: optional:file:./.env[.properties] # .env 파일의 환경변수를 주입하여 jar 실행
+  flyway:
+    baseline-on-migrate: true        # 기존 스키마를 baseline 처리
 app:
-  client-url: https://www.monghyang.com # 실제 운영 도메인 url origin
+  client-url: https://www.monghyang.com,https://monghyang.com,https://admin.monghyang.com,https://test.monghyang.com
   s3:
     bucket: monghyang-image-store
     region: ap-northeast-2

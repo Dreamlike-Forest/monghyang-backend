@@ -1,7 +1,7 @@
 package com.example.monghyang.domain.seller.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.global.annotation.LoginUserId;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.dto.ReqProductDto;
 import com.example.monghyang.domain.product.dto.UpdateProductDto;

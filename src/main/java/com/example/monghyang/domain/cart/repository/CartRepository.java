@@ -2,6 +2,7 @@ package com.example.monghyang.domain.cart.repository;
 
 import com.example.monghyang.domain.cart.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,6 +15,14 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("select c from Cart c where c.id = :id and c.user.id = :userId")
     Optional<Cart> findByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    @Modifying
+    @Query("update Cart c set c.quantity = c.quantity + 1 where c.id = :id and c.user.id = :userId")
+    int plusOneQuantity(@Param("id") Long id, @Param("userId") Long userId);
+
+    @Modifying
+    @Query("update Cart c set c.quantity = c.quantity - 1 where c.id = :id and c.user.id = :userId")
+    int minusOneQuantity(@Param("id") Long id, @Param("userId") Long userId);
 
     @Query("select c from Cart c where c.user.id = :userId")
     List<Cart> findByUserId(@Param("userId") Long userId);

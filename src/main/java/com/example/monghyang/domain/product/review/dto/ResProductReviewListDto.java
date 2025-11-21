@@ -1,9 +1,11 @@
 package com.example.monghyang.domain.product.review.dto;
 
 import com.example.monghyang.domain.product.review.ProductReview;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class ResProductReviewListDto {
     private Long product_review_id;
     private String users_name;

@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.brewery.repository;
 
-import com.example.monghyang.domain.brewery.dto.OpeningHourDto;
+import com.example.monghyang.domain.brewery.dto.JoyInfoDto;
 import com.example.monghyang.domain.brewery.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
@@ -71,7 +71,12 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     @Query("select new com.example.monghyang.domain.product.dto.ResProductOwnerDto(b.id, r.name, bi.imageKey) from Brewery b left join b.regionType r left join BreweryImage bi on bi.brewery = b and bi.seq = 1 where b.user.id = :userId")
     Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 
-    // 양조장의 운영시간 조회
-    @Query("select new com.example.monghyang.domain.brewery.dto.OpeningHourDto(b.startTime, b.endTime) from JoyOrder jo join jo.joy j on jo.joy.id = j.id and jo.joy.id = :joyId join j.brewery b on j.brewery.id = b.id")
-    Optional<OpeningHourDto> findOpeningHourByJoyId(@Param("joyId") Long joyId);
+    /**
+     * 양조장 운영 시작/종료 시간, 체험 시간 단위, 동시간대 최대 수용 가능 인원 정보 조회
+     * @param joyId
+     * @return
+     */
+    @Query("select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(b.startTime, b.endTime, j.timeUnit, j.maxCount) from Joy j join j.brewery b where j.id = :joyId")
+    Optional<JoyInfoDto> findJoyTimeInfoByJoyId(@Param("joyId") Long joyId);
+
 }
