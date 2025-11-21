@@ -3,10 +3,7 @@ package com.example.monghyang.domain.product.entity;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -36,7 +33,7 @@ public class Product {
     @Column(nullable = false)
     private Integer volume;
     @Column(nullable = false)
-    @Min(0)
+    @Min(value = 0, message = "재고 수량은 0 미만이 될 수 없습니다.")
     private Integer inventory;
     @Column(nullable = false, precision = 8)
     private BigDecimal originPrice;
@@ -52,14 +49,15 @@ public class Product {
     private Boolean isDeleted;
 
     @Builder
-    public Product(Users user, String name, Double alcohol, Boolean isOnlineSell,
-                   Integer volume, BigDecimal originPrice, String description) {
+    public Product(@NonNull Users user, @NonNull String name, @NonNull Double alcohol, @NonNull Boolean isOnlineSell,
+                   @NonNull Integer volume, @NonNull BigDecimal originPrice, @NonNull Integer inventory, String description) {
         this.user = user;
         this.name = name;
         this.alcohol = alcohol;
         this.isOnlineSell = isOnlineSell;
         this.salesVolume = 0;
         this.volume = volume;
+        this.inventory = inventory;
         this.originPrice = originPrice;
         this.discountRate = BigDecimal.ZERO;
         this.finalPrice = originPrice;
@@ -117,5 +115,12 @@ public class Product {
 
     public void updateDescription(String description) {
         this.description = description;
+    }
+
+    public void increaseInventory(Integer increaseNumber) {
+        this.inventory += increaseNumber;
+    }
+    public void decreaseInventory(Integer decreaseNumber) {
+        this.inventory -= decreaseNumber;
     }
 }

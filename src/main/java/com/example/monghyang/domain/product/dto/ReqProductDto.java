@@ -2,10 +2,7 @@ package com.example.monghyang.domain.product.dto;
 
 import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import com.example.monghyang.domain.image.dto.AddImageDto;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,6 +20,9 @@ public class ReqProductDto {
     private Boolean is_online_sell;
     @NotNull(message = "상품의 용량을 입력해주세요.")
     private Integer volume;
+    @NotNull(message = "상품의 초기 재고 수량을 입력해주세요.")
+    @Min(value = 1, message = "재고 수량은 0보다 커야합니다.")
+    private Integer inventory;
     @NotNull(message = "상품의 정가를 입력해주세요.")
     @Digits(integer = 8, fraction = 0, message = "가격 정보를 정수로 입력해주세요.")
     private BigDecimal origin_price;
