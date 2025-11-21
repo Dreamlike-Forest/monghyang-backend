@@ -1,4 +1,4 @@
-package com.example.monghyang.domain.joy.dto;
+package com.example.monghyang.domain.joy.dto.slot;
 
 import java.time.LocalDate;
 

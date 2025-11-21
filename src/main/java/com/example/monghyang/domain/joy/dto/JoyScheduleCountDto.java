@@ -7,4 +7,5 @@ public interface JoyScheduleCountDto {
     Integer getTimeUnit();
     LocalTime getStartTime();
     LocalTime getEndTime();
+    Integer getMaxCount();
 }

@@ -6,7 +6,7 @@ import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.dto.JoyScheduleCountDto;
-import com.example.monghyang.domain.joy.dto.UnavailableJoySlotTimeCountDto;
+import com.example.monghyang.domain.joy.dto.slot.UnavailableJoySlotTimeCountDto;
 import com.example.monghyang.domain.joy.repository.JoySlotRepository;
 import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.product.review.ProductReviewRepository;

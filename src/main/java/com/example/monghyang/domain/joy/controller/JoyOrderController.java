@@ -2,6 +2,10 @@ package com.example.monghyang.domain.joy.controller;
 
 import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.global.order.ReqOrderDto;
+import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotTimeDto;
+import com.example.monghyang.domain.joy.dto.slot.ResJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.slot.ResJoySlotTimeDto;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
@@ -9,8 +13,6 @@ import com.example.monghyang.domain.joy.service.JoySlotService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,12 @@ public class JoyOrderController {
             dto.setMonth(1);
         }
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joySlotService.getImpossibleDate(dto)));
+    }
+
+    @GetMapping("/calendar/time-info")
+    @Operation(summary = "특정 날의 모든 시간대의 '남아있는 자릿수' 정보 조회", description = "남아있는 자릿수가 0이라면 예약 불가를 의미")
+    public ResponseEntity<ResponseDataDto<ResJoySlotTimeDto>> getRemainingCountList(@Valid ReqFindJoySlotTimeDto dto) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joySlotService.getRemainingCountList(dto.getJoyId(), dto.getDate())));
     }
 
     // 체험 예약 요청, uuid를 클라이언트로 반환

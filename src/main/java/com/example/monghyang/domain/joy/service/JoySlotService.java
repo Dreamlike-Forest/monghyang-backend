@@ -2,10 +2,10 @@ package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.joy.dto.JoyScheduleCountDto;
-import com.example.monghyang.domain.joy.dto.ReqFindJoySlotDateDto;
-import com.example.monghyang.domain.joy.dto.ResJoySlotDateDto;
-import com.example.monghyang.domain.joy.dto.UnavailableJoySlotTimeCountDto;
+import com.example.monghyang.domain.joy.dto.*;
+import com.example.monghyang.domain.joy.dto.slot.*;
+import com.example.monghyang.domain.joy.entity.JoySlot;
+import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.repository.JoySlotRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,12 @@ import java.util.List;
 public class JoySlotService {
     // Spring AOP: Transactional 적용을 위해 클래스를 의도적으로 분리합니다.
     private final JoySlotRepository joySlotRepository;
+    private final JoyRepository joyRepository;
+
     @Autowired
-    public JoySlotService(JoySlotRepository joySlotRepository) {
+    public JoySlotService(JoySlotRepository joySlotRepository, JoyRepository joyRepository) {
         this.joySlotRepository = joySlotRepository;
+        this.joyRepository = joyRepository;
     }
 
     /**
@@ -74,9 +77,14 @@ public class JoySlotService {
      * @return
      */
     public ResJoySlotDateDto getImpossibleDate(ReqFindJoySlotDateDto dto) {
+        // 대상 체험이 하루 몇 회 운영되는지 계산하기 위한 (체험 시간 단위, 양조장 영업 시작 시간/종료 시간) 정보 조회
         JoyScheduleCountDto scheduleCountDto = joySlotRepository.findJoyScheduleCountByJoyId(dto.getJoyId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        // 하루 몇 회 운영되는지 계산: count로 저장
         long count = Duration.between(scheduleCountDto.getStartTime(), scheduleCountDto.getEndTime()).toMinutes() / scheduleCountDto.getTimeUnit();
+
+        // 대상 month 내의 기간 중 day 별로 '예약 불가능한 시간대'의 개수를 카운팅
+        // ex: (1일, 1), (2일, 10) == 1일의 예약 불가능 시간대: 1개, 2일의 예약 불가능 시간대: 10개
         LocalDate startDate = LocalDate.of(dto.getYear(), dto.getMonth(), 1);
         LocalDate endDate = startDate.plusMonths(1);
         List<UnavailableJoySlotTimeCountDto> dateInfoList = joySlotRepository.findUnavailableJoySlotTimeCountByJoyIdAndMonth(
@@ -85,6 +93,8 @@ public class JoySlotService {
                 endDate
         );
 
+        // 예약 불가능한 시간대의 개수가 위의 count 값과 같거나 더 큰 경우: 예약 불가능한 날
+        // 반환되는 dto에 해당 날짜 정보 삽입
         ResJoySlotDateDto result = new ResJoySlotDateDto();
         for(UnavailableJoySlotTimeCountDto countDto : dateInfoList) {
             if(countDto.getCount() >= count) {
@@ -93,4 +103,34 @@ public class JoySlotService {
         }
         return result;
     }
+
+    /**
+     * 특정 날의 각 시간대의 '남이있는 자릿수' 리스트를 반환
+     * @param joyId Long
+     * @param targetDate 특정 날 LocalDate
+     * @return 남아있는 자릿수가 0이라면 예약 불가를 의미
+     */
+    public ResJoySlotTimeDto getRemainingCountList(Long joyId, LocalDate targetDate) {
+        ResJoySlotTimeDto result = new ResJoySlotTimeDto();
+        JoyScheduleCountDto info = joySlotRepository.findJoyScheduleCountByJoyId(joyId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+
+        // 운영 시간대 정보를 response dto의 필드에 추가
+        LocalTime breweryStartTime = info.getStartTime();
+        LocalTime breweryEndTime = info.getEndTime();
+        while(breweryStartTime.isBefore(breweryEndTime)) {
+            result.getTime_info().add(breweryStartTime);
+            breweryStartTime = breweryStartTime.plusMinutes(info.getTimeUnit());
+        }
+
+        // 시간대별 남아있는 자리 정보를 response dto 필드에 추가
+        List<JoySlot> joySlotList = joySlotRepository.findByJoyIdAndDate(joyId, targetDate);
+        for (JoySlot joySlot : joySlotList) {
+            // 해당 시간대의 남아있는 자릿수 정보를 반환
+            // 남아있는 자릿수가 0인 시간대는 예약 불가를 의미
+            result.getRemaining_count_list().add(JoySlotTimeCountDto.timeCountOf(joySlot.getReservationTime(), info.getMaxCount() - joySlot.getCount()));
+        }
+        return result;
+    }
+
 }

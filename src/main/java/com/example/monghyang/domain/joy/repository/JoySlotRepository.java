@@ -1,8 +1,7 @@
 package com.example.monghyang.domain.joy.repository;
 
 import com.example.monghyang.domain.joy.dto.JoyScheduleCountDto;
-import com.example.monghyang.domain.joy.dto.UnavailableJoySlotTimeCountDto;
-import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.dto.slot.UnavailableJoySlotTimeCountDto;
 import com.example.monghyang.domain.joy.entity.JoySlot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -80,7 +79,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
      * @param joyId
      * @return 체험 시간 단위, 양조장 운영 시작 시간 및 종료 시간 정보
      */
-    @Query("select j.timeUnit as timeUnit, b.startTime as startTime, b.endTime as endTime from Joy j join j.brewery b where j.id = :joyId")
+    @Query("select j.timeUnit as timeUnit, b.startTime as startTime, b.endTime as endTime, j.maxCount as maxCount from Joy j join j.brewery b where j.id = :joyId")
     Optional<JoyScheduleCountDto> findJoyScheduleCountByJoyId(@Param("joyId") Long joyId);
 
 
@@ -98,4 +97,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     group by js.reservationDate
     """)
     List<UnavailableJoySlotTimeCountDto> findUnavailableJoySlotTimeCountByJoyIdAndMonth(@Param("joyId") Long joyId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("select js from JoySlot js where js.joy.id = :joyId and js.reservationDate = :date")
+    List<JoySlot> findByJoyIdAndDate(@Param("joyId") Long joyId, @Param("date") LocalDate date);
 }
