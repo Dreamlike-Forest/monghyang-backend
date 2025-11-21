@@ -1,5 +1,11 @@
 package com.example.monghyang.domain.joy.service;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.joy.dto.JoyScheduleCountDto;
+import com.example.monghyang.domain.joy.dto.ReqFindJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.ResJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.UnavailableJoySlotTimeCountDto;
 import com.example.monghyang.domain.joy.repository.JoySlotRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -57,5 +66,31 @@ public class JoySlotService {
             // 이 경우 해당 슬롯을 아예 제거한다.
             joySlotRepository.deleteJoySlot(joyId, date, time);
         }
+    }
+
+    /**
+     * 특정 달의 예약 불가능한 날 조회
+     * @param dto ReqFindJoySlotDateDto: joyId, year, month
+     * @return
+     */
+    public ResJoySlotDateDto getImpossibleDate(ReqFindJoySlotDateDto dto) {
+        JoyScheduleCountDto scheduleCountDto = joySlotRepository.findJoyScheduleCountByJoyId(dto.getJoyId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        long count = Duration.between(scheduleCountDto.getStartTime(), scheduleCountDto.getEndTime()).toMinutes() / scheduleCountDto.getTimeUnit();
+        LocalDate startDate = LocalDate.of(dto.getYear(), dto.getMonth(), 1);
+        LocalDate endDate = startDate.plusMonths(1);
+        List<UnavailableJoySlotTimeCountDto> dateInfoList = joySlotRepository.findUnavailableJoySlotTimeCountByJoyIdAndMonth(
+                dto.getJoyId(),
+                startDate,
+                endDate
+        );
+
+        ResJoySlotDateDto result = new ResJoySlotDateDto();
+        for(UnavailableJoySlotTimeCountDto countDto : dateInfoList) {
+            if(countDto.getCount() >= count) {
+                result.getJoy_unavailable_reservation_date().add(countDto.getReservationDate());
+            }
+        }
+        return result;
     }
 }
