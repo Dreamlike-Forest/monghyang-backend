@@ -2,6 +2,7 @@ package com.example.monghyang.domain.product.entity;
 
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,6 +35,9 @@ public class Product {
     private LocalDateTime registeredAt;
     @Column(nullable = false)
     private Integer volume;
+    @Column(nullable = false)
+    @Min(0)
+    private Integer inventory;
     @Column(nullable = false, precision = 8)
     private BigDecimal originPrice;
     @Column(nullable = false, precision = 3, scale = 1)
