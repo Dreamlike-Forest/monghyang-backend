@@ -18,6 +18,7 @@ import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -44,12 +45,13 @@ public class BreweryService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final BreweryImageRepository breweryImageRepository;
     private final StorageService storageService;
-    private final int BREWERY_PAGE_SIZE = 12;
+    private final int BREWERY_PAGE_SIZE = 6;
     private final BreweryTagRepository breweryTagRepository;
     private final JoyRepository joyRepository;
+    private final ProductService productService;
 
     @Autowired
-    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository, JoyRepository joyRepository) {
+    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository, JoyRepository joyRepository, ProductService productService) {
         this.breweryRepository = breweryRepository;
         this.usersRepository = usersRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -57,6 +59,7 @@ public class BreweryService {
         this.storageService = storageService;
         this.breweryTagRepository = breweryTagRepository;
         this.joyRepository = joyRepository;
+        this.productService = productService;
     }
 
     // 양조장 검색 (필터링 옵션 종류: 지역 타입, 가격 범위, 주종(태그), 배지(태그)): 이때 각 양조장의 이미지는 '대표 이미지'만 조회되도록
@@ -288,6 +291,7 @@ public class BreweryService {
         result.setTags_name(breweryTagRepository.findTagListByBreweryId(breweryId));
         List<Joy> joyList = joyRepository.findActiveByBreweryId(breweryId);
         result.setJoy(joyList.stream().map(ResJoyDto::joyFrom).toList());
+        result.setProduct_list(productService.getProductByUserId(brewery.getUser().getId(), 0));
         return result;
     }
 
