@@ -30,10 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,7 +67,7 @@ public class ProductService {
             productIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
         }
         for(ResProductListDto dto : result) { // Map에 저장된 태그 리스트들을 각각의 상품 dto에 알맞게 추가
-            dto.setTag_name(productIdTagMap.get(dto.getProduct_id()));
+            dto.setTag_name(productIdTagMap.getOrDefault(dto.getProduct_id(), Collections.emptyList()));
         }
     }
 
