@@ -58,7 +58,7 @@ dependencies {
 
 tasks.withType(Test).configureEach {
 	// devtest 패키지는 테스트 실행 제외
-	exclude '**/com/example/monghyang/devtest/**'
+//	exclude '**/com/example/monghyang/devtest/**'
 
 	useJUnitPlatform()
 

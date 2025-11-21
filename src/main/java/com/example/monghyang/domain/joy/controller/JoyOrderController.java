@@ -1,12 +1,15 @@
 package com.example.monghyang.domain.joy.controller;
 
-import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
+import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.global.order.ReqOrderDto;
-import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
-import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
+import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotTimeDto;
+import com.example.monghyang.domain.joy.dto.slot.ResJoySlotDateDto;
+import com.example.monghyang.domain.joy.dto.slot.ResJoySlotTimeDto;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
+import com.example.monghyang.domain.joy.service.JoySlotService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,15 +26,35 @@ import java.util.UUID;
 @Tag(name = "체험 예약 API")
 public class JoyOrderController {
     private final JoyOrderService joyOrderService;
+    private final JoySlotService joySlotService;
+
     @Autowired
-    public JoyOrderController(JoyOrderService joyOrderService) {
+    public JoyOrderController(JoyOrderService joyOrderService, JoySlotService joySlotService) {
         this.joyOrderService = joyOrderService;
+        this.joySlotService = joySlotService;
     }
 
     @GetMapping("/my/{startOffset}")
     @Operation(summary = "자신의 체험 예약 내역 조회", description = "페이지 크기: 12")
     public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getMyOrders(@LoginUserId Long userId, @PathVariable Integer startOffset) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfUser(userId, startOffset)));
+    }
+
+    @GetMapping("/calendar")
+    @Operation(summary = "특정 Month의 예약 불가능한 날 조회", description = "모든 파라미터 필수")
+    public ResponseEntity<ResponseDataDto<ResJoySlotDateDto>> getImpossibleDate(@Valid ReqFindJoySlotDateDto dto) {
+        if(dto.getMonth() > 12) {
+            dto.setMonth(12);
+        } else if(dto.getMonth() < 1) {
+            dto.setMonth(1);
+        }
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joySlotService.getImpossibleDate(dto)));
+    }
+
+    @GetMapping("/calendar/time-info")
+    @Operation(summary = "특정 날의 모든 시간대의 '남아있는 자릿수' 정보 조회", description = "남아있는 자릿수가 0이라면 예약 불가를 의미")
+    public ResponseEntity<ResponseDataDto<ResJoySlotTimeDto>> getRemainingCountList(@Valid ReqFindJoySlotTimeDto dto) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joySlotService.getRemainingCountList(dto.getJoyId(), dto.getDate())));
     }
 
     // 체험 예약 요청, uuid를 클라이언트로 반환

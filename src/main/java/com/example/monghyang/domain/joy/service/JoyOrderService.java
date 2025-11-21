@@ -277,7 +277,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
             joyOrder.setCanceled();
             return;
         }
-        Integer timeUnit = joyRepository.findTimeUnitbyId(joyOrder.getJoy().getId()).orElseThrow(() ->
+        Integer timeUnit = joyRepository.findTimeUnitByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND)); // 체험의 시간 단위 조회
         LocalDateTime now = LocalDateTime.now();
         if(now.isBefore(joyOrder.getReservation().plusMinutes(timeUnit))) {
