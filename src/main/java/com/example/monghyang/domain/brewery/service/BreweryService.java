@@ -62,15 +62,27 @@ public class BreweryService {
         this.productService = productService;
     }
 
-    // 양조장 검색 (필터링 옵션 종류: 지역 타입, 가격 범위, 주종(태그), 배지(태그)): 이때 각 양조장의 이미지는 '대표 이미지'만 조회되도록
-    // 삭제처리된 양조장은 취급하지 않음
+    private void addTagListToResult(Page<ResBreweryListDto> result) {
+        List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();
+        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
+        HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
+        // key가 존재하면 기존 리스트에 값 삽입, 존재하지 않으면 key값으로 리스트 생성 후 값 삽입
+        for(TagNameDto cur : breweryTagList) {
+            breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
+        }
+        // 조회된 양조장 별 태그 정보를 반환 dto에 삽입
+        for(ResBreweryListDto dto : result) {
+            // getOrDefault()를 통해 태그가 없는 양조장은 해당 필드에 비어있는 리스트를 삽입
+            dto.setTag_name(breweryIdTagMap.getOrDefault(dto.getBrewery_id(), Collections.emptyList()));
+        }
+    }
 
 
     // 양조장 수정 api
-        // 'brewery' 엔티티의 내용만 수정할 수 있다.
-        // 'users' 엔티티와 겹치는 컬럼(주소, 주소상세, 상호명)이 수정될 경우 users 테이블도 수정
-        // 동일한 이미지 순서값을 여러 개 받을 경우(ex: 순서가 1인 이미지를 2개 이상 받는 경우) DB 레벨 예외 발생 -> 처리 로직 필요
-        // 로직을 실제로 수행하기 전 애플리케이션 레벨에서 '삭제 리스트 삭제' -> '추가 리스트 추가'를 실행한 시나리오를 실행하여 이미지 개수가 5개 이하인지 검증
+    // 'brewery' 엔티티의 내용만 수정할 수 있다.
+    // 'users' 엔티티와 겹치는 컬럼(주소, 주소상세, 상호명)이 수정될 경우 users 테이블도 수정
+    // 동일한 이미지 순서값을 여러 개 받을 경우(ex: 순서가 1인 이미지를 2개 이상 받는 경우) DB 레벨 예외 발생 -> 처리 로직 필요
+    // 로직을 실제로 수행하기 전 애플리케이션 레벨에서 '삭제 리스트 삭제' -> '추가 리스트 추가'를 실행한 시나리오를 실행하여 이미지 개수가 5개 이하인지 검증
     @Transactional
     public void breweryUpdate(Long userId, ReqUpdateBreweryDto reqBreweryDto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
@@ -244,18 +256,7 @@ public class BreweryService {
         }
 
         // 2. 각 양조장의 태그 정보를 조회하기 위해 추가적인 쿼리문 실행
-        List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();
-        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
-        HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
-        // key가 존재하면 기존 리스트에 값 삽입, 존재하지 않으면 key값으로 리스트 생성 후 값 삽입
-        for(TagNameDto cur : breweryTagList) {
-            breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
-        }
-        // 조회된 양조장 별 태그 정보를 반환 dto에 삽입
-        for(ResBreweryListDto dto : result) {
-            // getOrDefault()를 통해 태그가 없는 양조장은 해당 필드에 비어있는 리스트를 삽입
-            dto.setTag_name(breweryIdTagMap.getOrDefault(dto.getBrewery_id(), Collections.emptyList()));
-        }
+        addTagListToResult(result);
 
         return result;
     }
@@ -272,16 +273,7 @@ public class BreweryService {
             throw new ApplicationException(ApplicationError.BREWERY_NOT_FOUND);
         }
 
-        List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();
-        List<TagNameDto> breweryTagList = breweryTagRepository.findTagListByBreweryIdList(breweryIdList);
-        HashMap<Long, List<String>> breweryIdTagMap = new HashMap<>();
-        for(TagNameDto cur : breweryTagList) {
-            breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
-        }
-        for(ResBreweryListDto dto : result) {
-            // getOrDefault()를 통해 태그가 없는 양조장은 해당 필드에 비어있는 리스트를 삽입
-            dto.setTag_name(breweryIdTagMap.getOrDefault(dto.getBrewery_id(), Collections.emptyList()));
-        }
+        addTagListToResult(result);
         return result;
     }
 
