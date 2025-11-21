@@ -57,3 +57,8 @@ server:
   tomcat:
     max-part-count: 25 # multipart 요청의 최대 가능 필드 수
     max-parameter-count: 100 # 요청에 담긴 파라메터 최대 수 제한
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,loggers
