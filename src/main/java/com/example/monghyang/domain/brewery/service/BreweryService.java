@@ -253,7 +253,8 @@ public class BreweryService {
         }
         // 조회된 양조장 별 태그 정보를 반환 dto에 삽입
         for(ResBreweryListDto dto : result) {
-            dto.setTag_name(breweryIdTagMap.get(dto.getBrewery_id()));
+            // getOrDefault()를 통해 태그가 없는 양조장은 해당 필드에 비어있는 리스트를 삽입
+            dto.setTag_name(breweryIdTagMap.getOrDefault(dto.getBrewery_id(), Collections.emptyList()));
         }
 
         return result;
@@ -278,7 +279,8 @@ public class BreweryService {
             breweryIdTagMap.computeIfAbsent(cur.ownerId(), k -> new ArrayList<>()).add(cur.tagName());
         }
         for(ResBreweryListDto dto : result) {
-            dto.setTag_name(breweryIdTagMap.get(dto.getBrewery_id()));
+            // getOrDefault()를 통해 태그가 없는 양조장은 해당 필드에 비어있는 리스트를 삽입
+            dto.setTag_name(breweryIdTagMap.getOrDefault(dto.getBrewery_id(), Collections.emptyList()));
         }
         return result;
     }
