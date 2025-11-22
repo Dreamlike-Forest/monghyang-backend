@@ -86,13 +86,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Modifying
     @Query("update Product p set p.inventory = p.inventory + :quantity where p.id = :productId and p.user.id = :userId")
-    void increseInventory(@Param("productId") Long productId, @Param("userId") Long userId, @Param("quantity") Integer quantity);
+    int increseInventory(@Param("productId") Long productId, @Param("userId") Long userId, @Param("quantity") Integer quantity);
 
     /**
      * 상품 재고 감소(출고 및 구매 등). 소유권 검증 X
      * @param productId
      * @param quantity
      */
+    @Modifying
     @Query("update Product p set p.inventory = p.inventory - :quantity where p.id = :productId")
     void decreseInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }

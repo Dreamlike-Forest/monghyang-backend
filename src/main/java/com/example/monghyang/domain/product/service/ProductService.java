@@ -169,8 +169,12 @@ public class ProductService {
      * @param quantity 증가할 수량 값
      */
     @Transactional
-    public void increseInventory(Long userId, Long productId, Integer quantity) {
-        productRepository.increseInventory(userId, productId, quantity);
+    public void increseInventory(Long productId, Long userId, Integer quantity) {
+        int ret = productRepository.increseInventory(productId, userId, quantity);
+        if(ret == 0) {
+            // 수정되지 않았다면 자신의 상품이 아닌 것
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
     }
 
     /**

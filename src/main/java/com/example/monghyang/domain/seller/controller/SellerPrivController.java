@@ -74,6 +74,20 @@ public class SellerPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("상품 정보가 수정되었습니다."));
     }
 
+    @PostMapping("/product-inc-inven/{productId}/{quantity}")
+    @Operation(summary = "재고 입고")
+    public ResponseEntity<ResponseDataDto<Void>> increseInventory(@LoginUserId Long userId, @PathVariable Long productId, @PathVariable Integer quantity) {
+        productService.increseInventory(productId, userId, quantity);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품 재고가 입고되었습니다."));
+    }
+
+    @PostMapping("/product-dec-inven/{productId}/{quantity}")
+    @Operation(summary = "재고 출고")
+    public ResponseEntity<ResponseDataDto<Void>> decreaseInventory(@PathVariable Long productId, @PathVariable Integer quantity) {
+        productService.decreseInventory(productId, quantity);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품 재고가 출고되었습니다."));
+    }
+
     // 상품 삭제 처리
     @DeleteMapping("/product/{productId}")
     @Operation(summary = "자신의 상품 삭제")
