@@ -162,6 +162,31 @@ public class ProductService {
         return result;
     }
 
+    /**
+     * 상품 재고 증가(입고)
+     * @param userId 판매자의 userId
+     * @param productId 상품 식별자
+     * @param quantity 증가할 수량 값
+     */
+    @Transactional
+    public void increseInventory(Long productId, Long userId, Integer quantity) {
+        int ret = productRepository.increseInventory(productId, userId, quantity);
+        if(ret == 0) {
+            // 수정되지 않았다면 자신의 상품이 아닌 것
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
+    }
+
+    /**
+     * 상품 재고 감소(출소 / 구매 등)
+     * @param productId 상품 식별자
+     * @param quantity 수량 감소분
+     */
+    @Transactional
+    public void decreseInventory(Long productId, Integer quantity) {
+        productRepository.decreseInventory(productId, quantity);
+    }
+
     // 상품 등록
     @Transactional
     public void createProduct(Long userId, ReqProductDto reqProductDto) {
@@ -171,7 +196,7 @@ public class ProductService {
         // 상품 추가
         Product product = Product.builder()
                 .user(user).name(reqProductDto.getName()).alcohol(reqProductDto.getAlcohol()).isOnlineSell(reqProductDto.getIs_online_sell())
-                .volume(reqProductDto.getVolume()).originPrice(reqProductDto.getOrigin_price())
+                .volume(reqProductDto.getVolume()).originPrice(reqProductDto.getOrigin_price()).inventory(reqProductDto.getInventory())
                 .description(reqProductDto.getDescription()).build();
         productRepository.save(product);
 

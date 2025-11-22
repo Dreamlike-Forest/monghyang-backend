@@ -6,6 +6,7 @@ import com.example.monghyang.domain.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -76,4 +77,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                                    @Param("minPrice") Integer minPrice, @Param("maxPrice") Integer maxPrice,
                                                    @Param("minAlcohol") Double minAlcohol, @Param("maxAlcohol") Double maxAlcohol,
                                                    @Param("tagIdList") List<Integer> tagIdList); // 상품 필터링 조회
+
+    /**
+     * 상품 재고 증가. 게시자만 수행 가능
+     * @param productId
+     * @param userId
+     * @param quantity
+     */
+    @Modifying
+    @Query("update Product p set p.inventory = p.inventory + :quantity where p.id = :productId and p.user.id = :userId")
+    int increseInventory(@Param("productId") Long productId, @Param("userId") Long userId, @Param("quantity") Integer quantity);
+
+    /**
+     * 상품 재고 감소(출고 및 구매 등). 소유권 검증 X
+     * @param productId
+     * @param quantity
+     */
+    @Modifying
+    @Query("update Product p set p.inventory = p.inventory - :quantity where p.id = :productId")
+    void decreseInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 }
