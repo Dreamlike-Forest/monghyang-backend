@@ -17,6 +17,11 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     @Query("select u from Users u join fetch u.role where u.id = :userId")
     Optional<Users> findByIdJoinedRole(@Param("userId") Long userId);
 
+    /**
+     * 로그인 시 사용
+     * @param email
+     * @return
+     */
     @Query("select u from Users u join fetch u.role where u.email = :email and u.isDeleted = false")
     Optional<Users> findByEmailActiveJoinedRole(@Param("email") String email);
     Optional<Users> findByoAuth2Id(String oAuth2Id);
@@ -24,4 +29,6 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     @Query("select new com.example.monghyang.domain.users.dto.UserSimpleInfoDto(u.nickname, r.name) from Users u join u.role r where u.id = :userId")
     Optional<UserSimpleInfoDto> findNicknameAndRoleType(@Param("userId") Long userId);
+
+    Optional<Users> findByEmail(String email);
 }

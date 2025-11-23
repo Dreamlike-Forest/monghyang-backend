@@ -1,11 +1,8 @@
 package com.example.monghyang.domain.auth.controller;
 
-import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
-import com.example.monghyang.domain.auth.dto.SellerJoinDto;
-import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.auth.dto.*;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
-import com.example.monghyang.domain.auth.dto.JoinDto;
 import com.example.monghyang.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,6 +29,13 @@ public class AuthController {
     public ResponseEntity<ResponseDataDto<Void>> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
         authService.updateRefreshToken(request, response);
         return ResponseEntity.ok().body(ResponseDataDto.success("세션 및 토큰 갱신에 성공하였습니다."));
+    }
+
+    @PostMapping("/reset-pw")
+    @Operation(summary = "비밀번호 초기화", description = "추후 이메일 인증 로직 도입 예정")
+    public ResponseEntity<ResponseDataDto<Void>> resetPw(@Valid @ModelAttribute ReqResetPwDto dto) {
+        authService.resetPassword(dto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 초기화되었습니다. 로그인 해주세요."));
     }
 
     @GetMapping("/check-email/{email}")

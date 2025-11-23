@@ -20,6 +20,7 @@ import com.example.monghyang.domain.auth.dto.SellerJoinDto;
 import com.example.monghyang.domain.seller.entity.SellerImage;
 import com.example.monghyang.domain.seller.repository.SellerImageRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
+import com.example.monghyang.domain.auth.dto.ReqResetPwDto;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
@@ -68,6 +69,14 @@ public class AuthService {
         this.storageService = storageService;
         this.breweryImageRepository = breweryImageRepository;
         this.sellerImageRepository = sellerImageRepository;
+    }
+
+    public void resetPassword(ReqResetPwDto dto) {
+        String password = bCryptPasswordEncoder.encode(dto.getNewPassword());
+        Users users = usersRepository.findByEmail(dto.getEmail()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        users.updatePassword(password);
+        usersRepository.save(users);
     }
 
     public void checkEmail(String email) {
