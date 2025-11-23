@@ -25,12 +25,10 @@ import java.util.List;
 public class JoySlotService {
     // Spring AOP: Transactional 적용을 위해 클래스를 의도적으로 분리합니다.
     private final JoySlotRepository joySlotRepository;
-    private final JoyRepository joyRepository;
 
     @Autowired
-    public JoySlotService(JoySlotRepository joySlotRepository, JoyRepository joyRepository) {
+    public JoySlotService(JoySlotRepository joySlotRepository) {
         this.joySlotRepository = joySlotRepository;
-        this.joyRepository = joyRepository;
     }
 
     /**

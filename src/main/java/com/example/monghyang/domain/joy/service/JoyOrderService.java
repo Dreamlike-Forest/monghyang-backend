@@ -17,6 +17,7 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,25 +37,22 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
+    @Getter
     private static final int JOY_ORDER_PAGE_SIZE = 12;
     private final JoyOrderRepository joyOrderRepository;
     private final UsersRepository usersRepository;
     private final JoyRepository joyRepository;
-    private final JoySlotRepository joySlotRepository;
     private final BreweryRepository breweryRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
-    private final JoyService joyService;
     private final JoySlotService joySlotService;
 
     @Autowired
-    public JoyOrderService(JoyOrderRepository joyOrderRepository, UsersRepository usersRepository, JoyRepository joyRepository, JoySlotRepository joySlotRepository, BreweryRepository breweryRepository, JoyStatusHistoryRepository joyStatusHistoryRepository, JoyService joyService, JoySlotService joySlotService) {
+    public JoyOrderService(JoyOrderRepository joyOrderRepository, UsersRepository usersRepository, JoyRepository joyRepository, BreweryRepository breweryRepository, JoyStatusHistoryRepository joyStatusHistoryRepository, JoySlotService joySlotService) {
         this.joyOrderRepository = joyOrderRepository;
         this.usersRepository = usersRepository;
         this.joyRepository = joyRepository;
-        this.joySlotRepository = joySlotRepository;
         this.breweryRepository = breweryRepository;
         this.joyStatusHistoryRepository = joyStatusHistoryRepository;
-        this.joyService = joyService;
         this.joySlotService = joySlotService;
     }
 

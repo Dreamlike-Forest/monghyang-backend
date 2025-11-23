@@ -15,6 +15,7 @@ import com.example.monghyang.domain.seller.repository.SellerImageRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class SellerService {
+    @Getter
     private final int SELLER_PAGE_SIZE = 12;
     private final SellerRepository sellerRepository;
     private final UsersRepository usersRepository;

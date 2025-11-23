@@ -5,6 +5,7 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.tag.dto.ResTagCategoryDto;
 import com.example.monghyang.domain.tag.entity.TagCategory;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TagCategoryService {
     private final TagCategoryRepository tagCategoryRepository;
-    private final Integer tagCategoryPageSize = 10;
+    @Getter
+    private final int TAG_CATEGORY_PAGE_SIZE = 10;
     @Autowired
     public TagCategoryService(TagCategoryRepository tagCategoryRepository) {
         this.tagCategoryRepository = tagCategoryRepository;
@@ -59,7 +61,7 @@ public class TagCategoryService {
             startOffset = 0;
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 정렬 기준: 기본키 기준으로 내림차순 정렬
-        Pageable pageable = PageRequest.of(startOffset, tagCategoryPageSize, sort);
+        Pageable pageable = PageRequest.of(startOffset, TAG_CATEGORY_PAGE_SIZE, sort);
         Page<ResTagCategoryDto> result = tagCategoryRepository.findActivePaging(pageable).map(ResTagCategoryDto::tagCategoryFrom); // 조회 결과를 dto에 담아 반환
         if(!result.hasContent()) {
             throw new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND);
@@ -76,7 +78,7 @@ public class TagCategoryService {
             startOffset = 0;
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable pageable = PageRequest.of(startOffset, tagCategoryPageSize, sort);
+        Pageable pageable = PageRequest.of(startOffset, TAG_CATEGORY_PAGE_SIZE, sort);
         Page<ResTagCategoryDto> result = tagCategoryRepository.findByKeywordActivePaging(keyword, pageable).map(ResTagCategoryDto::tagCategoryFrom);
         if(!result.hasContent()) {
             throw new ApplicationException(ApplicationError.TAG_CATEGORY_NOT_FOUND);

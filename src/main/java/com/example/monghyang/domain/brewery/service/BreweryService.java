@@ -22,6 +22,7 @@ import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +46,7 @@ public class BreweryService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final BreweryImageRepository breweryImageRepository;
     private final StorageService storageService;
+    @Getter
     private final int BREWERY_PAGE_SIZE = 6;
     private final BreweryTagRepository breweryTagRepository;
     private final JoyRepository joyRepository;
@@ -285,7 +287,13 @@ public class BreweryService {
         result.setTags_name(breweryTagRepository.findTagListByBreweryId(breweryId));
         List<Joy> joyList = joyRepository.findActiveByBreweryId(breweryId);
         result.setJoy(joyList.stream().map(ResJoyDto::joyFrom).toList());
-        result.setProduct_list(productService.getProductByUserId(brewery.getUser().getId(), 0));
+        try{
+            result.setProduct_list(productService.getProductByUserId(brewery.getUser().getId(), 0));
+        } catch (ApplicationException e) {
+            Pageable pageable = PageRequest.of(0, productService.getPRODUCT_PAGE_SIZE());
+            result.setProduct_list(Page.empty(pageable));
+        }
+
         return result;
     }
 

@@ -9,6 +9,7 @@ import com.example.monghyang.domain.product.review.dto.ResProductReviewListDto;
 import com.example.monghyang.domain.product.review.dto.UpdateProductReviewDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class ProductReviewService {
+    @Getter
     private final int PRODUCT_REVIEW_PAGE_SIZE = 12;
     private final ProductReviewRepository productReviewRepository;
     private final UsersRepository usersRepository;

@@ -20,6 +20,7 @@ import com.example.monghyang.domain.users.dto.UserSimpleInfoDto;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ProductService {
+    @Getter
     private final int PRODUCT_PAGE_SIZE = 12;
     private final ProductRepository productRepository;
     private final UsersRepository usersRepository;
