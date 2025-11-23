@@ -26,7 +26,7 @@ public class ResUsersPrivateInfoDto {
         this.users_name = users.getName();
         this.users_phone = users.getPhone();
         this.users_birth = users.getBirth();
-        this.users_gender = (users.getGender() == Boolean.FALSE) ? "male" : "female";
+        this.users_gender = (users.getGender() == Boolean.FALSE) ? "man" : "woman";
         this.users_address = users.getAddress();
         this.users_address_detail = users.getAddressDetail();
     }
