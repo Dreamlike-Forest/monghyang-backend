@@ -8,6 +8,7 @@ import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
+import com.example.monghyang.domain.users.dto.ResUsersPrivateInfoDto;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -41,6 +42,18 @@ public class UsersService {
             throw new ApplicationException(ApplicationError.USER_NOT_FOUND);
         }
         return users.stream().map(ResUsersDto::usersJoinedWithRoleToDto).toList();
+    }
+
+    public ResUsersPrivateInfoDto getMyUserInfo(Long userId) {
+        Users users = usersRepository.findByIdJoinedRole(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        return ResUsersPrivateInfoDto.usersJoinedWithRoleToDto(users);
+    }
+
+    public ResUsersDto getUsersById(Long userId) {
+        Users users = usersRepository.findByIdJoinedRole(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+        return ResUsersDto.usersJoinedWithRoleToDto(users);
     }
 
     @Transactional

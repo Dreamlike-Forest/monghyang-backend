@@ -6,6 +6,7 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
+import com.example.monghyang.domain.users.dto.ResUsersPrivateInfoDto;
 import com.example.monghyang.domain.users.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,6 +42,18 @@ public class UsersController {
     public ResponseEntity<ResponseDataDto<List<ResUsersDto>>> getUsersByEmail(@PathVariable String email) {
         List<ResUsersDto> resUsersDto = usersService.getUsersByEmail(email);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(resUsersDto));
+    }
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "유저 식별자로 조회")
+    public ResponseEntity<ResponseDataDto<ResUsersDto>> getUsersByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(usersService.getUsersById(userId)));
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "자기 자신의 정보를 조회합니다.")
+    public ResponseEntity<ResponseDataDto<ResUsersPrivateInfoDto>> getMyUserInfo(@LoginUserId Long userId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(usersService.getMyUserInfo(userId)));
     }
 
     // 회원 정보 수정 api
