@@ -155,8 +155,8 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
 
     @Override
     @Transactional
-    public void setStatusFailed(Long orderInfoTableId) {
-        Orders orders = ordersRepository.findById(orderInfoTableId).orElseThrow(() ->
+    public void setStatusFailed(UUID pgOrderId) {
+        Orders orders = ordersRepository.findByPgOrderIdForSetFailed(pgOrderId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.ORDER_NOT_FOUND));
         orderStatusHistoryService.updatePaymentStatusFailed(orders);
     }

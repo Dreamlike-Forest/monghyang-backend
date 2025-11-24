@@ -175,8 +175,8 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
 
     @Override
     @Transactional
-    public void setStatusFailed(Long orderInfoTableId) {
-        JoyOrder joyOrder = joyOrderRepository.findById(orderInfoTableId).orElseThrow(() ->
+    public void setStatusFailed(UUID pgOrderId) {
+        JoyOrder joyOrder = joyOrderRepository.findByPgOrderIdForSetFailed(pgOrderId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
         joyOrder.setFailed();
         joyStatusHistoryRepository.save(JoyStatusHistory.joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.FAILED, "failed"));

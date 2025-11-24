@@ -36,4 +36,7 @@ public interface OrdersRepository extends JpaRepository<Orders,Long> {
     order by o.createdAt desc
     """)
     Page<ResOrderDto> findByUserId(Pageable pageable, @Param("userId") Long userId);
+
+    @Query("select o from Orders o where o.pgOrderId = :pgOrderId")
+    Optional<Orders> findByPgOrderIdForSetFailed(@Param("pgOrderId") UUID pgOrderId);
 }

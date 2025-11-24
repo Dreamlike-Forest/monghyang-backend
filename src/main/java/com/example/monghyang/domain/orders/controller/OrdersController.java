@@ -34,7 +34,12 @@ public class OrdersController {
     @PostMapping("/request")
     @Operation(summary = "PG사 결제 요청 이후 실제 결제 승인을 요청하는 API", description = "서버에서 실제 결제 승인 요청을 PG사로 전송합니다.")
     public ResponseEntity<ResponseDataDto<Void>> orderRequestToPG(@LoginUserId Long userId, @Valid @ModelAttribute ReqOrderDto dto) {
-        ordersService.requestOrderToPG(userId, dto);
+        try{
+            ordersService.requestOrderToPG(userId, dto);
+        } catch (Exception e){
+            ordersService.setStatusFailed(dto.getPg_order_id());
+            throw e;
+        }
         return ResponseEntity.ok().body(ResponseDataDto.success("결제가 완료되었습니다."));
     }
 

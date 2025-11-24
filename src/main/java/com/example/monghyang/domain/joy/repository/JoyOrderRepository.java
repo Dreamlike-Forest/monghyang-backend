@@ -28,4 +28,7 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
 
     @Query("select new com.example.monghyang.domain.joy.dto.ResJoyOrderDto(jo.id, jo.users.id, j.id, j.name, jo.count, jo.totalAmount, jo.payerName, jo.payerPhone, jo.createdAt, jo.reservation, jo.joyPaymentStatus) from JoyOrder jo join jo.joy j on jo.users.id = :userId")
     Page<ResJoyOrderDto> findByUserId(Long userId, Pageable pageable);
+
+    @Query("select jo from JoyOrder jo where jo.pgOrderId = :pgOrderId")
+    Optional<JoyOrder> findByPgOrderIdForSetFailed(@Param("pgOrderId") UUID pgOrderId);
 }
