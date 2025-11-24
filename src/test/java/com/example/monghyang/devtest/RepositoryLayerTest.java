@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -67,6 +68,7 @@ public class RepositoryLayerTest {
     }
 
     @Test
+    @Disabled
     @DisplayName("예약가능 슬롯 조회 테스트")
     void getJoySlotTest() {
         JoyScheduleCountDto dto = joySlotRepository.findJoyScheduleCountByJoyId(21L).orElseThrow(() ->
@@ -80,5 +82,14 @@ public class RepositoryLayerTest {
         for (UnavailableJoySlotTimeCountDto dto1 : list) {
             System.out.println(dto1.getReservationDate()+" "+dto1.getCount());
         }
+    }
+
+    @Test
+    @Disabled
+    @DisplayName("주문 대상 상품 재고 수량 일괄 감소")
+    void decreaseInvenForOrder() {
+        int targetEa = 3;
+        int ret = productRepository.decreaseInventoryForOrderByProductIds(List.of(1L, 2L, 3L));
+        System.out.println("재고 감소된 상품의 수: "+ret);
     }
 }

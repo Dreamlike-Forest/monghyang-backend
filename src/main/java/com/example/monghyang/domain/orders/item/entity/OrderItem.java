@@ -62,6 +62,7 @@ public class OrderItem {
         this.amount = amount;
         this.fulfillmentStatus = FulfillmentStatus.CREATED;
         this.refundStatus = RefundStatus.NONE;
+        this.isDeleted = false;
     }
 
     public void updateFulfillmentStatus(FulfillmentStatus fulfillmentStatus) {

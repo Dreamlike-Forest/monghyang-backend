@@ -74,4 +74,7 @@ public class Orders {
     public void setDeleted() {
         this.isDeleted = true;
     }
+    public void setCanceled() {
+        this.paymentStatus = PaymentStatus.CANCELED;
+    }
 }
