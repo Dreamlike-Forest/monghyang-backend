@@ -23,25 +23,25 @@ public class OrderItemRefundHistoryService {
         this.orderItemRefundHistoryRepository = repository;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void setRefundNone(OrderItem orderItem) {
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.NONE));
     }
 
     // '환불 요청' 상태 설정
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void updateRefundRequested(OrderItem orderItem) {
         orderItem.updateRefundStatus(RefundStatus.REQUESTED);
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.REQUESTED));
     }
     // '반품 되었음' 상태 설정
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void updateRefundReturned(OrderItem orderItem) {
         orderItem.updateRefundStatus(RefundStatus.REQUESTED);
         orderItemRefundHistoryRepository.save(OrderItemRefundHistory.orderItemToStatusOf(orderItem, RefundStatus.RETURNED));
     }
     // '환불 처리됨' 상태 설정 및 환불 처리 로직
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void updateRefundRefunded(OrderItem orderItem) {
         /*
             PG사를 통해 해당 주문 요소 결제 금액에 해당하는 금액을 환불

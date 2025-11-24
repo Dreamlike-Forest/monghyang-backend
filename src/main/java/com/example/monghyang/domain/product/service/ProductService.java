@@ -201,7 +201,7 @@ public class ProductService {
      * @throws ApplicationException 주문 희망 상품의 수와 실제 재고 차감된 상품 수가 달라 주문 프로세스 종료
      * @throws DataIntegrityViolationException 재고 부족으로 차감하지 못하는 경우 발생하는 예외
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // 상품 갱신을 위해 획득하는 락 점유 기간 최소화를 위해 신규 트랜잭션에서 수행
+    @Transactional
     public void decreaseInventoryForOrder(List<Long> orderProductIdList) throws ApplicationException, DataIntegrityViolationException {
         // 장바구니에 담은 상품들의 식별자
         int ret = productRepository.decreaseInventoryForOrderByProductIds(orderProductIdList);
@@ -215,7 +215,7 @@ public class ProductService {
      * 주문 실패 시 차감된 재고를 롤백하기 위한 보상 트랜잭션
      * @param orderProductIdList 재고 롤백할 상품 식별자 리스트
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void increaseInventoryForOrder(List<Long> orderProductIdList) {
         productRepository.increaseInventoryForOrderByProductIds(orderProductIdList);
     }
