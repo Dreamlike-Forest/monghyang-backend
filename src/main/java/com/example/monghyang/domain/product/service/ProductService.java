@@ -2,12 +2,15 @@ package com.example.monghyang.domain.product.service;
 
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
+import com.example.monghyang.domain.cart.entity.Cart;
+import com.example.monghyang.domain.cart.repository.CartRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.orders.dto.ReqPreOrderDto;
 import com.example.monghyang.domain.product.dto.*;
 import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.product.entity.ProductImage;
@@ -29,6 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -47,9 +51,10 @@ public class ProductService {
     private final BreweryRepository breweryRepository;
     private final SellerRepository sellerRepository;
     private final BreweryTagRepository breweryTagRepository;
+    private final CartRepository cartRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository) {
+    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository, CartRepository cartRepository) {
         this.productRepository = productRepository;
         this.usersRepository = usersRepository;
         this.storageService = storageService;
@@ -58,6 +63,7 @@ public class ProductService {
         this.breweryRepository = breweryRepository;
         this.sellerRepository = sellerRepository;
         this.breweryTagRepository = breweryTagRepository;
+        this.cartRepository = cartRepository;
     }
 
     private void addTagListToResult(Page<ResProductListDto> result) {
@@ -180,13 +186,38 @@ public class ProductService {
     }
 
     /**
-     * 상품 재고 감소(출소 / 구매 등)
+     * 특정 상품 재고 감소(출소 / 구매 등)
      * @param productId 상품 식별자
      * @param quantity 수량 감소분
      */
     @Transactional
     public void decreseInventory(Long productId, Integer quantity) {
         productRepository.decreseInventory(productId, quantity);
+    }
+
+    /**
+     * 주문 처리를 위한 상품 재고 일괄 감소. 하나라도 재고 감소에 실패 시 주문 프로세스 종료
+     * @param orderProductIdList 주문할 상품 식별자 리스트
+     * @throws ApplicationException 주문 희망 상품의 수와 실제 재고 차감된 상품 수가 달라 주문 프로세스 종료
+     * @throws DataIntegrityViolationException 재고 부족으로 차감하지 못하는 경우 발생하는 예외
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // 상품 갱신을 위해 획득하는 락 점유 기간 최소화를 위해 신규 트랜잭션에서 수행
+    public void decreaseInventoryForOrder(List<Long> orderProductIdList) throws ApplicationException, DataIntegrityViolationException {
+        // 장바구니에 담은 상품들의 식별자
+        int ret = productRepository.decreaseInventoryForOrderByProductIds(orderProductIdList);
+        if(ret != orderProductIdList.size()) {
+            // 주문 희망 상품의 수와 실제 재고가 차감된 상품의 수가 다르다면 예외 발생
+            throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
+        }
+    }
+
+    /**
+     * 주문 실패 시 차감된 재고를 롤백하기 위한 보상 트랜잭션
+     * @param orderProductIdList 재고 롤백할 상품 식별자 리스트
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void increaseInventoryForOrder(List<Long> orderProductIdList) {
+        productRepository.increaseInventoryForOrderByProductIds(orderProductIdList);
     }
 
     // 상품 등록

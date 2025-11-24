@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 @Getter
 public class ResCartDto {
-    private Long cart_id;
-    private Long product_id;
-    private Integer cart_quantity;
-    private LocalDateTime cart_created_at;
+    private final Long cart_id;
+    private final Long product_id;
+    private final Integer cart_quantity;
+    private final LocalDateTime cart_created_at;
 
     private ResCartDto(Cart cart) {
         this.cart_id = cart.getId();

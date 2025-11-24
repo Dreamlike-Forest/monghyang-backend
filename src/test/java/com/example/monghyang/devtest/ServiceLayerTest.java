@@ -10,11 +10,14 @@ import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.tag.service.TagCategoryService;
 import com.example.monghyang.domain.tag.service.TagsService;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -41,8 +44,9 @@ public class ServiceLayerTest {
     private ProductService productService;
 
     @Test
+    @Disabled
     @Transactional
     void test() {
-
+        productService.decreaseInventoryForOrder(List.of(1L, 2L, 3L));
     }
 }

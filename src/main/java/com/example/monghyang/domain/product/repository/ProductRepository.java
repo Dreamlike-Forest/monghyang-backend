@@ -3,9 +3,11 @@ package com.example.monghyang.domain.product.repository;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
 import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.users.entity.Users;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -96,4 +98,32 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("update Product p set p.inventory = p.inventory - :quantity where p.id = :productId")
     void decreseInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    /**
+     * 주문 시 사용되는 상품 재고 수량 일괄 감소 쿼리문(native). 삭제되지 않고 품절되지 않은 상품만 재고 차감.
+     * @param productIds 구매할 장바구니 식별자 리스트
+     * @return
+     */
+    @Modifying
+    @Query(value = """
+    update cart c
+    join product p on c.product_id = p.id
+    set p.inventory = p.inventory - c.quantity
+    where p.id in :productIds and p.is_deleted = false and p.is_soldout = false
+    """, nativeQuery = true)
+    int decreaseInventoryForOrderByProductIds(@Param("productIds") List<Long> productIds);
+
+    /**
+     * 주문 프로세스 실패 시 실행되는 보상 트랜잭션에서 수행: 차감했던 재고 복구
+     * @param productIds
+     * @return
+     */
+    @Modifying
+    @Query(value = """
+    update cart c
+    join product p on c.product_id = p.id
+    set p.inventory = p.inventory + c.quantity
+    where p.id in :productIds
+    """, nativeQuery = true)
+    void increaseInventoryForOrderByProductIds(@Param("productIds") List<Long> productIds);
 }

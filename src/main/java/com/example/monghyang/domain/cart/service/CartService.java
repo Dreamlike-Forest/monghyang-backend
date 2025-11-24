@@ -39,6 +39,9 @@ public class CartService {
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         Product product = productRepository.findById(dto.getProduct_id()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        if(product.getIsDeleted().equals(true) || product.getIsSoldout().equals(true) || product.getInventory().equals(0)) {
+            throw new ApplicationException(ApplicationError.PRODUCT_CANNOT_ORDER);
+        }
         Optional<Cart> previous = cartRepository.findByProductIdAndUserId(product.getId(), user.getId());
         if(previous.isPresent()) {
             // 이미 해당 유저가 해당 상품을 장바구니에 추가했던 상태인 경우: 새로 레코드를 생성하지 않고, 기존 수량을 증가 후 로직 종료
