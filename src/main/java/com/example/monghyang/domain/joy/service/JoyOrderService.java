@@ -180,6 +180,8 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
         joyOrder.setFailed();
         joyStatusHistoryRepository.save(JoyStatusHistory.joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.FAILED, "failed"));
+        // 해당 시간대의 예약 가능 인원 수 롤백
+        joySlotService.decrementJoySlotCount(joyOrder.getJoy().getId(), joyOrder.getReservation().toLocalDate(), joyOrder.getReservation().toLocalTime(), joyOrder.getCount());
     }
 
 
