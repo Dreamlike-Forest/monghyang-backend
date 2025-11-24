@@ -76,8 +76,8 @@ public class OrderItemService {
     }
 
     public ResOrderItemStatusHistoryDto getOrderItemStatusHistory(Long userId, Long orderItemId) {
-        List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemId(orderItemId);
-        List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemId(orderItemId);
+        List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemIdAndUserId(orderItemId, userId);
+        List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemIdAndUserId(orderItemId, userId);
 
         ResOrderItemStatusHistoryDto result = new ResOrderItemStatusHistoryDto();
         for(OrderItemFulfillmentHistory history : fulfillmentHistoryList) {
