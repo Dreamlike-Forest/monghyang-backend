@@ -15,8 +15,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem,Long> {
 
     /**
      * PAID 상태의 주문의 주문요소를 조회
-     * @param orderItemId
-     * @param userId
+     * @param orderItemId 주문 요소 식별자
+     * @param userId 주문자 유저 식별자
      * @return
      */
     @Query("""

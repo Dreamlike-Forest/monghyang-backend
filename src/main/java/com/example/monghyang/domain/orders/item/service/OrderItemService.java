@@ -62,7 +62,7 @@ public class OrderItemService {
          */
 
         // 차감한 재고 복구
-        productService.increaseInventoryForOrder(Collections.singletonList(orderItem.getProduct().getId()));
+        productService.rollbackInventory(orderItem.getProduct().getId(), orderItem.getQuantity());
         orderItem.updateFulfillmentStatus(FulfillmentStatus.CANCELED);
         orderItemFulFillmentHistoryService.updateFulfillmentCanceled(orderItem, false);
         orderItemRefundHistoryService.updateRefundRequested(orderItem);
@@ -76,8 +76,8 @@ public class OrderItemService {
     }
 
     public ResOrderItemStatusHistoryDto getOrderItemStatusHistory(Long userId, Long orderItemId) {
-        List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemId(orderItemId);
-        List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemId(orderItemId);
+        List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemIdAndUserId(orderItemId, userId);
+        List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemIdAndUserId(orderItemId, userId);
 
         ResOrderItemStatusHistoryDto result = new ResOrderItemStatusHistoryDto();
         for(OrderItemFulfillmentHistory history : fulfillmentHistoryList) {

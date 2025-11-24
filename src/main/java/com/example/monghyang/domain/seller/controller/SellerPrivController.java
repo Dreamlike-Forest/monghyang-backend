@@ -77,7 +77,7 @@ public class SellerPrivController {
     @PostMapping("/product-inc-inven/{productId}/{quantity}")
     @Operation(summary = "재고 입고")
     public ResponseEntity<ResponseDataDto<Void>> increseInventory(@LoginUserId Long userId, @PathVariable Long productId, @PathVariable Integer quantity) {
-        productService.increseInventory(productId, userId, quantity);
+        productService.increaseInventory(productId, userId, quantity);
         return ResponseEntity.ok().body(ResponseDataDto.success("상품 재고가 입고되었습니다."));
     }
 
