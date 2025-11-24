@@ -96,34 +96,26 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
                 .user(user).totalAmount(totalAmount).pgOrderId(pgOrderId).payerName(dto.getPayer_name())
                 .payerPhone(dto.getPayer_phone()).address(dto.getAddress())
                 .addressDetail(dto.getAddress_detail()).build();
-        try {
-            ordersRepository.save(order);
+        ordersRepository.save(order);
 
-            // 상품 주문 상태 내역 생성: pending
-            orderStatusHistoryService.setPaymentStatusPending(order);
+        // 상품 주문 상태 내역 생성: pending
+        orderStatusHistoryService.setPaymentStatusPending(order);
 
-            // orderItem 생성
-            for(Cart cart : orderList){
-                BigDecimal amount = cart.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(cart.getQuantity()));
-                OrderItem orderItem = OrderItem.builder()
-                        .orders(order).product(cart.getProduct()).quantity(cart.getQuantity())
-                        .amount(amount).provider(cart.getProduct().getUser()).build();
-                // 각 주문 요소 엔티티, 해당 주문 요소의 배송 상태 및 환불 상태 엔티티 생성하고 Insert
-                orderItemRepository.save(orderItem);
-                orderItemFulFillmentHistoryService.setFulfillmentCreated(orderItem);
-                orderItemRefundHistoryService.setRefundNone(orderItem);
-            }
-
-            // uuid 반환
-            return pgOrderId;
-        } catch (Exception e) {
-            // 주문 프로세스 실패 시 차감된 재고를 다시 롤백 후 종료
-            // 본 트랜잭션의 롤백이 확정된 상황이기에 보상 로직들은 모두 새로운 트랜잭션에서 수행한다.
-            productService.increaseInventoryForOrder(orderList.stream().map(c -> c.getProduct().getId()).toList());
-
-            // 기타 로그 작업 등
-            throw e;
+        // orderItem 생성
+        for(Cart cart : orderList){
+            BigDecimal amount = cart.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(cart.getQuantity()));
+            OrderItem orderItem = OrderItem.builder()
+                    .orders(order).product(cart.getProduct()).quantity(cart.getQuantity())
+                    .amount(amount).provider(cart.getProduct().getUser()).build();
+            // 각 주문 요소 엔티티, 해당 주문 요소의 배송 상태 및 환불 상태 엔티티 생성하고 Insert
+            orderItemRepository.save(orderItem);
+            orderItemFulFillmentHistoryService.setFulfillmentCreated(orderItem);
+            orderItemRefundHistoryService.setRefundNone(orderItem);
+            cartRepository.delete(cart);
         }
+
+        // uuid 반환
+        return pgOrderId;
     }
 
     @Override
@@ -159,6 +151,14 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
         for(OrderItem orderItem : orderItemList){
             orderItemFulFillmentHistoryService.updateFulfillmentAllocated(orderItem);
         }
+    }
+
+    @Override
+    @Transactional
+    public void setStatusFailed(Long orderInfoTableId) {
+        Orders orders = ordersRepository.findById(orderInfoTableId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.ORDER_NOT_FOUND));
+        orderStatusHistoryService.updatePaymentStatusFailed(orders);
     }
 
     public Page<ResOrderDto> getMyOrderList(Long userId, Integer startOffset) {

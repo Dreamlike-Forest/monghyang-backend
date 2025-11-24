@@ -17,4 +17,11 @@ public interface PaymentManager<T> {
      * @param dto paymentKey, orderId, total_amount 값이 담긴 dto
      */
     void requestOrderToPG(Long userId, ReqOrderDto dto);
+
+    /**
+     * 구매 실패 시 결제 상태를 '실패'로 변경하는 메서드<br>
+     * 컨트롤러 계층에서 결제 승인 요청을 진행하는 전 과정을 try-catch하고, 예외 발생 시 이 메서드를 별도로 호출하세요.
+     * @param orderInfoTableId 주문 정보가 담긴 테이블의 식별자(joy_order, orders 등의 테이블의 식별자)
+     */
+    void setStatusFailed(Long orderInfoTableId);
 }

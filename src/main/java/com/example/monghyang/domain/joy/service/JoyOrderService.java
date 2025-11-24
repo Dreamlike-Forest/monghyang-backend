@@ -173,6 +173,15 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         joyStatusHistoryRepository.save(history);
     }
 
+    @Override
+    @Transactional
+    public void setStatusFailed(Long orderInfoTableId) {
+        JoyOrder joyOrder = joyOrderRepository.findById(orderInfoTableId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
+        joyOrder.setFailed();
+        joyStatusHistoryRepository.save(JoyStatusHistory.joyOrderToStatusReasonCodeOf(joyOrder, JoyPaymentStatus.FAILED, "failed"));
+    }
+
 
     /**
      * 예약 시간대 및 인원 변경 요청. 예약 전날까지 변경 요청 가능
