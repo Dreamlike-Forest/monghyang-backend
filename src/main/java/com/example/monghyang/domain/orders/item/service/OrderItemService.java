@@ -76,9 +76,6 @@ public class OrderItemService {
     }
 
     public ResOrderItemStatusHistoryDto getOrderItemStatusHistory(Long userId, Long orderItemId) {
-        OrderItem orderItem = orderItemRepository.findByOrderItemIdAndUserId(orderItemId, userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.ORDER_ITEM_NOT_FOUND));
-
         List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemId(orderItemId);
         List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemId(orderItemId);
 
