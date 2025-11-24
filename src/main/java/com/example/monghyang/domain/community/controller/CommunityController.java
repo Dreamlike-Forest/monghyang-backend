@@ -84,7 +84,7 @@ public class CommunityController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @PutMapping("/{communityId}")
+    @PostMapping("/{communityId}") // put을 post로 변환
     @Operation(summary = "커뮤니티 게시글 수정", description = "커뮤니티 게시글을 수정합니다.")
     public ResponseDataDto<ResCommunityDto> updateCommunity(
             @LoginUserId Long userId,
