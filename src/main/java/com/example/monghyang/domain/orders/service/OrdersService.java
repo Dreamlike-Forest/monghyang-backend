@@ -72,6 +72,9 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
         List<Cart> orderList = cartRepository.findByIdListAndUserId(dto.getCart_id(), userId);
         if(orderList.isEmpty()){
             throw new ApplicationException(ApplicationError.CART_ITEM_NOT_FOUND);
+        } else if(orderList.size() != dto.getCart_id().size()) {
+            // 주문 희망 장바구니 목록 중 품절/삭제 처리된 상품이 하나라도 있다면 주문 프로세스 중단
+            throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
         }
 
         // 상품 재고 차감: 하나라도 실패하면 주문 프로세스 종료
