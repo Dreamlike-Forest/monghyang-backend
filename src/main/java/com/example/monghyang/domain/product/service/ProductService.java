@@ -2,15 +2,12 @@ package com.example.monghyang.domain.product.service;
 
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
-import com.example.monghyang.domain.cart.entity.Cart;
-import com.example.monghyang.domain.cart.repository.CartRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
-import com.example.monghyang.domain.orders.dto.ReqPreOrderDto;
 import com.example.monghyang.domain.product.dto.*;
 import com.example.monghyang.domain.product.entity.Product;
 import com.example.monghyang.domain.product.entity.ProductImage;
@@ -32,7 +29,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -51,10 +47,9 @@ public class ProductService {
     private final BreweryRepository breweryRepository;
     private final SellerRepository sellerRepository;
     private final BreweryTagRepository breweryTagRepository;
-    private final CartRepository cartRepository;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository, CartRepository cartRepository) {
+    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository) {
         this.productRepository = productRepository;
         this.usersRepository = usersRepository;
         this.storageService = storageService;
@@ -63,7 +58,6 @@ public class ProductService {
         this.breweryRepository = breweryRepository;
         this.sellerRepository = sellerRepository;
         this.breweryTagRepository = breweryTagRepository;
-        this.cartRepository = cartRepository;
     }
 
     private void addTagListToResult(Page<ResProductListDto> result) {
@@ -377,5 +371,25 @@ public class ProductService {
         Product product = verifyIsOwn(userId, productId);
         product.unSetSoldout();
         productRepository.save(product);
+    }
+
+    public Page<ResMyProductDto> getMyProductList(Long userId, Integer startOffset) {
+        if(startOffset == null || startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, PRODUCT_PAGE_SIZE);
+        Page<ResMyProductDto> result = productRepository.findMyProduct(pageable, userId);
+        if(result.getContent().isEmpty()) {
+            throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
+        }
+        List<TagNameDto> productAuthTagList = productTagRepository.findAuthTagListByProductIdList(result.getContent().stream().map(ResMyProductDto::getProduct_id).toList());
+        for(TagNameDto tag : productAuthTagList) {
+            for(ResMyProductDto dto : result.getContent()) {
+                if(dto.getProduct_id().equals(tag.ownerId())) {
+                    dto.getTags().add(tag);
+                }
+            }
+        }
+        return result;
     }
 }

@@ -4,6 +4,7 @@ import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.dto.ReqProductDto;
+import com.example.monghyang.domain.product.dto.ResMyProductDto;
 import com.example.monghyang.domain.product.dto.UpdateProductDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.product.tag.ProductTagService;
@@ -13,6 +14,7 @@ import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -94,6 +96,12 @@ public class SellerPrivController {
     public ResponseEntity<ResponseDataDto<Void>> deleteProduct(@LoginUserId Long userId, @PathVariable Long productId) {
         productService.deleteProduct(userId, productId);
         return ResponseEntity.ok().body(ResponseDataDto.success("상품이 삭제되었습니다."));
+    }
+
+    @GetMapping("/product/my/{startOffset}")
+    @Operation(summary = "자신의 상품 리스트 등록 최신순 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResMyProductDto>>> getMyProductList(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productService.getMyProductList(userId, startOffset)));
     }
 
     // 상품 복구 처리
