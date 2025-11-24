@@ -248,8 +248,8 @@ public class ProductService {
     // 상품 수정
     @Transactional
     public void updateProduct(Long userId, UpdateProductDto updateProductDto) {
-        Product product = productRepository.findByIdAndUserId(updateProductDto.getId(), userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        Product product = verifyIsOwn(userId, updateProductDto.getId());
+
         if(!updateProductDto.getAdd_images().isEmpty() || !updateProductDto.getRemove_images().isEmpty() || !updateProductDto.getModify_images().isEmpty()) {
             List<ProductImage> imageList = productImageRepository.findByProduct(product);
 
@@ -334,17 +334,48 @@ public class ProductService {
 
     // 상품 삭제 처리
     public void deleteProduct(Long userId, Long productId) {
-        Product product = productRepository.findByIdAndUserId(productId, userId).orElseThrow(() ->
+        Product product = productRepository.findById(productId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        if(!product.getUser().getId().equals(userId)) {
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
         product.setDeleted();
         productRepository.save(product);
     }
 
+    /**
+     * 특정 상품이 자신의 상품이 맞는지 확인
+     * @param userId 유저 식별자
+     * @param productId 상품 식별자
+     * @throws ApplicationException 상품이 존재하지 않거나, 접근 권한이 없을 시 예외 발생
+     * @return Product Entity
+     */
+    private Product verifyIsOwn(Long userId, Long productId) throws ApplicationException {
+        Product product = productRepository.findById(productId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        if(!product.getUser().getId().equals(userId)) {
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
+        return product;
+    }
     // 상품 삭제 복구
     public void restoreProduct(Long userId, Long productId) {
-        Product product = productRepository.findByIdAndUserId(productId, userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND));
+        Product product = verifyIsOwn(userId, productId);
         product.unSetDeleted();
+        productRepository.save(product);
+    }
+
+    // 상품 품절 처리
+    public void setSoldout(Long userId, Long productId) {
+        Product product = verifyIsOwn(userId, productId);
+        product.setSoldout();
+        productRepository.save(product);
+    }
+
+    // 상품 품절 처리 해제
+    public void unSetSoldout(Long userId, Long productId) {
+        Product product = verifyIsOwn(userId, productId);
+        product.unSetSoldout();
         productRepository.save(product);
     }
 }

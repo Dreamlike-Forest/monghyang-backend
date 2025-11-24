@@ -104,6 +104,19 @@ public class SellerPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("상품이 복구되었습니다."));
     }
 
+    @PostMapping("/product-set-soldout/{productId}")
+    @Operation(summary = "상품 삭제 처리")
+    public ResponseEntity<ResponseDataDto<Void>> setSoldoutProduct(@LoginUserId Long userId, @PathVariable Long productId) {
+        productService.setSoldout(userId, productId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품이 품절 처리 되었습니다."));
+    }
+
+    @PostMapping("/product-unset-soldout/{productId}")
+    public ResponseEntity<ResponseDataDto<Void>> unSetSoldoutProduct(@LoginUserId Long userId, @PathVariable Long productId) {
+        productService.unSetSoldout(userId, productId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품이 품절 해제 처리 되었습니다."));
+    }
+
 
     // 상품에 대한 태그 추가 및 삭제
     @PostMapping("/product-tag/{productId}")

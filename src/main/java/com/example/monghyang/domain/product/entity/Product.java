@@ -117,10 +117,10 @@ public class Product {
         this.description = description;
     }
 
-    public void increaseInventory(Integer increaseNumber) {
-        this.inventory += increaseNumber;
+    public void setSoldout() {
+        this.isSoldout = Boolean.TRUE;
     }
-    public void decreaseInventory(Integer decreaseNumber) {
-        this.inventory -= decreaseNumber;
+    public void unSetSoldout() {
+        this.isSoldout = Boolean.FALSE;
     }
 }
