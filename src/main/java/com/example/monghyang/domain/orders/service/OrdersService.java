@@ -153,12 +153,24 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
         }
     }
 
+    /**
+     * 재고 롤백 및 주문, 주문 요소 상태를 '실패'로 변경
+     * @param pgOrderId 해당 주문의 pgOrderId
+     */
     @Override
     @Transactional
     public void setStatusFailed(UUID pgOrderId) {
         Orders orders = ordersRepository.findByPgOrderIdForSetFailed(pgOrderId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.ORDER_NOT_FOUND));
         orderStatusHistoryService.updatePaymentStatusFailed(orders);
+
+        // 재고 롤백
+        List<OrderItem> orderItemList = orderItemRepository.findByOrderId(orders.getId());
+        for(OrderItem orderItem : orderItemList){
+            productService.rollbackInventory(orderItem.getProduct().getId(), orderItem.getQuantity());
+            orderItemFulFillmentHistoryService.updateFulfillmentFailed(orderItem);
+        }
+
     }
 
     public Page<ResOrderDto> getMyOrderList(Long userId, Integer startOffset) {

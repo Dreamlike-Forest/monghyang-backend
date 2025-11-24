@@ -88,7 +88,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Modifying
     @Query("update Product p set p.inventory = p.inventory + :quantity where p.id = :productId and p.user.id = :userId")
-    int increseInventory(@Param("productId") Long productId, @Param("userId") Long userId, @Param("quantity") Integer quantity);
+    int increaseInventory(@Param("productId") Long productId, @Param("userId") Long userId, @Param("quantity") Integer quantity);
+
+
+    /**
+     * 재고 롤백용 업데이트 쿼리
+     * @param productId 상품 식별자
+     * @param quantity 롤백할 재고 개수
+     */
+    @Modifying
+    @Query("update Product p set p.inventory = p.inventory + :quantity where p.id = :productId")
+    void rollbackInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 
     /**
      * 상품 재고 감소(출고 및 구매 등). 소유권 검증 X
@@ -97,7 +107,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Modifying
     @Query("update Product p set p.inventory = p.inventory - :quantity where p.id = :productId")
-    void decreseInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+    void decreaseInventory(@Param("productId") Long productId, @Param("quantity") Integer quantity);
 
     /**
      * 주문 시 사용되는 상품 재고 수량 일괄 감소 쿼리문(native). 삭제되지 않고 품절되지 않은 상품만 재고 차감.

@@ -177,8 +177,8 @@ public class ProductService {
      * @param quantity 증가할 수량 값
      */
     @Transactional
-    public void increseInventory(Long productId, Long userId, Integer quantity) {
-        int ret = productRepository.increseInventory(productId, userId, quantity);
+    public void increaseInventory(Long productId, Long userId, Integer quantity) {
+        int ret = productRepository.increaseInventory(productId, userId, quantity);
         if(ret == 0) {
             // 수정되지 않았다면 자신의 상품이 아닌 것
             throw new ApplicationException(ApplicationError.FORBIDDEN);
@@ -192,7 +192,17 @@ public class ProductService {
      */
     @Transactional
     public void decreseInventory(Long productId, Integer quantity) {
-        productRepository.decreseInventory(productId, quantity);
+        productRepository.decreaseInventory(productId, quantity);
+    }
+
+    /**
+     * 상품 재고 롤백용 메소드
+     * @param productId 상품 식별자
+     * @param quantity 롤백할 재고 수량
+     */
+    @Transactional
+    public void rollbackInventory(Long productId, Integer quantity) {
+        productRepository.rollbackInventory(productId, quantity);
     }
 
     /**
@@ -209,15 +219,6 @@ public class ProductService {
             // 주문 희망 상품의 수와 실제 재고가 차감된 상품의 수가 다르다면 예외 발생
             throw new ApplicationException(ApplicationError.PRODUCT_NOT_FOUND);
         }
-    }
-
-    /**
-     * 주문 실패 시 차감된 재고를 롤백하기 위한 보상 트랜잭션
-     * @param orderProductIdList 재고 롤백할 상품 식별자 리스트
-     */
-    @Transactional
-    public void increaseInventoryForOrder(List<Long> orderProductIdList) {
-        productRepository.increaseInventoryForOrderByProductIds(orderProductIdList);
     }
 
     // 상품 등록

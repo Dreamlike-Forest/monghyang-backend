@@ -62,7 +62,7 @@ public class OrderItemService {
          */
 
         // 차감한 재고 복구
-        productService.increaseInventoryForOrder(Collections.singletonList(orderItem.getProduct().getId()));
+        productService.rollbackInventory(orderItem.getProduct().getId(), orderItem.getQuantity());
         orderItem.updateFulfillmentStatus(FulfillmentStatus.CANCELED);
         orderItemFulFillmentHistoryService.updateFulfillmentCanceled(orderItem, false);
         orderItemRefundHistoryService.updateRefundRequested(orderItem);
