@@ -113,4 +113,10 @@ public class Joy { // 양조장 체험
     public void updateMaxCount(Integer maxCount) {
         this.maxCount = maxCount;
     }
+    public void setIsSoldout() {
+        this.isSoldout = Boolean.TRUE;
+    }
+    public void unSetIsSoldout() {
+        this.isSoldout = Boolean.FALSE;
+    }
 }

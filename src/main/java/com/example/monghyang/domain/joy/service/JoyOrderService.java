@@ -308,6 +308,19 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         return result;
     }
 
+    // 특정 양조장의 특정 날짜의 체험 예약 현황을 조회
+    public Page<ResJoyOrderDto> getHistoryOfMyBreweryByDate(Long userId, Integer startOffset, LocalDate date) {
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt"); // 생성일자(예약 시점) 기준 내림차순
+        Pageable pageable = PageRequest.of(startOffset, JOY_ORDER_PAGE_SIZE, sort);
+        Page<ResJoyOrderDto> result = joyOrderRepository.findByBreweryIdAndDate(brewery.getId(), pageable, date);
+        if(result.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND);
+        }
+        return result;
+    }
+
     // 자신의 예약 내역 조회
     public Page<ResJoyOrderDto> getHistoryOfUser(Long userId, Integer startOffset) {
         Users user = usersRepository.findById(userId).orElseThrow(() ->

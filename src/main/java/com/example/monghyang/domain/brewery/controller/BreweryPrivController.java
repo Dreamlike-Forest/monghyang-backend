@@ -1,10 +1,7 @@
 package com.example.monghyang.domain.brewery.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.joy.dto.ReqJoyDto;
-import com.example.monghyang.domain.joy.dto.ReqUpdateJoyDto;
-import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
-import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
+import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryDto;
@@ -20,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/brewery-priv") // 양조장용 api
@@ -71,6 +71,12 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
     }
 
+    @GetMapping("/joy")
+    @Operation(summary = "자신이 제공하는 체험 정보 조회")
+    public ResponseEntity<ResponseDataDto<List<ResJoyDto>>> getMyJoyList(@LoginUserId Long userId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyService.getMyJoyList(userId)));
+    }
+
     @PostMapping("/joy-add")
     @Operation(summary = "체험 추가")
     public ResponseEntity<ResponseDataDto<Void>> createJoy(@LoginUserId Long userId, @Valid @ModelAttribute ReqJoyDto reqJoyDto) {
@@ -99,6 +105,20 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
     }
 
+    @PostMapping("/joy-set-soldout/{joyId}")
+    @Operation(summary = "체험 품절처리")
+    public ResponseEntity<ResponseDataDto<Void>> setSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.setSoldout(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 처리되었습니다."));
+    }
+
+    @PostMapping("/joy-unset-soldout/{joyId}")
+    @Operation(summary = "체험 품절 상태 복구")
+    public ResponseEntity<ResponseDataDto<Void>> unSetSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.unSetSoldout(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 상태에서 복구되었습니다."));
+    }
+
     @PostMapping("/joy-order/change")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
@@ -117,5 +137,11 @@ public class BreweryPrivController {
     @Operation(summary = "자신의 양조장의 체험 예약 현황 및 내역 최신순 확인", description = "페이지 크기: 12")
     public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBrewery(@LoginUserId Long userId, @PathVariable Integer startOffset) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBrewery(userId, startOffset)));
+    }
+
+    @GetMapping("/joy-order/history-date/{startOffset}/{date}")
+    @Operation(summary = "자신의 양조장의 특정 날짜의 체험 예약 현황 확인")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBreweryByDate(@LoginUserId Long userId, @PathVariable Integer startOffset, @PathVariable LocalDate date) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBreweryByDate(userId, startOffset, date)));
     }
 }

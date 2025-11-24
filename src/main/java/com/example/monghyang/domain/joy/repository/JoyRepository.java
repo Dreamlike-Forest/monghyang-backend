@@ -13,6 +13,9 @@ public interface JoyRepository extends JpaRepository<Joy, Long> {
     @Query("select j from Joy j where j.brewery.id = :breweryId and j.isDeleted = false")
     List<Joy> findActiveByBreweryId(@Param("breweryId") Long breweryId);
 
+    @Query("select j from Joy j join j.brewery b where b.user.id = :userId")
+    List<Joy> findByUserId(@Param("userId") Long userId);
+
     @Query("select j from Joy j where j.id = :joyId and j.brewery.id = :breweryId")
     Optional<Joy> findByBreweryIdAndJoyId(@Param("breweryId") Long breweryId, @Param("joyId") Long joyId);
 

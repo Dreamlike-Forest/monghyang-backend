@@ -1,11 +1,14 @@
 package com.example.monghyang.domain.users.dto;
 
 import com.example.monghyang.domain.users.entity.Users;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL) // null 필드는 json 직렬화하지 않게 설정
 public class ResUsersPrivateInfoDto {
     private final Long users_id;
     private final String role_name;
@@ -17,6 +20,12 @@ public class ResUsersPrivateInfoDto {
     private final String users_gender;
     private final String users_address;
     private final String users_address_detail;
+
+    // 사용자의 권한 정보에 따라 아래 두 개의 필드가 채워질 수 있습니다.
+    @Setter
+    private ResBreweryPrivateInfoDto brewery;
+    @Setter
+    private ResSellerPrivateInfoDto seller;
 
     private ResUsersPrivateInfoDto(Users users) {
         this.users_id = users.getId();

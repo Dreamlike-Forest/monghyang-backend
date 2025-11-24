@@ -4,6 +4,7 @@ import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.dto.ReqProductDto;
+import com.example.monghyang.domain.product.dto.ResMyProductDto;
 import com.example.monghyang.domain.product.dto.UpdateProductDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.product.tag.ProductTagService;
@@ -13,6 +14,7 @@ import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -96,12 +98,31 @@ public class SellerPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("상품이 삭제되었습니다."));
     }
 
+    @GetMapping("/product/my/{startOffset}")
+    @Operation(summary = "자신의 상품 리스트 등록 최신순 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResMyProductDto>>> getMyProductList(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productService.getMyProductList(userId, startOffset)));
+    }
+
     // 상품 복구 처리
     @PostMapping("/product-restore/{productId}")
     @Operation(summary = "자신의 상품 복구")
     public ResponseEntity<ResponseDataDto<Void>> restoreProduct(@LoginUserId Long userId, @PathVariable Long productId) {
         productService.restoreProduct(userId, productId);
         return ResponseEntity.ok().body(ResponseDataDto.success("상품이 복구되었습니다."));
+    }
+
+    @PostMapping("/product-set-soldout/{productId}")
+    @Operation(summary = "상품 삭제 처리")
+    public ResponseEntity<ResponseDataDto<Void>> setSoldoutProduct(@LoginUserId Long userId, @PathVariable Long productId) {
+        productService.setSoldout(userId, productId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품이 품절 처리 되었습니다."));
+    }
+
+    @PostMapping("/product-unset-soldout/{productId}")
+    public ResponseEntity<ResponseDataDto<Void>> unSetSoldoutProduct(@LoginUserId Long userId, @PathVariable Long productId) {
+        productService.unSetSoldout(userId, productId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("상품이 품절 해제 처리 되었습니다."));
     }
 
 

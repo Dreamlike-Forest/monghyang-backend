@@ -1,13 +1,11 @@
 package com.example.monghyang.domain.product.repository;
 
+import com.example.monghyang.domain.product.dto.ResMyProductDto;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
 import com.example.monghyang.domain.product.entity.Product;
-import com.example.monghyang.domain.users.entity.Users;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,9 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    @Query("select p from Product p where p.id = :productId and p.user.id = :userId")
-    Optional<Product> findByIdAndUserId(@Param("userId") Long userId, @Param("productId") Long productId);
-
     @Query("select p from Product p where p.id = :productId and p.user.id = :userId")
     Optional<Product> findByUserId(@Param("userId") Long userId, @Param("productId") Long productId);
 
@@ -124,16 +119,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     int decreaseInventoryForOrderByProductIds(@Param("productIds") List<Long> productIds);
 
     /**
-     * 주문 프로세스 실패 시 실행되는 보상 트랜잭션에서 수행: 차감했던 재고 복구
-     * @param productIds
+     * 자신이 게시한 상품의 정보 조회
+     * @param pageable
+     * @param userId 자신의 유저 식별자
      * @return
      */
-    @Modifying
-    @Query(value = """
-    update cart c
-    join product p on c.product_id = p.id
-    set p.inventory = p.inventory + c.quantity
-    where p.id in :productIds
-    """, nativeQuery = true)
-    void increaseInventoryForOrderByProductIds(@Param("productIds") List<Long> productIds);
+    @Query("""
+    select new com.example.monghyang.domain.product.dto.ResMyProductDto(
+        p.id, p.name, p.alcohol, p.volume, p.salesVolume,
+        p.originPrice, p.discountRate, p.finalPrice, pi.imageKey,
+        p.isOnlineSell, p.isSoldout, p.isDeleted, p.description, p.registeredAt)
+    from Product p
+    left join ProductImage pi on pi.product.id = p.id and pi.seq = 1
+    order by p.registeredAt desc
+    """)
+    Page<ResMyProductDto> findMyProduct(Pageable pageable, @Param("userId") Long userId);
 }

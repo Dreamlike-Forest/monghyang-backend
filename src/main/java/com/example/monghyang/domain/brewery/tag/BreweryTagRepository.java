@@ -20,7 +20,7 @@ public interface BreweryTagRepository extends JpaRepository<BreweryTag,Long> {
      * 특정 n개 양조장이 가진 태그 리스트 조회
      * @param breweryIdList 특정 n개 양조장의 식별자 리스트
      */
-    @Query("select new com.example.monghyang.domain.tag.dto.TagNameDto(bt.brewery.id, bt.tags.name) from BreweryTag bt where bt.brewery.id in :breweryIdList")
+    @Query("select new com.example.monghyang.domain.tag.dto.TagNameDto(bt.brewery.id, bt.tags.name, bt.tags.id) from BreweryTag bt where bt.brewery.id in :breweryIdList")
     List<TagNameDto> findTagListByBreweryIdList(@Param("breweryIdList") List<Long> breweryIdList);
 
     @Query("select t.name from BreweryTag bt join bt.tags t where bt.brewery.id = :breweryId")
