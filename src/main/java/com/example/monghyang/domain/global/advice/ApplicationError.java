@@ -13,6 +13,7 @@ public enum ApplicationError {
     BREWERY_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 정보가 존재하지 않습니다."),
     BREWERY_OPENING_TIME_INVALID(HttpStatus.BAD_REQUEST, "양조장 운영 시간대가 잘못되었습니다."),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 정보가 존재하지 않습니다."),
+    PRODUCT_CANNOT_ORDER(HttpStatus.BAD_REQUEST, "주문할 수 없는 상품입니다."),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장바구니 요소가 존재하지 않습니다."),
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니가 비어있습니다."),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰 정보가 존재하지 않습니다."),
