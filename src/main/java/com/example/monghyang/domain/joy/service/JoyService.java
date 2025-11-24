@@ -78,6 +78,24 @@ public class JoyService {
         joyRepository.save(joy);
     }
 
+    public void setSoldout(Long userId, Long joyId) {
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        joy.setIsSoldout();
+        joyRepository.save(joy);
+    }
+
+    public void unSetSoldout(Long userId, Long joyId) {
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        joy.unSetIsSoldout();
+        joyRepository.save(joy);
+    }
+
     // 체험 수정(가격 및 할인율, 기타 체험 정보, 매진 처리 등)
     @Transactional
     public void updateJoy(Long userId, ReqUpdateJoyDto reqUpdateJoyDto) {

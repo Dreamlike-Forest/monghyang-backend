@@ -99,6 +99,20 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
     }
 
+    @PostMapping("/joy-set-soldout/{joyId}")
+    @Operation(summary = "체험 품절처리")
+    public ResponseEntity<ResponseDataDto<Void>> setSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.setSoldout(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 처리되었습니다."));
+    }
+
+    @PostMapping("/joy-unset-soldout/{joyId}")
+    @Operation(summary = "체험 품절 상태 복구")
+    public ResponseEntity<ResponseDataDto<Void>> unSetSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+        joyService.unSetSoldout(userId, joyId);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 상태에서 복구되었습니다."));
+    }
+
     @PostMapping("/joy-order/change")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
     public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
