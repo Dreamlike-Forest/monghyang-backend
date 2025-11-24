@@ -6,9 +6,7 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
-import com.example.monghyang.domain.users.dto.ReqUsersDto;
-import com.example.monghyang.domain.users.dto.ResUsersDto;
-import com.example.monghyang.domain.users.dto.ResUsersPrivateInfoDto;
+import com.example.monghyang.domain.users.dto.*;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
@@ -47,7 +45,20 @@ public class UsersService {
     public ResUsersPrivateInfoDto getMyUserInfo(Long userId) {
         Users users = usersRepository.findByIdJoinedRole(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
-        return ResUsersPrivateInfoDto.usersJoinedWithRoleToDto(users);
+        ResUsersPrivateInfoDto result = ResUsersPrivateInfoDto.usersJoinedWithRoleToDto(users);
+
+        // 사용자가 양조장이거나 판매자인 경우 그에 해당하는 추가적인 정보를 응답 객체의 필드에 삽입한다.
+        if(users.getRole().getName().equals(RoleType.ROLE_BREWERY)) {
+            Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+            result.setBrewery(new ResBreweryPrivateInfoDto(brewery));
+        } else if(users.getRole().getName().equals(RoleType.ROLE_SELLER)) {
+            Seller seller = sellerRepository.findByUserId(userId).orElseThrow(() ->
+                    new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
+            result.setSeller(new ResSellerPrivateInfoDto(seller));
+        }
+
+        return result;
     }
 
     public ResUsersDto getUsersById(Long userId) {
