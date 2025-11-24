@@ -2,6 +2,7 @@ package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.joy.dto.ReqJoyDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyDto;
+import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
@@ -16,6 +17,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -132,5 +136,18 @@ public class JoyService {
         if(reqUpdateJoyDto.getMax_count() != null) {
             joy.updateMaxCount(reqUpdateJoyDto.getMax_count());
         }
+    }
+
+    /**
+     * 자신이 관리하는 체험 전체 조회
+     * @param userId 자신의 유저 식별자
+     * @return
+     */
+    public List<ResJoyDto> getMyJoyList(Long userId) {
+        List<Joy> joyList = joyRepository.findByUserId(userId);
+        if(joyList.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_NOT_FOUND);
+        }
+        return joyList.stream().map(ResJoyDto::joyFrom).toList();
     }
 }

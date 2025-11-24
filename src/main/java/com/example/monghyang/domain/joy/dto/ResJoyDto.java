@@ -17,6 +17,9 @@ public class ResJoyDto {
     private final Integer joy_sales_volume;
     private final String joy_image_key;
     private final Boolean joy_is_soldout;
+    private final Integer joy_time_unit;
+    private final Integer joy_max_count;
+    private final Boolean joy_is_deleted;
 
     private ResJoyDto(Joy joy) {
         this.joy_id = joy.getId();
@@ -29,6 +32,9 @@ public class ResJoyDto {
         this.joy_sales_volume = joy.getSalesVolume();
         this.joy_is_soldout = joy.getIsSoldout();
         this.joy_image_key = joy.getImageKey();
+        this.joy_time_unit = joy.getTimeUnit();
+        this.joy_max_count = joy.getMaxCount();
+        this.joy_is_deleted = (joy.getIsDeleted() == null) ? false : joy.getIsDeleted();
     }
 
     public static ResJoyDto joyFrom(Joy joy) {

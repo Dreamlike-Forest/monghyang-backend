@@ -1,10 +1,7 @@
 package com.example.monghyang.domain.brewery.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.joy.dto.ReqJoyDto;
-import com.example.monghyang.domain.joy.dto.ReqUpdateJoyDto;
-import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
-import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
+import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryDto;
@@ -22,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/brewery-priv") // 양조장용 api
@@ -71,6 +69,12 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @RequestBody ReqTagDto reqBreweryTagDto) {
         breweryTagService.updateTag(userId, reqBreweryTagDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
+    }
+
+    @GetMapping("/joy")
+    @Operation(summary = "자신이 제공하는 체험 정보 조회")
+    public ResponseEntity<ResponseDataDto<List<ResJoyDto>>> getMyJoyList(@LoginUserId Long userId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyService.getMyJoyList(userId)));
     }
 
     @PostMapping("/joy-add")
