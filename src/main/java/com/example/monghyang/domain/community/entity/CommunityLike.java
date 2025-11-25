@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 })
 public class CommunityLike {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "COMMUNITY_LIKE_ID")
     private Long id;
 
