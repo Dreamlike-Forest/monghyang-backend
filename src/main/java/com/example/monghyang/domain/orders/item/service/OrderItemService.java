@@ -3,6 +3,7 @@ package com.example.monghyang.domain.orders.item.service;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.orders.item.dto.ResFulfillmentStatusHistoryDto;
+import com.example.monghyang.domain.orders.item.dto.ResOrderItemForSellerDto;
 import com.example.monghyang.domain.orders.item.dto.ResOrderItemStatusHistoryDto;
 import com.example.monghyang.domain.orders.item.dto.ResRefundStatusHistoryDto;
 import com.example.monghyang.domain.orders.item.entity.*;
@@ -11,9 +12,13 @@ import com.example.monghyang.domain.orders.item.repository.OrderItemRefundHistor
 import com.example.monghyang.domain.orders.item.repository.OrderItemRepository;
 import com.example.monghyang.domain.orders.service.OrderStatusHistoryService;
 import com.example.monghyang.domain.product.service.ProductService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,8 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class OrderItemService {
+    @Getter
+    private final int ORDER_ITEM_PAGE_SIZE = 12;
     private final OrderItemRepository orderItemRepository;
     private final ProductService productService;
     private final OrderItemFulFillmentHistoryService orderItemFulFillmentHistoryService;
@@ -78,6 +85,46 @@ public class OrderItemService {
             result.getRefundHistory().add(new ResRefundStatusHistoryDto(history));
         }
         return result;
+    }
+
+    /**
+     * 판매자/양조장의 상품에 대한 주문 요소 정보를 조회
+     * @param userId 판매자/양조장의 회원 식별자
+     * @param startOffset
+     * @return
+     */
+    public Page<ResOrderItemForSellerDto> getMyProductOrderList(Long userId, Integer startOffset) {
+        if(startOffset == null || startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, ORDER_ITEM_PAGE_SIZE);
+        Page<ResOrderItemForSellerDto> result = orderItemRepository.findByOrderIdListByProviderId(pageable, userId);
+        if(result.getContent().isEmpty()) {
+            throw new ApplicationException(ApplicationError.ORDER_ITEM_NOT_FOUND);
+        }
+        List<Long> orderItemList = result.stream().map(ResOrderItemForSellerDto::getOrder_item_id).toList();
+        List<OrderItemFulfillmentHistory> fulfillmentHistoryList = orderItemFulfillmentHistoryRepository.findByOrderItemIdListAndProviderId(orderItemList, userId);
+        List<OrderItemRefundHistory> refundHistoryList = orderItemRefundHistoryRepository.findByOrderItemIdListAndProviderId(orderItemList, userId);
+
+        // 각 order_item status history 정보를 결과 dto의 필드에 삽입
+        for(OrderItemFulfillmentHistory history : fulfillmentHistoryList) {
+            for(ResOrderItemForSellerDto dto : result.getContent()) {
+                if(dto.getOrder_item_id().equals(history.getOrderItem().getId())) {
+                    dto.getStatus_history().getFulfillmentHistory().add(new ResFulfillmentStatusHistoryDto(history));
+                    break;
+                }
+            }
+        }
+        for(OrderItemRefundHistory history : refundHistoryList) {
+            for(ResOrderItemForSellerDto dto : result.getContent()) {
+                if(dto.getOrder_item_id().equals(history.getOrderItem().getId())) {
+                    dto.getStatus_history().getRefundHistory().add(new ResRefundStatusHistoryDto(history));
+                    break;
+                }
+            }
+        }
+        return result;
+
     }
 
 }

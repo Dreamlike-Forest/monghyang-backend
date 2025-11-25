@@ -1,7 +1,10 @@
 package com.example.monghyang.domain.orders.item.repository;
 
 import com.example.monghyang.domain.orders.item.dto.OrderItemDto;
+import com.example.monghyang.domain.orders.item.dto.ResOrderItemForSellerDto;
 import com.example.monghyang.domain.orders.item.entity.OrderItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -42,7 +45,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem,Long> {
 
 
     /**
-     * 주문 식별자 리스트를 통해 주문 요소 조회
+     * 일반 사용자용: 자신의 주문 식별자 리스트를 통해 주문 요소 조회
      * @param orderIdList 주문 식별자 리스트
      * @return
      */
@@ -59,8 +62,31 @@ public interface OrderItemRepository extends JpaRepository<OrderItem,Long> {
     join oi.product p
     join oi.provider u
     left join ProductImage pi on pi.product.id = p.id and pi.seq = 1
-    where oi.orders.id in :orderIdList
+    where oi.orders.id in :orderIdList and oi.isDeleted = false
     """
     )
     List<OrderItemDto> findByOrderIdList(@Param("orderIdList") List<Long> orderIdList);
+
+    /**
+     * 판매자/양조장용: 자신이 판매중인 상품에 대한 모든 주문 요청을 조회(실패한 주문은 제외)
+     * @param pageable
+     * @param providerId 판매자/양조장 식별자
+     * @return
+     */
+    @Query("""
+    select new com.example.monghyang.domain.orders.item.dto.ResOrderItemForSellerDto(
+        oi.orders.id, oi.id, p.id, p.name, u.id, u.nickname, u.role,
+        pi.imageKey, oi.quantity, oi.amount, oi.fulfillmentStatus, oi.refundStatus,
+        oi.carrierCode, oi.trackingNo, oi.shippedAt, oi.deliveredAt, oi.createdAt,
+        oi.updatedAt, o.payerName, o.payerPhone, o.address, o.addressDetail
+        )
+    from OrderItem oi
+    join oi.product p
+    join oi.provider u
+    join oi.orders o
+    left join ProductImage pi on pi.product.id = p.id and pi.seq = 1
+    where oi.provider.id = :providerId and o.paymentStatus != com.example.monghyang.domain.orders.entity.PaymentStatus.FAILED
+    """
+    )
+    Page<ResOrderItemForSellerDto> findByOrderIdListByProviderId(Pageable pageable, @Param("providerId") Long providerId);
 }

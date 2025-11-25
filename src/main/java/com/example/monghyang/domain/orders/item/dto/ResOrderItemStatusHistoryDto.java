@@ -9,6 +9,6 @@ import java.util.List;
 @Getter
 @Setter
 public class ResOrderItemStatusHistoryDto {
-    List<ResFulfillmentStatusHistoryDto> fulfillmentHistory = new ArrayList<>();
-    List<ResRefundStatusHistoryDto> refundHistory = new ArrayList<>();
+    private List<ResFulfillmentStatusHistoryDto> fulfillmentHistory = new ArrayList<>();
+    private List<ResRefundStatusHistoryDto> refundHistory = new ArrayList<>();
 }

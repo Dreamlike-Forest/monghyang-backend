@@ -3,6 +3,8 @@ package com.example.monghyang.domain.seller.controller;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
+import com.example.monghyang.domain.orders.item.dto.ResOrderItemForSellerDto;
+import com.example.monghyang.domain.orders.item.service.OrderItemService;
 import com.example.monghyang.domain.product.dto.ReqProductDto;
 import com.example.monghyang.domain.product.dto.ResMyProductDto;
 import com.example.monghyang.domain.product.dto.UpdateProductDto;
@@ -20,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/seller-priv")
 @Tag(name = "판매자 관리자용 API", description = "양조장 및 판매자 권한을 가진 회원만 접근할 수 있습니다.")
@@ -28,6 +32,7 @@ public class SellerPrivController {
     private final SellerService sellerService;
     private final ProductTagService productTagService;
     private final ProductService productService;
+    private final OrderItemService orderItemService;
 
     // 판매자 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 판매자 조회 -> 판매자 식별자 사용)
 
@@ -127,6 +132,12 @@ public class SellerPrivController {
     public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @PathVariable Long productId, @RequestBody ReqTagDto reqTagDto) {
         productTagService.updateTag(userId, productId, reqTagDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
+    }
+
+    @GetMapping("/product-order/history/{startOffset}")
+    @Operation(summary = "자신이 게시판 상품에 대한 모든 주문 정보 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResOrderItemForSellerDto>>> findMyProductOrder(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(orderItemService.getMyProductOrderList(userId, startOffset)));
     }
 }
 
