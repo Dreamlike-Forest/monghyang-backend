@@ -131,6 +131,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         p.isOnlineSell, p.isSoldout, p.isDeleted, p.description, p.registeredAt)
     from Product p
     left join ProductImage pi on pi.product.id = p.id and pi.seq = 1
+    where p.user.id = :userId
     order by p.registeredAt desc
     """)
     Page<ResMyProductDto> findMyProduct(Pageable pageable, @Param("userId") Long userId);

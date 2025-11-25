@@ -24,7 +24,10 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
     @Query("select jo from JoyOrder jo where jo.id = :joyOrderId and jo.users.id = :userId")
     Optional<JoyOrder> findByIdAndUserId(@Param("joyOrderId") Long joyOrderId, @Param("userId") Long userId);
 
-    @Query("select new com.example.monghyang.domain.joy.dto.ResJoyOrderDto(jo.id, jo.users.id, j.id, j.name, jo.count, jo.totalAmount, jo.payerName, jo.payerPhone, jo.createdAt, jo.reservation, jo.joyPaymentStatus) from JoyOrder jo join jo.joy j on j.brewery.id = :breweryId")
+    @Query("""
+    select new com.example.monghyang.domain.joy.dto.ResJoyOrderDto(jo.id, jo.users.id, j.id, j.name, jo.count, jo.totalAmount, jo.payerName, jo.payerPhone, jo.createdAt, jo.reservation, jo.joyPaymentStatus)
+    from JoyOrder jo join jo.joy j on j.brewery.id = :breweryId and jo.joyPaymentStatus != com.example.monghyang.domain.joy.entity.JoyPaymentStatus.FAILED
+    """)
     Page<ResJoyOrderDto> findByBreweryId(@Param("breweryId") Long breweryId, Pageable pageable);
 
     @Query("""
@@ -34,6 +37,7 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
         jo.reservation, jo.joyPaymentStatus)
     from JoyOrder jo join jo.joy j on j.brewery.id = :breweryId
     where date(jo.reservation) = :date
+    and jo.joyPaymentStatus != com.example.monghyang.domain.joy.entity.JoyPaymentStatus.FAILED
     """)
     Page<ResJoyOrderDto> findByBreweryIdAndDate(@Param("breweryId") Long breweryId, Pageable pageable, @Param("date") LocalDate date);
 
