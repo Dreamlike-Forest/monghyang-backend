@@ -9,6 +9,7 @@ import com.example.monghyang.domain.util.dto.JwtClaimsDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,15 +19,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CustomLogoutHandler implements LogoutHandler {
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
 
-    @Autowired
-    public CustomLogoutHandler(RedisService redisService, JwtUtil jwtUtil) {
-        this.redisService = redisService;
-        this.jwtUtil = jwtUtil;
-    }
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         String refreshToken = request.getHeader("X-Refresh-Token");

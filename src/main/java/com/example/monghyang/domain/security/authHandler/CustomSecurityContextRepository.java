@@ -5,6 +5,7 @@ import com.example.monghyang.domain.util.DeviceTypeUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,17 +25,12 @@ import java.util.function.Supplier;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CustomSecurityContextRepository implements SecurityContextRepository {
 
     private static final String SESSION_HEADER_NAME = "X-Session-Id";
     private static final String SESSION_USER_INFO_NAME = "sessionUserInfo";
     private final RedisService redisService;
-
-
-    @Autowired
-    public CustomSecurityContextRepository(RedisService redisService) {
-        this.redisService = redisService;
-    }
 
 
     // IDE의 컴파일 에러를 해결하기 위한 임시방편 코드입니다.
