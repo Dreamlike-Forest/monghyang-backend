@@ -31,6 +31,7 @@ import com.example.monghyang.domain.util.SessionUtil;
 import com.example.monghyang.domain.util.dto.JwtClaimsDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuthService {
     // 회원 가입 및 토큰 갱신에 관련된 서비스
     private final UsersRepository usersRepository;
@@ -55,21 +57,6 @@ public class AuthService {
     private final BreweryImageRepository breweryImageRepository;
     private final SellerImageRepository sellerImageRepository;
 
-    @Autowired
-    public AuthService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, RoleRepository roleRepository, JwtUtil jwtUtil, SessionUtil sessionUtil, RedisService redisService, SellerRepository sellerRepository, BreweryRepository breweryRepository, RegionTypeRepository regionTypeRepository, StorageService storageService, BreweryImageRepository breweryImageRepository, SellerImageRepository sellerImageRepository) {
-        this.usersRepository = usersRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.roleRepository = roleRepository;
-        this.jwtUtil = jwtUtil;
-        this.sessionUtil = sessionUtil;
-        this.redisService = redisService;
-        this.sellerRepository = sellerRepository;
-        this.breweryRepository = breweryRepository;
-        this.regionTypeRepository = regionTypeRepository;
-        this.storageService = storageService;
-        this.breweryImageRepository = breweryImageRepository;
-        this.sellerImageRepository = sellerImageRepository;
-    }
 
     public void resetPassword(ReqResetPwDto dto) {
         String password = bCryptPasswordEncoder.encode(dto.getNewPassword());
