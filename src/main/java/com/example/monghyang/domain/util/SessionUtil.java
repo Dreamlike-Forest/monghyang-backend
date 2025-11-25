@@ -7,18 +7,15 @@ import com.example.monghyang.domain.redis.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class SessionUtil {
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
-    @Autowired
-    public SessionUtil(RedisService redisService, JwtUtil jwtUtil) {
-        this.redisService = redisService;
-        this.jwtUtil = jwtUtil;
-    }
 
     // 새로운 세션 및 RT 생성
     public void createNewAuthInfo(HttpServletRequest request, HttpServletResponse response, Long userId, String role) {
