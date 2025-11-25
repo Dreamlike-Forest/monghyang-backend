@@ -8,6 +8,7 @@ import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import com.example.monghyang.domain.tag.dto.ResTagListDto;
 import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.tag.repository.TagsRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,17 +19,12 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BreweryTagService {
     private final BreweryTagRepository breweryTagRepository;
     private final BreweryRepository breweryRepository;
     private final TagsRepository tagsRepository;
 
-    @Autowired
-    public BreweryTagService(BreweryTagRepository breweryTagRepository, BreweryRepository breweryRepository, TagsRepository tagsRepository) {
-        this.breweryTagRepository = breweryTagRepository;
-        this.breweryRepository = breweryRepository;
-        this.tagsRepository = tagsRepository;
-    }
 
     // 태그 수정
     @Transactional

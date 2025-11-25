@@ -13,6 +13,7 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +25,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/brewery-priv") // 양조장용 api
 @Tag(name = "양조장 관리자용 API", description = "양조장 권한을 가진 회원만 접근할 수 있습니다.")
+@RequiredArgsConstructor
 public class BreweryPrivController {
     private final BreweryService breweryService;
     private final BreweryTagService breweryTagService;
     private final JoyService joyService;
     private final JoyOrderService joyOrderService;
-
-    @Autowired
-    public BreweryPrivController(BreweryService breweryService, BreweryTagService breweryTagService, JoyService joyService, JoyOrderService joyOrderService) {
-        this.breweryService = breweryService;
-        this.breweryTagService = breweryTagService;
-        this.joyService = joyService;
-        this.joyOrderService = joyOrderService;
-    }
 
     // 양조장 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 양조장 조회 -> 양조장 식별자 사용)
 
