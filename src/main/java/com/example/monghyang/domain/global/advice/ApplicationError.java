@@ -51,6 +51,8 @@ public enum ApplicationError {
     TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "태그가 존재하지 않습니다."),
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "커뮤니티 게시글이 존재하지 않습니다."), // 추가
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글이 존재하지 않습니다."),   // 추가
+    ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시글입니다."),  // 추가
+    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시글입니다."), // 추가
     FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),    // 추가
     TERMS_AND_CONDITIONS_NOT_AGREED(HttpStatus.CONFLICT, "약관에 동의하지 않으면 회원 가입하실 수 없습니다."),
     EMAIL_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),

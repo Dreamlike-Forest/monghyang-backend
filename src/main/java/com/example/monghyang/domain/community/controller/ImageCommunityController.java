@@ -2,6 +2,7 @@ package com.example.monghyang.domain.community.controller;
 
 import com.example.monghyang.domain.community.dto.ResImageCommunityDto;
 import com.example.monghyang.domain.community.service.ImageCommunityService;
+import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,10 +22,11 @@ public class ImageCommunityController {
     @PostMapping("/{communityId}")
     @Operation(summary = "커뮤니티 이미지 업로드", description = "커뮤니티 게시글에 이미지를 업로드합니다.")
     public ResponseDataDto<ResImageCommunityDto> uploadImage(
+            @LoginUserId Long userId,
             @PathVariable Long communityId,
             @RequestParam Integer imageNum,
             @RequestParam("file") MultipartFile file) {
-        ResImageCommunityDto result = imageCommunityService.uploadImage(communityId, imageNum, file);
+        ResImageCommunityDto result = imageCommunityService.uploadImage(userId, communityId, imageNum, file);
         return ResponseDataDto.contentFrom(result);
     }
 
@@ -37,8 +39,10 @@ public class ImageCommunityController {
 
     @DeleteMapping("/{imageId}")
     @Operation(summary = "커뮤니티 이미지 삭제", description = "커뮤니티 이미지를 삭제합니다.")
-    public ResponseDataDto<Void> deleteImage(@PathVariable Long imageId) {
-        imageCommunityService.deleteImage(imageId);
+    public ResponseDataDto<Void> deleteImage(
+            @LoginUserId Long userId,
+            @PathVariable Long imageId) {
+        imageCommunityService.deleteImage(userId, imageId);
         return ResponseDataDto.success("이미지가 삭제되었습니다.");
     }
 }
