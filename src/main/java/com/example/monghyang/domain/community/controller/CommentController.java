@@ -42,7 +42,7 @@ public class CommentController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @PutMapping("/{commentId}")
+    @PostMapping("/{commentId}") // put을 posy로 변환
     @Operation(summary = "댓글 수정", description = "댓글을 수정합니다.")
     public ResponseDataDto<ResCommentDto> updateComment(
             @LoginUserId Long userId,
@@ -59,5 +59,6 @@ public class CommentController {
             @PathVariable Long commentId) {
         commentService.deleteComment(userId, commentId);
         return ResponseDataDto.success("댓글이 삭제되었습니다.");
+
     }
 }

@@ -2,6 +2,8 @@ package com.example.monghyang.domain.community.service;
 
 import com.example.monghyang.domain.community.dto.*;
 import com.example.monghyang.domain.community.entity.Community;
+import com.example.monghyang.domain.community.entity.CommunityLike;
+import com.example.monghyang.domain.community.repository.CommunityLikeRepository;
 import com.example.monghyang.domain.community.repository.CommunityRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -24,6 +26,7 @@ public class CommunityService {
     private final CommunityRepository communityRepository;
     private final UsersRepository usersRepository;
     private final ImageCommunityService imageCommunityService;
+    private final CommunityLikeRepository communityLikeRepository;
 
     private static final int PAGE_SIZE = 12;
 
@@ -50,7 +53,7 @@ public class CommunityService {
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             for (int i = 0; i < dto.getImages().size(); i++) {
                 if (!dto.getImages().get(i).isEmpty()) {
-                    imageCommunityService.uploadImage(saved.getId(), i + 1, dto.getImages().get(i));
+                    imageCommunityService.uploadImage(userId, saved.getId(), i + 1, dto.getImages().get(i));
                 }
             }
         }
@@ -131,7 +134,7 @@ public class CommunityService {
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             for (int i = 0; i < dto.getImages().size(); i++) {
                 if (!dto.getImages().get(i).isEmpty()) {
-                    imageCommunityService.uploadImage(communityId, i + 1, dto.getImages().get(i));
+                    imageCommunityService.uploadImage(userId, communityId, i + 1, dto.getImages().get(i));
                 }
             }
         }
@@ -155,18 +158,39 @@ public class CommunityService {
     }
 
     @Transactional
-    public void likeCommunity(Long communityId) {
+    public void likeCommunity(Long userId, Long communityId) {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new ApplicationException(ApplicationError.USER_NOT_FOUND));
+
+        // 중복 좋아요 방지
+        if (communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId)) {
+            throw new ApplicationException(ApplicationError.ALREADY_LIKED);
+        }
+
+        // 좋아요 엔티티 생성
+        CommunityLike like = CommunityLike.builder()
+                .community(community)
+                .user(user)
+                .build();
+
+        communityLikeRepository.save(like);
         community.increaseLikes();
     }
 
     @Transactional
-    public void unlikeCommunity(Long communityId) {
+    public void unlikeCommunity(Long userId, Long communityId) {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
+        // 좋아요가 존재하는지 확인
+        if (!communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId)) {
+            throw new ApplicationException(ApplicationError.LIKE_NOT_FOUND);
+        }
+
+        communityLikeRepository.deleteByCommunityIdAndUserId(communityId, userId);
         community.decreaseLikes();
     }
 }

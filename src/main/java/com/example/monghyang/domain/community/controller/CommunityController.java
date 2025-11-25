@@ -84,7 +84,7 @@ public class CommunityController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @PutMapping("/{communityId}")
+    @PostMapping("/{communityId}") // put을 post로 변환
     @Operation(summary = "커뮤니티 게시글 수정", description = "커뮤니티 게시글을 수정합니다.")
     public ResponseDataDto<ResCommunityDto> updateCommunity(
             @LoginUserId Long userId,
@@ -105,15 +105,19 @@ public class CommunityController {
 
     @PostMapping("/{communityId}/like")
     @Operation(summary = "커뮤니티 게시글 좋아요", description = "커뮤니티 게시글에 좋아요를 추가합니다.")
-    public ResponseDataDto<Void> likeCommunity(@PathVariable Long communityId) {
-        communityService.likeCommunity(communityId);
+    public ResponseDataDto<Void> likeCommunity(
+            @LoginUserId Long userId,
+            @PathVariable Long communityId) {
+        communityService.likeCommunity(userId, communityId);
         return ResponseDataDto.success("좋아요가 추가되었습니다.");
     }
 
     @DeleteMapping("/{communityId}/like")
     @Operation(summary = "커뮤니티 게시글 좋아요 취소", description = "커뮤니티 게시글의 좋아요를 취소합니다.")
-    public ResponseDataDto<Void> unlikeCommunity(@PathVariable Long communityId) {
-        communityService.unlikeCommunity(communityId);
+    public ResponseDataDto<Void> unlikeCommunity(
+            @LoginUserId Long userId,
+            @PathVariable Long communityId) {
+        communityService.unlikeCommunity(userId, communityId);
         return ResponseDataDto.success("좋아요가 취소되었습니다.");
     }
 }

@@ -26,9 +26,14 @@ public class ImageCommunityService {
     private final StorageService storageService;
 
     @Transactional
-    public ResImageCommunityDto uploadImage(Long communityId, Integer imageNum, MultipartFile file) {
+    public ResImageCommunityDto uploadImage(Long userId, Long communityId, Integer imageNum, MultipartFile file) {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
+
+        // 권한 검증: 본인이 작성한 게시글인지 확인
+        if (!community.getUser().getId().equals(userId)) {
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
 
         // 이미지 파일 저장 (AWS S3 or Local)
         String imageKey = storageService.upload(file, ImageType.COMMUNITY_IMAGE);
@@ -52,9 +57,14 @@ public class ImageCommunityService {
     }
 
     @Transactional
-    public void deleteImage(Long imageId) {
+    public void deleteImage(Long userId, Long imageId) {
         ImageCommunity imageCommunity = imageCommunityRepository.findById(imageId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
+
+        // 권한 검증: 본인이 작성한 게시글의 이미지인지 확인
+        if (!imageCommunity.getCommunity().getUser().getId().equals(userId)) {
+            throw new ApplicationException(ApplicationError.FORBIDDEN);
+        }
 
         // 스토리지에서 이미지 삭제
         storageService.remove(imageCommunity.getImageUrl());
