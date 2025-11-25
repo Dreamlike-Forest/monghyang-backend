@@ -2,6 +2,7 @@ package com.example.monghyang.domain.global.advice;
 
 import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.dto.RequestPathDto;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,19 @@ public class ApplicationErrorDto {
             this.method = requestPath.getHttpMethod();
         }
     }
+    private ApplicationErrorDto(HttpServletRequest request, HttpStatus status, String message) {
+        this.status = status.value();
+        this.message = message;
+        this.timestamp = LocalDateTime.now();
+        this.path = request.getRequestURI();
+        this.method = request.getMethod();
+    }
+
     public static ApplicationErrorDto statusMessageOf(HttpStatus status, String message) {
         return new ApplicationErrorDto(status, message);
+    }
+
+    public static ApplicationErrorDto statusMessageOf(HttpServletRequest request, HttpStatus status, String message) {
+        return new ApplicationErrorDto(request, status, message);
     }
 }
