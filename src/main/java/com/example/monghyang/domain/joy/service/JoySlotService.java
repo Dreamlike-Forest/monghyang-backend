@@ -7,6 +7,7 @@ import com.example.monghyang.domain.joy.dto.slot.*;
 import com.example.monghyang.domain.joy.entity.JoySlot;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.repository.JoySlotRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,14 +23,10 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JoySlotService {
     // Spring AOP: Transactional 적용을 위해 클래스를 의도적으로 분리합니다.
     private final JoySlotRepository joySlotRepository;
-
-    @Autowired
-    public JoySlotService(JoySlotRepository joySlotRepository) {
-        this.joySlotRepository = joySlotRepository;
-    }
 
     /**
      * JoySlot Insert: 새 트랜잭션 생성(REQUIRES_NEW) 전략 적용 -> JDBC 예외 대응

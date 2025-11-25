@@ -13,6 +13,7 @@ import com.example.monghyang.domain.joy.service.JoySlotService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +25,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/joy-order")
 @Tag(name = "체험 예약 API")
+@RequiredArgsConstructor
 public class JoyOrderController {
     private final JoyOrderService joyOrderService;
     private final JoySlotService joySlotService;
-
-    @Autowired
-    public JoyOrderController(JoyOrderService joyOrderService, JoySlotService joySlotService) {
-        this.joyOrderService = joyOrderService;
-        this.joySlotService = joySlotService;
-    }
 
     @GetMapping("/my/{startOffset}")
     @Operation(summary = "자신의 체험 예약 내역 조회", description = "페이지 크기: 12")
