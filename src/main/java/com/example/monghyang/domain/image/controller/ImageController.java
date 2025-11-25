@@ -6,6 +6,7 @@ import com.example.monghyang.domain.image.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -28,13 +29,9 @@ import java.util.Optional;
 @RequestMapping("/api/image")
 @Tag(name = "이미지 파일 요청 API")
 @Slf4j
+@RequiredArgsConstructor
 public class ImageController {
     private final StorageService storageService;
-    @Autowired
-    public ImageController(StorageService storageService) {
-        this.storageService = storageService;
-    }
-
 
     /**
      * 이미지 파일 응답 API (stream 방식)

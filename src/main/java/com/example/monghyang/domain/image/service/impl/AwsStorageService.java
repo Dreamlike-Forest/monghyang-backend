@@ -49,7 +49,7 @@ public class AwsStorageService implements StorageService {
 
     @Override
     public String upload(MultipartFile file, ImageType imageType) {
-        if(file.isEmpty()) {
+        if(file == null || file.isEmpty()) {
             throw new ApplicationException(ApplicationError.IMAGE_REQUEST_NULL);
         }
         if(file.getOriginalFilename() == null || !file.getOriginalFilename().contains(".")) {
