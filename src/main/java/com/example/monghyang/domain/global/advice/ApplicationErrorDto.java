@@ -1,6 +1,5 @@
 package com.example.monghyang.domain.global.advice;
 
-import com.example.monghyang.domain.util.ExceptionUtil;
 import com.example.monghyang.domain.util.dto.RequestPathDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
@@ -21,18 +20,6 @@ public class ApplicationErrorDto {
     private String message;
     private LocalDateTime timestamp;
 
-
-    private ApplicationErrorDto(HttpStatus status, String message) {
-        this.status = status.value();
-        this.message = message;
-        this.timestamp = LocalDateTime.now();
-
-        RequestPathDto requestPath = ExceptionUtil.getRequestPath(); // 해당 요청의 url 및 method 정보를 담은 객체 load
-        if(requestPath != null) {
-            this.path = requestPath.getPath();
-            this.method = requestPath.getHttpMethod();
-        }
-    }
     private ApplicationErrorDto(HttpServletRequest request, HttpStatus status, String message) {
         this.status = status.value();
         this.message = message;
@@ -41,11 +28,14 @@ public class ApplicationErrorDto {
         this.method = request.getMethod();
     }
 
-    public static ApplicationErrorDto statusMessageOf(HttpStatus status, String message) {
-        return new ApplicationErrorDto(status, message);
-    }
-
-    public static ApplicationErrorDto statusMessageOf(HttpServletRequest request, HttpStatus status, String message) {
+    /**
+     *
+     * @param request 요청의 HttpServletRequest 객체
+     * @param status 응답 헤더 및 본문 status 필드에 삽입할 http status 값
+     * @param message 응답 본문 message
+     * @return
+     */
+    public static ApplicationErrorDto requestStatusMessageOf(HttpServletRequest request, HttpStatus status, String message) {
         return new ApplicationErrorDto(request, status, message);
     }
 }

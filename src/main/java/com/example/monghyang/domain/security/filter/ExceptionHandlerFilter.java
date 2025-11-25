@@ -51,7 +51,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         response.setStatus(applicationError.getStatus().value());
         response.setContentType("application/json;charset=utf-8");
         // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
-        objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.statusMessageOf(request, applicationError.getStatus(), applicationError.getMessage()));
+        objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.requestStatusMessageOf(request, applicationError.getStatus(), applicationError.getMessage()));
     }
 
 }
