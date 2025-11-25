@@ -11,6 +11,7 @@ import com.example.monghyang.domain.product.repository.ProductRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,17 +22,11 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
     private final UsersRepository usersRepository;
     private final ProductRepository productRepository;
-
-    @Autowired
-    public CartService(CartRepository cartRepository, UsersRepository usersRepository, ProductRepository productRepository) {
-        this.cartRepository = cartRepository;
-        this.usersRepository = usersRepository;
-        this.productRepository = productRepository;
-    }
 
     // 장바구니 추가
     public void addCart(ReqCartDto dto, Long userId) throws ConstraintViolationException {
