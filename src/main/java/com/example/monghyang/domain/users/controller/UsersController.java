@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,17 +26,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 @Tag(name = "회원 공통 API")
+@RequiredArgsConstructor
 public class UsersController {
     private final UsersService usersService;
     private final RedisService redisService;
     private final SecurityContextLogoutHandler securityContextLogoutHandler; // 스프링 세션 표준 로그아웃 핸들러
-
-    @Autowired
-    public UsersController(UsersService usersService, RedisService redisService, SecurityContextLogoutHandler securityContextLogoutHandler) {
-        this.usersService = usersService;
-        this.redisService = redisService;
-        this.securityContextLogoutHandler = securityContextLogoutHandler;
-    }
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Email로 회원을 조회합니다.")
