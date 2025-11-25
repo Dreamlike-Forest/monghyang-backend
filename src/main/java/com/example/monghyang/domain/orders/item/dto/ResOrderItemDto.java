@@ -1,11 +1,13 @@
 package com.example.monghyang.domain.orders.item.dto;
 
-import lombok.Getter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
+@RequiredArgsConstructor
 public class ResOrderItemDto {
     private final Long order_id;
     private final Long order_item_id;

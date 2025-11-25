@@ -33,6 +33,7 @@ public interface OrdersRepository extends JpaRepository<Orders,Long> {
     from Orders o
     where o.user.id = :userId
     and o.paymentStatus != com.example.monghyang.domain.orders.entity.PaymentStatus.PENDING
+    and o.isDeleted = false
     order by o.createdAt desc
     """)
     Page<ResOrderDto> findByUserId(Pageable pageable, @Param("userId") Long userId);
