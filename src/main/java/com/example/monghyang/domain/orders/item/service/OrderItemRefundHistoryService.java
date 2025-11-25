@@ -1,27 +1,19 @@
 package com.example.monghyang.domain.orders.item.service;
 
-import com.example.monghyang.domain.global.advice.ApplicationError;
-import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.orders.item.entity.OrderItem;
 import com.example.monghyang.domain.orders.item.entity.OrderItemRefundHistory;
 import com.example.monghyang.domain.orders.item.entity.RefundStatus;
 import com.example.monghyang.domain.orders.item.repository.OrderItemRefundHistoryRepository;
-import com.example.monghyang.domain.orders.item.repository.OrderItemRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrderItemRefundHistoryService {
     private final OrderItemRefundHistoryRepository orderItemRefundHistoryRepository;
-
-    @Autowired
-    public OrderItemRefundHistoryService(OrderItemRefundHistoryRepository repository) {
-        this.orderItemRefundHistoryRepository = repository;
-    }
 
     @Transactional
     public void setRefundNone(OrderItem orderItem) {

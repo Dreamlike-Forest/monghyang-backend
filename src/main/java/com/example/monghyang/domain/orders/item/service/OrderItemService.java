@@ -11,6 +11,7 @@ import com.example.monghyang.domain.orders.item.repository.OrderItemRefundHistor
 import com.example.monghyang.domain.orders.item.repository.OrderItemRepository;
 import com.example.monghyang.domain.orders.service.OrderStatusHistoryService;
 import com.example.monghyang.domain.product.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrderItemService {
     private final OrderItemRepository orderItemRepository;
     private final ProductService productService;
@@ -29,17 +31,6 @@ public class OrderItemService {
     private final OrderStatusHistoryService orderStatusHistoryService;
     private final OrderItemFulfillmentHistoryRepository orderItemFulfillmentHistoryRepository;
     private final OrderItemRefundHistoryRepository orderItemRefundHistoryRepository;
-
-    @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, ProductService productService, OrderItemFulFillmentHistoryService orderItemFulFillmentHistoryService, OrderItemRefundHistoryService orderItemRefundHistoryService, OrderStatusHistoryService orderStatusHistoryService, OrderItemFulfillmentHistoryRepository orderItemFulfillmentHistoryRepository, OrderItemRefundHistoryRepository orderItemRefundHistoryRepository) {
-        this.orderItemRepository = orderItemRepository;
-        this.productService = productService;
-        this.orderItemFulFillmentHistoryService = orderItemFulFillmentHistoryService;
-        this.orderItemRefundHistoryService = orderItemRefundHistoryService;
-        this.orderStatusHistoryService = orderStatusHistoryService;
-        this.orderItemFulfillmentHistoryRepository = orderItemFulfillmentHistoryRepository;
-        this.orderItemRefundHistoryRepository = orderItemRefundHistoryRepository;
-    }
 
     /**
      * 개별 주문 요소 1개 취소

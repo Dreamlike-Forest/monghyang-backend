@@ -5,6 +5,7 @@ import com.example.monghyang.domain.orders.item.entity.OrderItem;
 import com.example.monghyang.domain.orders.item.entity.OrderItemFulfillmentHistory;
 import com.example.monghyang.domain.orders.item.repository.OrderItemFulfillmentHistoryRepository;
 import com.example.monghyang.domain.orders.item.repository.OrderItemRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrderItemFulFillmentHistoryService {
     private final OrderItemFulfillmentHistoryRepository orderItemFulfillmentHistoryRepository;
-
-    @Autowired
-    public OrderItemFulFillmentHistoryService(OrderItemFulfillmentHistoryRepository orderItemFulfillmentHistoryRepository) {
-        this.orderItemFulfillmentHistoryRepository = orderItemFulfillmentHistoryRepository;
-    }
 
     @Transactional
     public void setFulfillmentCreated(OrderItem orderItem) {
