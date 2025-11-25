@@ -14,6 +14,7 @@ import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +23,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/seller-priv")
 @Tag(name = "판매자 관리자용 API", description = "양조장 및 판매자 권한을 가진 회원만 접근할 수 있습니다.")
+@RequiredArgsConstructor
 public class SellerPrivController {
     private final SellerService sellerService;
     private final ProductTagService productTagService;
     private final ProductService productService;
-
-    @Autowired
-    public SellerPrivController(SellerService sellerService, ProductTagService productTagService, ProductService productService) {
-        this.sellerService = sellerService;
-        this.productTagService = productTagService;
-        this.productService = productService;
-    }
 
     // 판매자 권한 검증: (@LoginUserId로 회원식별자 추출 -> 해당되는 판매자 조회 -> 판매자 식별자 사용)
 
