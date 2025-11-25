@@ -11,6 +11,7 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,17 +24,11 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JoyService {
     private final JoyRepository joyRepository;
     private final BreweryRepository breweryRepository;
     private final StorageService storageService;
-
-    @Autowired
-    public JoyService(JoyRepository joyRepository, BreweryRepository breweryRepository, StorageService storageService) {
-        this.joyRepository = joyRepository;
-        this.breweryRepository = breweryRepository;
-        this.storageService = storageService;
-    }
 
     // 체험 등록
     @Transactional

@@ -18,6 +18,7 @@ import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,6 +37,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     @Getter
     private static final int JOY_ORDER_PAGE_SIZE = 12;
@@ -45,18 +47,6 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final BreweryRepository breweryRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoySlotService joySlotService;
-
-    @Autowired
-    public JoyOrderService(JoyOrderRepository joyOrderRepository, UsersRepository usersRepository, JoyRepository joyRepository, BreweryRepository breweryRepository, JoyStatusHistoryRepository joyStatusHistoryRepository, JoySlotService joySlotService) {
-        this.joyOrderRepository = joyOrderRepository;
-        this.usersRepository = usersRepository;
-        this.joyRepository = joyRepository;
-        this.breweryRepository = breweryRepository;
-        this.joyStatusHistoryRepository = joyStatusHistoryRepository;
-        this.joySlotService = joySlotService;
-    }
-
-
 
     /**
      * 체험 시간대 유효성 검증

@@ -6,6 +6,7 @@ import com.example.monghyang.domain.util.SessionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,15 +18,10 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
+@RequiredArgsConstructor
 public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
     private final SessionUtil sessionUtil;
-
-    @Autowired
-    public SessionLoginSuccessHandler(ObjectMapper objectMapper, SessionUtil sessionUtil) {
-        this.objectMapper = objectMapper;
-        this.sessionUtil = sessionUtil;
-    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {

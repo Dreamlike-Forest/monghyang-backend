@@ -8,6 +8,7 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,12 +18,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/cart")
 @Tag(name = "장바구니 API", description = "장바구니 수량 유효 범위: 1 ~ 99")
+@RequiredArgsConstructor
 public class CartController {
     private final CartService cartService;
-    @Autowired
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
 
     @PostMapping
     @Operation(summary = "장바구니 추가")

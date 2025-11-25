@@ -10,6 +10,7 @@ import com.example.monghyang.domain.product.review.dto.UpdateProductReviewDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,19 +21,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProductReviewService {
     @Getter
     private final int PRODUCT_REVIEW_PAGE_SIZE = 12;
     private final ProductReviewRepository productReviewRepository;
     private final UsersRepository usersRepository;
     private final ProductRepository productRepository;
-
-    @Autowired
-    public ProductReviewService(ProductReviewRepository productReviewRepository, UsersRepository usersRepository, ProductRepository productRepository) {
-        this.productReviewRepository = productReviewRepository;
-        this.usersRepository = usersRepository;
-        this.productRepository = productRepository;
-    }
 
     // 리뷰 작성
     public void createReview(Long userId, ReqProductReviewDto reqProductReviewDto) {

@@ -23,6 +23,7 @@ import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,7 @@ import java.util.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrdersService implements PaymentManager<ReqPreOrderDto> {
     @Getter
     private final int ORDER_PAGE_SIZE = 6;
@@ -49,19 +51,6 @@ public class OrdersService implements PaymentManager<ReqPreOrderDto> {
     private final OrderStatusHistoryService orderStatusHistoryService;
     private final OrderItemFulFillmentHistoryService orderItemFulFillmentHistoryService;
     private final OrderItemRefundHistoryService orderItemRefundHistoryService;
-
-    @Autowired
-    public OrdersService(OrdersRepository ordersRepository, CartRepository cartRepository, UsersRepository usersRepository, OrderStatusHistoryRepository orderStatusHistoryRepository, OrderItemRepository orderItemRepository, ProductService productService, OrderStatusHistoryService orderStatusHistoryService, OrderItemFulFillmentHistoryService orderItemFulFillmentHistoryService, OrderItemRefundHistoryService orderItemRefundHistoryService) {
-        this.ordersRepository = ordersRepository;
-        this.cartRepository = cartRepository;
-        this.usersRepository = usersRepository;
-        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.productService = productService;
-        this.orderStatusHistoryService = orderStatusHistoryService;
-        this.orderItemFulFillmentHistoryService = orderItemFulFillmentHistoryService;
-        this.orderItemRefundHistoryService = orderItemRefundHistoryService;
-    }
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)

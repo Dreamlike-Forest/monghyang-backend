@@ -16,6 +16,7 @@ import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class SellerService {
     @Getter
     private final int SELLER_PAGE_SIZE = 12;
@@ -41,15 +43,6 @@ public class SellerService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final SellerImageRepository sellerImageRepository;
     private final StorageService storageService;
-
-    @Autowired
-    public SellerService(SellerRepository sellerRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, SellerImageRepository sellerImageRepository, StorageService storageService) {
-        this.sellerRepository = sellerRepository;
-        this.usersRepository = usersRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.sellerImageRepository = sellerImageRepository;
-        this.storageService = storageService;
-    }
 
     // 판매자 정보 수정
     @Transactional

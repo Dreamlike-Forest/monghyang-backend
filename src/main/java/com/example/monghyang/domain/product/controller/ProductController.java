@@ -6,6 +6,7 @@ import com.example.monghyang.domain.product.dto.ResProductListDto;
 import com.example.monghyang.domain.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/product")
 @Tag(name = "상품 API")
+@RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
-    @Autowired
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
 
     // 상품 필터링 조회(태그, 도수, 가격)
     @GetMapping("/search/{startOffset}")

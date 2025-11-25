@@ -8,6 +8,7 @@ import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.RoleRepository;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -18,15 +19,10 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UsersRepository usersRepository;
     private final RoleRepository roleRepository;
-
-    @Autowired
-    public CustomOAuth2UserService(UsersRepository usersRepository, RoleRepository roleRepository) {
-        this.usersRepository = usersRepository;
-        this.roleRepository = roleRepository;
-    }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {

@@ -23,6 +23,7 @@ import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BreweryService {
     private final BreweryRepository breweryRepository;
     private final UsersRepository usersRepository;
@@ -51,18 +53,6 @@ public class BreweryService {
     private final BreweryTagRepository breweryTagRepository;
     private final JoyRepository joyRepository;
     private final ProductService productService;
-
-    @Autowired
-    public BreweryService(BreweryRepository breweryRepository, UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, BreweryImageRepository breweryImageRepository, StorageService storageService, BreweryTagRepository breweryTagRepository, JoyRepository joyRepository, ProductService productService) {
-        this.breweryRepository = breweryRepository;
-        this.usersRepository = usersRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.breweryImageRepository = breweryImageRepository;
-        this.storageService = storageService;
-        this.breweryTagRepository = breweryTagRepository;
-        this.joyRepository = joyRepository;
-        this.productService = productService;
-    }
 
     private void addTagListToResult(Page<ResBreweryListDto> result) {
         List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();

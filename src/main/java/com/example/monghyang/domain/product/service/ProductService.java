@@ -21,8 +21,8 @@ import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProductService {
     @Getter
     private final int PRODUCT_PAGE_SIZE = 12;
@@ -47,18 +48,6 @@ public class ProductService {
     private final BreweryRepository breweryRepository;
     private final SellerRepository sellerRepository;
     private final BreweryTagRepository breweryTagRepository;
-
-    @Autowired
-    public ProductService(ProductRepository productRepository, UsersRepository usersRepository, StorageService storageService, ProductImageRepository productImageRepository, ProductTagRepository productTagRepository, BreweryRepository breweryRepository, SellerRepository sellerRepository, BreweryTagRepository breweryTagRepository) {
-        this.productRepository = productRepository;
-        this.usersRepository = usersRepository;
-        this.storageService = storageService;
-        this.productImageRepository = productImageRepository;
-        this.productTagRepository = productTagRepository;
-        this.breweryRepository = breweryRepository;
-        this.sellerRepository = sellerRepository;
-        this.breweryTagRepository = breweryTagRepository;
-    }
 
     private void addTagListToResult(Page<ResProductListDto> result) {
         List<Long> productIdList = result.getContent().stream().map(ResProductListDto::getProduct_id).toList();

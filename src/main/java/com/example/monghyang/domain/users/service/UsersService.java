@@ -10,6 +10,7 @@ import com.example.monghyang.domain.users.dto.*;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,19 +21,12 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UsersService {
     private final UsersRepository usersRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder; // 패스워드 암호화 모듈
     private final SellerRepository sellerRepository;
     private final BreweryRepository breweryRepository;
-
-    @Autowired
-    public UsersService(UsersRepository usersRepository, BCryptPasswordEncoder bCryptPasswordEncoder, SellerRepository sellerRepository, BreweryRepository breweryRepository) {
-        this.usersRepository = usersRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.sellerRepository = sellerRepository;
-        this.breweryRepository = breweryRepository;
-    }
 
     public List<ResUsersDto> getUsersByEmail(String email) {
         List<Users> users = usersRepository.findByEmailJoinedRole(email);

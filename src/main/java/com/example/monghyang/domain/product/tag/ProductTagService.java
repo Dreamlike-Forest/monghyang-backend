@@ -8,6 +8,7 @@ import com.example.monghyang.domain.tag.dto.ReqTagDto;
 import com.example.monghyang.domain.tag.dto.ResTagListDto;
 import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.tag.repository.TagsRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,17 +19,11 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProductTagService {
     private final ProductTagRepository productTagRepository;
     private final ProductRepository productRepository;
     private final TagsRepository tagsRepository;
-
-    @Autowired
-    public ProductTagService(ProductTagRepository productTagRepository, ProductRepository productRepository, TagsRepository tagsRepository) {
-        this.productTagRepository = productTagRepository;
-        this.productRepository = productRepository;
-        this.tagsRepository = tagsRepository;
-    }
 
     // 태그 추가 및 삭제
     @Transactional

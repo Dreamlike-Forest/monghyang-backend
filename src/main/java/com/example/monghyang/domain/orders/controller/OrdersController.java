@@ -9,6 +9,7 @@ import com.example.monghyang.domain.orders.dto.ResOrderStatusHistoryDto;
 import com.example.monghyang.domain.orders.service.OrdersService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +19,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrdersController {
     private final OrdersService ordersService;
-    public OrdersController(OrdersService ordersService) {
-        this.ordersService = ordersService;
-    }
 
     @PostMapping("/prepare")
     @Operation(summary = "PG사로 전송할 'orderId' 값을 발급하기 위한 API", description = "프론트엔드에서 PG사로 결제 요청하기 전에 수행해주세요.")

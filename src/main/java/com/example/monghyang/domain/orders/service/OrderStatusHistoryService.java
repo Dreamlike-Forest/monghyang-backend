@@ -4,6 +4,7 @@ import com.example.monghyang.domain.orders.entity.OrderStatusHistory;
 import com.example.monghyang.domain.orders.entity.Orders;
 import com.example.monghyang.domain.orders.entity.PaymentStatus;
 import com.example.monghyang.domain.orders.repository.OrderStatusHistoryRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrderStatusHistoryService {
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
-    @Autowired
-    public OrderStatusHistoryService(OrderStatusHistoryRepository orderStatusHistoryRepository) {
-        this.orderStatusHistoryRepository = orderStatusHistoryRepository;
-    }
 
     @Transactional
     public void setPaymentStatusPending(Orders orders) {

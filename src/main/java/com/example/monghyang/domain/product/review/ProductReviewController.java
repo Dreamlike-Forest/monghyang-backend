@@ -8,6 +8,7 @@ import com.example.monghyang.domain.product.review.dto.UpdateProductReviewDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/product-review")
 @Tag(name = "상품 리뷰 API")
+@RequiredArgsConstructor
 public class ProductReviewController {
     private final ProductReviewService productReviewService;
-    @Autowired
-    public ProductReviewController(ProductReviewService productReviewService) {
-        this.productReviewService = productReviewService;
-    }
 
     // 리뷰 추가
     @PostMapping
