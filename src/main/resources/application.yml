@@ -49,7 +49,7 @@ spring:
     locations: classpath:db/migration
     baseline-version: 1              # 기본 버전 숫자: 1
     baseline-description: "Monghyang Initial DB Schema(by flyway)"
-    out-of-order: false # 순차 처리 비활성화
+    out-of-order: true # 순차 처리 비활성화
 # JWT 관련 설정
 jwt:
   refresh-secret: ${JWT_REFRESH_SECRET_KEY} # JWT REFRESH 토큰 생성에 사용되는 비밀키
