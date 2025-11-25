@@ -7,6 +7,7 @@ import com.example.monghyang.domain.tag.entity.TagCategory;
 import com.example.monghyang.domain.tag.entity.Tags;
 import com.example.monghyang.domain.tag.repository.TagCategoryRepository;
 import com.example.monghyang.domain.tag.repository.TagsRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,16 +19,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class TagsService {
     private final TagsRepository tagsRepository;
     private final TagCategoryRepository tagCategoryRepository;
     private final int TAG_PAGE_SIZE = 10;
-
-    @Autowired
-    public TagsService(TagsRepository tagsRepository, TagCategoryRepository tagCategoryRepository) {
-        this.tagsRepository = tagsRepository;
-        this.tagCategoryRepository = tagCategoryRepository;
-    }
 
     // 태그 생성
     public void createTag(Integer tagCategoryId, String tagName) throws DataIntegrityViolationException {
