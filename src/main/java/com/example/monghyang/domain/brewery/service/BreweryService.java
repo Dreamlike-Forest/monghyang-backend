@@ -1,6 +1,9 @@
 package com.example.monghyang.domain.brewery.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.brewery.dto.ResRegionDto;
+import com.example.monghyang.domain.brewery.entity.RegionType;
+import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
@@ -25,7 +28,6 @@ import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,6 +55,16 @@ public class BreweryService {
     private final BreweryTagRepository breweryTagRepository;
     private final JoyRepository joyRepository;
     private final ProductService productService;
+    private final RegionTypeRepository regionTypeRepository;
+
+    /**
+     * 양조장 지역 종류 전체를 반환
+     * @return
+     */
+    public List<ResRegionDto> getAllRegions() {
+        List<RegionType> regionTypeList = regionTypeRepository.findAll();
+        return regionTypeList.stream().map(ResRegionDto::new).toList();
+    }
 
     private void addTagListToResult(Page<ResBreweryListDto> result) {
         List<Long> breweryIdList = result.getContent().stream().map(ResBreweryListDto::getBrewery_id).toList();

@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.brewery.controller;
 
+import com.example.monghyang.domain.brewery.dto.ResRegionDto;
 import com.example.monghyang.domain.joy.service.JoyService;
 import com.example.monghyang.domain.brewery.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.dto.ResBreweryListDto;
@@ -51,5 +52,11 @@ public class BreweryController {
     @Operation(summary = "양조장 식별자로 양조장 검색", description = "제공 정보: 양조장에 대한 정보, 태그, 이미지 key 및 순서, 체험 정보")
     public ResponseEntity<ResponseDataDto<ResBreweryDto>> getBreweryById(@PathVariable Long breweryId) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getBreweryById(breweryId)));
+    }
+
+    @GetMapping("/regions")
+    @Operation(summary = "양조장 지역 리스트 반환")
+    public ResponseEntity<ResponseDataDto<List<ResRegionDto>>> getRegionList() {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getAllRegions()));
     }
 }
