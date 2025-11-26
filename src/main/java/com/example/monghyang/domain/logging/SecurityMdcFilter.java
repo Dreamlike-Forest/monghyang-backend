@@ -32,5 +32,6 @@ public class SecurityMdcFilter extends OncePerRequestFilter {
         }
         MDC.put("userId", userId);
         MDC.put("userRole", userRole);
+        filterChain.doFilter(request, response);
     }
 }
