@@ -1,6 +1,5 @@
 package com.example.monghyang.domain.security.filter;
 
-import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.MDC;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -29,7 +29,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
             try {
                 filterChain.doFilter(request, response);
             } catch (ApplicationException e) {
-                setApplicationErrorResponse(request, response, e.getApplicationError());
+                setApplicationErrorResponse(request, response, e);
             } catch (IllegalStateException e) {
                 return;
             }
@@ -43,11 +43,16 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 
     // 에러 처리용 dto를 통해 http 응답의 body에 http status code, error message 값을 json으로 반환합니다.
     // 이 경우 로그 처리 및 프론트엔드 개발 편의성을 위해 body에도 status code를 첨부합니다.
-    public void setApplicationErrorResponse(HttpServletRequest request, HttpServletResponse response, ApplicationError applicationError) throws IOException {
-        response.setStatus(applicationError.getStatus().value());
+    public void setApplicationErrorResponse(HttpServletRequest request, HttpServletResponse response, ApplicationException e) throws IOException {
+        MDC.put("level", e.getLogLevel().toString());
+        MDC.put("message", e.getMessage());
+        if(e.getLogStackTrace() == true) {
+            log.debug("stackTrace", e);
+        }
+        response.setStatus(e.getHttpStatus().value());
         response.setContentType("application/json;charset=utf-8");
         // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
-        objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.requestStatusMessageOf(request, applicationError.getStatus(), applicationError.getMessage()));
+        objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.requestStatusMessageOf(request, e.getHttpStatus(), e.getMessage()));
     }
 
 }
