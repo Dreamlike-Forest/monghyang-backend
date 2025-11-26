@@ -10,8 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,7 +19,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE) // 이 필터가 가장 높은 우선순위로 동작하도록 설정
+@Order(2)
 @RequiredArgsConstructor
 public class ExceptionHandlerFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
