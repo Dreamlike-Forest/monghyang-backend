@@ -1,0 +1,63 @@
+<configuration>
+
+    <!-- 콘솔은 읽기 쉽게 패턴 로그 사용 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <loggerName/>
+                <threadName/>
+
+                <!-- MDC 값 포함 -->
+                <mdc/>
+
+                <!-- stackTrace 값 json 변환 -->
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- 운영용 JSON 파일 로그 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/app.json</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/app-%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp timeZone="Asia/Seoul"/>
+                <loggerName/>
+                <threadName/>
+
+                <!-- MDC: traceId, userId, roles 등 자동으로 포함 -->
+                <mdc/>
+
+                <!-- HTTP 서블릿 정보(있으면 포함) -->
+                <arguments/> <!-- 로그 메시지에 전달된 {} 인자값 정보 -->
+                <stackTrace/> <!-- 로그 메시지의 {} 인자로 예외 객체 자체를 넘기면 스택 트레이스 값 json으로 변환 -->
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- 로거 레벨 정리 (중복 로그 감소) -->
+    <logger name="com.example" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.hibernate" level="INFO"/>
+
+    <!-- 4) root logger (기타 라이브러리) -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <root level="ERROR">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

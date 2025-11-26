@@ -32,18 +32,10 @@ public class LoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             long duration = System.currentTimeMillis() - startTime;
-            // 아래 두 개의 값은 인증 정보가 없을 시 null / Anonymous 로 설정된다.
-            String userId = MDC.get("userId");
-            String userRole = MDC.get("userRole");
+            MDC.put("durationMs", String.valueOf(duration));
+            MDC.put("status", String.valueOf(response.getStatus()));
+            log.info("RES_RESULT");
 
-            log.info("REQ_END traceId={} method={} path={} status={} durationMs={} userId={} roles={}",
-                    traceId,
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    response.getStatus(),
-                    duration,
-                    userId,
-                    userRole);
             MDC.clear();
         }
     }
