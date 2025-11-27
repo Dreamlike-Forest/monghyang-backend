@@ -2,9 +2,11 @@ package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.util.SecurityFilterExceptionResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
@@ -12,9 +14,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class SessionLoginFailureHandler implements AuthenticationFailureHandler {
+    private final SecurityFilterExceptionResponseWriter writer;
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        throw new ApplicationException(ApplicationError.USER_UNAUTHORIZED);
+//        throw new ApplicationException(ApplicationError.USER_UNAUTHORIZED);
+        writer.setApplicationErrorResponse(request, response, new ApplicationException(ApplicationError.USER_UNAUTHORIZED));
     }
 }

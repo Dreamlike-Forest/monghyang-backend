@@ -1,21 +1,9 @@
 <configuration>
+    <!-- 콘솔: Spring Boot 기본 설정(Property들: CONSOLE_LOG_PATTERN 등) -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <!-- 콘솔은 읽기 쉽게 패턴 로그 사용 -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <timestamp/>
-                <loggerName/>
-                <threadName/>
-
-                <!-- MDC 값 포함 -->
-                <mdc/>
-
-                <!-- stackTrace 값 json 변환 -->
-                <stackTrace/>
-            </providers>
-        </encoder>
-    </appender>
+    <!-- Spring Boot 기본 콘솔 Appender 사용 -->
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
     <!-- 운영용 JSON 파일 로그 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -48,7 +36,7 @@
     </logger>
 
     <logger name="org.springframework" level="INFO"/>
-    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.security" level="DEBUG"/>
     <logger name="org.hibernate" level="INFO"/>
 
     <!-- 4) root logger (기타 라이브러리) -->
@@ -56,7 +44,7 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <root level="ERROR">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
 

@@ -1,7 +1,6 @@
 package com.example.monghyang.domain.security.config;
 
 import com.example.monghyang.domain.logging.SecurityMdcFilter;
-import com.example.monghyang.domain.security.filter.ExceptionHandlerFilter;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;

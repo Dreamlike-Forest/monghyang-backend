@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 @Component
 @Slf4j
-@Order(1)
+@Order(Ordered.HIGHEST_PRECEDENCE) // 가장 앞단에 배치
 @RequiredArgsConstructor
 public class LoggingFilter extends OncePerRequestFilter {
     @Override
