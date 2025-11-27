@@ -21,17 +21,22 @@ import java.util.stream.Collectors;
 public class SecurityMdcFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String userId = null;
-        String userRole = null;
-        if(auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            // 인증정보 있으면 userId, userRole을 MDC에 추가
-            userId = auth.getPrincipal().toString();
-            userRole = auth.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String userId = "Anonymous";
+            String userRole = "Anonymous";
+            if(auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+                // 인증정보 있으면 userId, userRole을 MDC에 추가
+                userId = auth.getPrincipal().toString();
+                userRole = auth.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
+            }
+            MDC.put("userId", userId);
+            MDC.put("userRole", userRole);
         }
-        MDC.put("userId", userId);
-        MDC.put("userRole", userRole);
-        filterChain.doFilter(request, response);
+
+
     }
 }
