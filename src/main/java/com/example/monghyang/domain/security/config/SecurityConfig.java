@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.security.config;
 
-import com.example.monghyang.domain.security.filter.ExceptionHandlerFilter;
+import com.example.monghyang.domain.logging.SecurityMdcFilter;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationFailureHandler;
 import com.example.monghyang.domain.oauth2.handler.CustomOAuth2AuthenticationSuccessHandler;
 import com.example.monghyang.domain.oauth2.service.CustomOAuth2UserService;
@@ -19,6 +19,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -69,7 +70,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, ExceptionHandlerFilter exceptionHandlerFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler, CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler, CustomOAuth2AuthenticationFailureHandler customOAuth2AuthenticationFailureHandler, SessionLoginSuccessHandler sessionLoginSuccessHandler, SessionLoginFailureHandler sessionLoginFailureHandler, CustomLogoutHandler customLogoutHandler, SessionLogoutSeccessHandler sessionLogoutSeccessHandler, SecurityMdcFilter securityMdcFilter) throws Exception {
         // application api 요청에 대한 Security Filter Chain
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -134,6 +135,7 @@ public class SecurityConfig {
                         .logoutSuccessHandler(sessionLogoutSeccessHandler)
                         .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterAfter(securityMdcFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         return http.build();
     }

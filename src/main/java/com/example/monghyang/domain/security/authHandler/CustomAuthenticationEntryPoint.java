@@ -2,9 +2,11 @@ package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.util.SecurityFilterExceptionResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -12,9 +14,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    private final SecurityFilterExceptionResponseWriter writer;
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        throw new ApplicationException(ApplicationError.SESSION_NOT_FOUND);
+//        throw new ApplicationException(ApplicationError.SESSION_NOT_FOUND);
+        writer.setApplicationErrorResponse(request, response, new ApplicationException(ApplicationError.SESSION_NOT_FOUND));
     }
 }
