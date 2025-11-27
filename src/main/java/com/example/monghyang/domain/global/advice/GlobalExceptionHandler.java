@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         MDC.put("level", e.getLogLevel().toString());
         MDC.put("message", e.getMessage());
         if(e.getLogStackTrace() == true) {
-            log.debug("stackTrace", e);
+            log.warn("stackTrace", e);
         }
         return ResponseEntity.status(e.getHttpStatus()).body(ApplicationErrorDto.requestStatusMessageOf(request, e.getHttpStatus(), e.getMessage()));
     }

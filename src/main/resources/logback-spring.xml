@@ -31,8 +31,9 @@
     </appender>
 
     <!-- 로거 레벨 정리 (중복 로그 감소) -->
-    <logger name="com.example" level="DEBUG" additivity="false">
+    <logger name="com.example.monghyang" level="INFO" additivity="false">
         <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <logger name="org.springframework" level="INFO"/>
@@ -40,9 +41,9 @@
     <logger name="org.hibernate" level="INFO"/>
 
     <!-- 4) root logger (기타 라이브러리) -->
-    <root level="INFO">
-        <appender-ref ref="FILE"/>
-    </root>
+<!--    <root level="INFO">-->
+<!--        <appender-ref ref="FILE"/>-->
+<!--    </root>-->
 
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>

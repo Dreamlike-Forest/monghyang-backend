@@ -28,7 +28,7 @@ public class SecurityFilterExceptionResponseWriter {
         MDC.put("level", e.getLogLevel().toString());
         MDC.put("message", e.getMessage());
         if(e.getLogStackTrace() == true) {
-            log.debug("stackTrace", e);
+            log.warn("stackTrace", e);
         }
         response.setStatus(e.getHttpStatus().value());
         response.setContentType("application/json;charset=utf-8");
