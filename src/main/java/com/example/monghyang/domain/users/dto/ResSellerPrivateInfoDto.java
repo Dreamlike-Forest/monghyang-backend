@@ -1,9 +1,12 @@
 package com.example.monghyang.domain.users.dto;
 
+import com.example.monghyang.domain.seller.dto.ResSellerImageDto;
 import com.example.monghyang.domain.seller.entity.Seller;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ResSellerPrivateInfoDto {
@@ -19,6 +22,8 @@ public class ResSellerPrivateInfoDto {
     private final String seller_introduction;
     private final Boolean seller_is_agreed_seller;
     private final Boolean seller_is_deleted;
+    private final List<ResSellerImageDto> seller_images = new ArrayList<>();
+
     public ResSellerPrivateInfoDto(Seller seller) {
         this.seller_id = seller.getId();
         this.seller_name = seller.getSellerName();

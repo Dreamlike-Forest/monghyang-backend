@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface SellerImageRepository extends JpaRepository<SellerImage, Long> {
     List<SellerImage> findBySeller(Seller seller);
 
-    @Query("select new com.example.monghyang.domain.seller.dto.ResSellerImageDto(s.imageKey, s.seq) from SellerImage s where s.seller.id = :sellerId")
+    @Query("select new com.example.monghyang.domain.seller.dto.ResSellerImageDto(s.id, s.imageKey, s.seq) from SellerImage s where s.seller.id = :sellerId")
     List<ResSellerImageDto> findImageKeyBySeller(@Param("sellerId") Long sellerId);
 
     @Query("select s from SellerImage s where s.id = :id and s.seller.id = :sellerId")

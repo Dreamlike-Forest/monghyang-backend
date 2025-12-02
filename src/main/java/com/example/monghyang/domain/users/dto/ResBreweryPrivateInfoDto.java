@@ -1,10 +1,13 @@
 package com.example.monghyang.domain.users.dto;
 
+import com.example.monghyang.domain.brewery.dto.ResBreweryImageDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ResBreweryPrivateInfoDto {
@@ -27,6 +30,7 @@ public class ResBreweryPrivateInfoDto {
     private final Boolean brewery_is_visiting_brewery;
     private final Boolean brewery_is_agreed_brewery;
     private final Boolean brewery_is_deleted;
+    private final List<ResBreweryImageDto> brewery_images = new ArrayList<>();
 
     /**
      * 생성자
