@@ -232,62 +232,6 @@ public class ProductService {
     @Transactional
     public void updateProduct(Long userId, UpdateProductDto updateProductDto) {
         Product product = verifyIsOwn(userId, updateProductDto.getId());
-
-        if(!updateProductDto.getAdd_images().isEmpty() || !updateProductDto.getRemove_images().isEmpty() || !updateProductDto.getModify_images().isEmpty()) {
-            List<ProductImage> imageList = productImageRepository.findByProduct(product);
-
-            Set<Long> imageListIds = imageList.stream().map(ProductImage::getId).collect(Collectors.toSet());
-
-            // 수정 이후의 이미지 총 개수 계산 및 검증
-            if(imageList.size() - updateProductDto.getRemove_images().size() + updateProductDto.getAdd_images().size() > 5) {
-                throw new ApplicationException(ApplicationError.IMAGE_COUNT_INVALID);
-            }
-
-            // 이미지 삭제
-            for(Long removeImageId : updateProductDto.getRemove_images()) {
-                if(!imageListIds.contains(removeImageId)) {
-                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
-                }
-                ProductImage productImage = productImageRepository.findById(updateProductDto.getId()).orElseThrow(() ->
-                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
-                storageService.remove(productImage.getImageKey()); // 스토리지에서 이미지 삭제
-                productImageRepository.delete(productImage);
-                imageListIds.remove(removeImageId); // set에 반영
-            }
-
-            productImageRepository.flush(); // 삭제 정보 선반영: 이후의 수정 로직에서 uk 제약조건 위배를 피하기 위함
-
-            // 이미지 순서 정보 수정
-            for(ModifySeqImageDto cur : updateProductDto.getModify_images()) {
-                if(!imageListIds.contains(cur.getImage_id())) {
-                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
-                }
-                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-                ProductImage productImage = productImageRepository.findById(cur.getImage_id()).orElseThrow(() ->
-                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
-                productImage.updateSeq(cur.getSeq());
-                try {
-                    productImageRepository.save(productImage);
-                } catch (DataIntegrityViolationException e) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-            }
-
-            // 이미지 업로드
-            for(AddImageDto cur : updateProductDto.getAdd_images()) {
-                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-                String imageKey = storageService.upload(cur.getImage(), ImageType.PRODUCT_IMAGE);
-                try {
-                    productImageRepository.save(ProductImage.productImageKeySeqVolumeOf(product, imageKey, cur.getSeq(), cur.getImage().getSize()));
-                } catch (DataIntegrityViolationException e) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-            }
-        }
         // Product 테이블 컬럼에 대한 수정사항 반영
         if(updateProductDto.getName() != null) {
             product.updateName(updateProductDto.getName());
@@ -312,6 +256,62 @@ public class ProductService {
         }
         if(updateProductDto.getDiscount_rate() != null) {
             product.updateDiscountRate(updateProductDto.getDiscount_rate());
+        }
+        if(!updateProductDto.getAdd_images().isEmpty() || !updateProductDto.getRemove_images().isEmpty() || !updateProductDto.getModify_images().isEmpty()) {
+            List<ProductImage> imageList = productImageRepository.findByProduct(product);
+
+            Set<Long> imageListIds = imageList.stream().map(ProductImage::getId).collect(Collectors.toSet());
+
+            // 수정 이후의 이미지 총 개수 계산 및 검증
+            if(imageList.size() - updateProductDto.getRemove_images().size() + updateProductDto.getAdd_images().size() > 5) {
+                throw new ApplicationException(ApplicationError.IMAGE_COUNT_INVALID);
+            }
+
+            // 이미지 삭제
+            for(Long removeImageId : updateProductDto.getRemove_images()) {
+                if(!imageListIds.contains(removeImageId)) {
+                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
+                }
+                ProductImage productImage = productImageRepository.findById(updateProductDto.getId()).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
+                storageService.remove(productImage.getImageKey()); // 스토리지에서 이미지 삭제
+                productImageRepository.delete(productImage);
+                imageListIds.remove(removeImageId); // set에 반영
+            }
+
+            try {
+                // 이미지 순서 정보 수정
+                for(ModifySeqImageDto cur : updateProductDto.getModify_images()) {
+                    if(!imageListIds.contains(cur.getImage_id())) {
+                        throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
+                    }
+                    if(cur.getSeq() > 5 || cur.getSeq() < 1) {
+                        throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                    }
+                    ProductImage productImage = productImageRepository.findById(cur.getImage_id()).orElseThrow(() ->
+                            new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
+                    productImage.updateSeq(cur.getSeq() * -1);
+                    // Dirty Checking을 사용하지 않고 save()를 호출하는 이유
+                    // 이후의 bulk update, insert를 위해 즉시 DB에 쿼리문을 전송하기 ㅑ위함
+                    productImageRepository.save(productImage);
+                }
+                productImageRepository.updateImageSeqToPositive(product.getId());
+            } catch (DataIntegrityViolationException e) {
+                throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+            }
+
+            // 이미지 업로드
+            for(AddImageDto cur : updateProductDto.getAdd_images()) {
+                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+                String imageKey = storageService.upload(cur.getImage(), ImageType.PRODUCT_IMAGE);
+                try {
+                    productImageRepository.save(ProductImage.productImageKeySeqVolumeOf(product, imageKey, cur.getSeq(), cur.getImage().getSize()));
+                } catch (DataIntegrityViolationException e) {
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+            }
         }
     }
 

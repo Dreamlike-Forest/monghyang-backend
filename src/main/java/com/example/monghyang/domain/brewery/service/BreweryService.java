@@ -184,8 +184,6 @@ public class BreweryService {
                 throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
             }
 
-            breweryImageRepository.flush(); // 삭제 정보 선반영: 이미지 생성 시 uk 제약조건 위배를 피하기 위함
-
             // 이미지 업로드
             for(AddImageDto cur : reqBreweryDto.getAdd_images()) {
                 if(cur.getSeq() > 5 || cur.getSeq() < 1) {
