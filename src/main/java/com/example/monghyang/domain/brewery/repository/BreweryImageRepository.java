@@ -15,7 +15,7 @@ public interface BreweryImageRepository extends JpaRepository<BreweryImage, Long
 
     List<BreweryImage> findByBrewery(Brewery brewery); // 특정 양조장이 업로드한 이미지 정보 조회
 
-    @Query("select new com.example.monghyang.domain.brewery.dto.ResBreweryImageDto(b.imageKey, b.seq) from BreweryImage b where b.brewery.id = :breweryId")
+    @Query("select new com.example.monghyang.domain.brewery.dto.ResBreweryImageDto(b.id, b.imageKey, b.seq) from BreweryImage b where b.brewery.id = :breweryId")
     List<ResBreweryImageDto> findImageKeyByBrewery(@Param("breweryId") Long breweryId);
 
     @Modifying

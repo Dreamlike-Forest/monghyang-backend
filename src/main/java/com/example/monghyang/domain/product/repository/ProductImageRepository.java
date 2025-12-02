@@ -14,7 +14,7 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
     List<ProductImage> findByProduct(Product product);
 
 
-    @Query("select new com.example.monghyang.domain.product.dto.ResProductImageDto(pi.imageKey, pi.seq) from ProductImage pi where pi.product.id = :productId")
+    @Query("select new com.example.monghyang.domain.product.dto.ResProductImageDto(pi.id, pi.imageKey, pi.seq) from ProductImage pi where pi.product.id = :productId")
     List<ResProductImageDto> findSimpleByProductId(@Param("productId") Long productId);
 
     @Modifying
