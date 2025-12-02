@@ -4,6 +4,7 @@ import com.example.monghyang.domain.brewery.dto.ResBreweryImageDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryImage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,7 +18,8 @@ public interface BreweryImageRepository extends JpaRepository<BreweryImage, Long
     @Query("select new com.example.monghyang.domain.brewery.dto.ResBreweryImageDto(b.imageKey, b.seq) from BreweryImage b where b.brewery.id = :breweryId")
     List<ResBreweryImageDto> findImageKeyByBrewery(@Param("breweryId") Long breweryId);
 
-    @Query("select b from BreweryImage b where b.id = :id and b.brewery.id = :breweryId")
-    Optional<BreweryImage> findByIdAndBreweryId(@Param("id") Long id, @Param("breweryId") Long breweryId);
+    @Modifying
+    @Query("update BreweryImage bi set bi.seq = bi.seq * -1 where bi.brewery.id = :breweryId and bi.seq < 0")
+    void updateImageSeqToPositive(@Param("breweryId") Long breweryId);
 
 }
