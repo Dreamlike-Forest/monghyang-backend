@@ -17,7 +17,8 @@ spring:
       max-request-size: 50MB
   jpa:
     properties:
-      hibernate.jdbc.time_zone: Asia/Seoul
+      hibernate:
+        jdbc.time_zone: Asia/Seoul
   security:
     oauth2:
       client:
