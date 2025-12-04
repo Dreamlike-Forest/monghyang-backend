@@ -30,7 +30,6 @@ public class CustomSecurityContextRepository implements SecurityContextRepositor
 
     private static final String SESSION_HEADER_NAME = "X-Session-Id";
     private static final String SESSION_USER_INFO_NAME = "sessionUserInfo";
-    private final RedisService redisService;
 
 
     // IDE의 컴파일 에러를 해결하기 위한 임시방편 코드입니다.
@@ -48,6 +47,7 @@ public class CustomSecurityContextRepository implements SecurityContextRepositor
             HttpSession session = request.getSession(false); // 세션 저장소에서 SID로 세션 조회
             if(session == null) {
                 // 조회 결과 없다면 '익명' 사용자
+                System.out.println("세션 정보가 존재하지 않습니다.");
                 return context;
             }
 

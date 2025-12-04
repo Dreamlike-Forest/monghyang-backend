@@ -41,7 +41,7 @@ public class CustomLogoutHandler implements LogoutHandler {
             userId = jwtClaimsDto.getUserId();
 
             if(userId != null) {
-                redisService.deleteRefreshTokenTid(userId, tid); // 리프레시 토큰 삭제
+                redisService.deleteRefreshTokenAndSession(userId, tid); // 리프레시 토큰 삭제
             }
         } catch (ApplicationException e) {
             log.error("토큰 관련 예외 발생. user id: {}, device type: {}\nerror message: {}", userId, e.getMessage());

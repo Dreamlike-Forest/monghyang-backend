@@ -94,6 +94,9 @@ public class AuthService {
         String tid = jwtClaimsDto.getTid();
         String role = jwtClaimsDto.getRole();
 
+        // 갱신 전의 refresh token, session 제거
+        redisService.deleteRefreshTokenAndSession(userId, tid);
+
         // 세션 및 토큰 갱신
         sessionUtil.createNewAuthInfo(request, response, userId, role);
     }

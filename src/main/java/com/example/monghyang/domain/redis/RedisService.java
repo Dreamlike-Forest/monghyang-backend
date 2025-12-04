@@ -21,16 +21,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RedisService {
     private final Long refreshTokenExpiration; // Redis 요소 수명
-    private final Long sessionExpiration;
     private final RedisTemplate<String, String> stringRedisTemplate; // access token tid 저장용 redis 템플릿
     private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     @Autowired
     public RedisService(RedisTemplate<String, String> stringRedisTemplate, @Value("${jwt.refresh-expiration}") Duration refreshTokenExpiration,
-                        @Value("${spring.session.timeout}") Duration sessionExpiration,
                         FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.refreshTokenExpiration = refreshTokenExpiration.toMillis();
-        this.sessionExpiration = sessionExpiration.toMillis();
         this.sessionRepository = sessionRepository;
     }
 
@@ -45,7 +42,13 @@ public class RedisService {
     }
 
     // 리프레시 토큰 및 세션 제거
-    public void deleteRefreshTokenTid(Long userId, String tid) {
+
+    /**
+     * Refresh Token을 이용하여 Refresh Token, Session 제거
+     * @param userId 회원 식별자
+     * @param tid 토큰의 식별자
+     */
+    public void deleteRefreshTokenAndSession(Long userId, String tid) {
         String key = createRefreshTokenKey(userId, tid);
         String storedSid = stringRedisTemplate.opsForValue().get(key);
         if(storedSid != null){
@@ -54,6 +57,10 @@ public class RedisService {
         stringRedisTemplate.delete(key);
     }
 
+    /**
+     * 세션 정보 제거
+     * @param sessionId 세션 식별자(SID)
+     */
     public void deleteSession(String sessionId) {
         if(sessionId == null || sessionId.isBlank()) {
             return;
@@ -61,7 +68,7 @@ public class RedisService {
         try {
             sessionRepository.deleteById(sessionId);
         } catch (Exception e) {
-            log.warn("세션 삭제 중 예외 발생. sessinoId={}", sessionId, e);
+            log.warn("세션 삭제 중 예외 발생. sessionId={}", sessionId, e);
         }
     }
 
@@ -71,13 +78,36 @@ public class RedisService {
      */
     public void deleteAllInfoByUserId(Long userId) {
         String refreshKeyPattern = "refresh:"+userId+":*";
-        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshKeyPattern).count(5).build())) {
+        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshKeyPattern).count(10).build())) {
             while (cursor.hasNext()) {
                 String curRefreshKey = cursor.next();
                 String curSessionId = stringRedisTemplate.opsForValue().get(curRefreshKey);
                 stringRedisTemplate.delete(curRefreshKey);
                 deleteSession(curSessionId);
             }
+        } catch (Exception e) {
+            log.warn("특정 유저의 모든 인증 정보 및 Refresh Token 삭제 중 오류 발생. userId={}", userId, e);
+        }
+    }
+
+    /**
+     * 회원 식별자와 SID 조합에 해당되는 Refresh Token 제거
+     * @param userId 회원 식별자
+     * @param sessionId 세션 식별자
+     */
+    public void deleteRefreshTokenByUserIdAndSid(Long userId, String sessionId) {
+        String refreshKeyPattern = "refresh:"+userId+":*";
+        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshKeyPattern).count(10).build())) {
+            while (cursor.hasNext()) {
+                String curRefreshKey = cursor.next();
+                String curSessionId = stringRedisTemplate.opsForValue().get(curRefreshKey);
+                if(curSessionId.equals(sessionId)) {
+                    stringRedisTemplate.delete(curRefreshKey);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.error("인증 정보 수 조정을 위한 Refresh token 삭제 중 오류 발생. userId={}", userId, e);
         }
     }
 

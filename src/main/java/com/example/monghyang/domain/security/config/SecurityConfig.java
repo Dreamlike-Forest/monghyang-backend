@@ -148,8 +148,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionConcurrency(concurrency -> concurrency
-                                .maximumSessions(5)
-                                .maxSessionsPreventsLogin(false)
                                 .sessionRegistry(sessionRegistry())
                         )
                 );
