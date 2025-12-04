@@ -52,6 +52,9 @@ public class ResCommunityDto {
     @JsonProperty("comments")
     private Integer comments;
 
+    @JsonProperty("is_liked")
+    private Boolean isLiked;
+
     public static ResCommunityDto from(Community community) {
         return ResCommunityDto.builder()
                 .communityId(community.getId())
@@ -68,6 +71,27 @@ public class ResCommunityDto {
                 .viewCount(community.getViewCount())
                 .likes(community.getLikes())
                 .comments(community.getComments())
+                .isLiked(null)
+                .build();
+    }
+
+    public static ResCommunityDto from(Community community, Boolean isLiked) {
+        return ResCommunityDto.builder()
+                .communityId(community.getId())
+                .userId(community.getUser().getId())
+                .title(community.getTitle())
+                .category(community.getCategory())
+                .subCategory(community.getSubCategory())
+                .productName(community.getProductName())
+                .breweryName(community.getBreweryName())
+                .star(community.getStar())
+                .detail(community.getDetail())
+                .tags(community.getTags())
+                .createdAt(community.getCreatedAt())
+                .viewCount(community.getViewCount())
+                .likes(community.getLikes())
+                .comments(community.getComments())
+                .isLiked(isLiked)
                 .build();
     }
 }

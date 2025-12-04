@@ -10,6 +10,9 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -80,8 +83,17 @@ public class CommunityController {
     @GetMapping("/{communityId}")
     @Operation(summary = "커뮤니티 게시글 상세 조회", description = "특정 커뮤니티 게시글의 상세 정보를 조회합니다.")
     public ResponseDataDto<ResCommunityDto> getCommunityById(@PathVariable Long communityId) {
-        ResCommunityDto result = communityService.getCommunityById(communityId);
+        Long userId = getCurrentUserId();
+        ResCommunityDto result = communityService.getCommunityById(communityId, userId);
         return ResponseDataDto.contentFrom(result);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return (Long) auth.getPrincipal();
     }
 
     @PostMapping("/{communityId}") // put을 post로 변환

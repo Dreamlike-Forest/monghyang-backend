@@ -104,12 +104,19 @@ public class CommunityService {
     }
 
     @Transactional
-    public ResCommunityDto getCommunityById(Long communityId) {
+    public ResCommunityDto getCommunityById(Long communityId, Long userId) {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
         community.increaseViewCount();
-        return ResCommunityDto.from(community);
+
+        // 로그인한 사용자의 좋아요 여부 확인
+        Boolean isLiked = null;
+        if (userId != null) {
+            isLiked = communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId);
+        }
+
+        return ResCommunityDto.from(community, isLiked);
     }
 
     @Transactional
