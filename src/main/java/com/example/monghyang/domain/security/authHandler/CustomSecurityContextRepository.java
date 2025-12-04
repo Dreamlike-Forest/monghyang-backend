@@ -54,10 +54,9 @@ public class CustomSecurityContextRepository implements SecurityContextRepositor
             Object sessionUserInfo = session.getAttribute(SESSION_USER_INFO_NAME);
             if(sessionUserInfo instanceof SessionUserInfo(Long userId, String role)) {
                 // 세션에 저장된 SessionUserInfo 객체 파싱
-                String deviceType = DeviceTypeUtil.getDeviceType(request).name();
                 List<GrantedAuthority> authentication = Collections.singletonList(new SimpleGrantedAuthority(role));
 
-                redisService.expireLoginInfo(userId, deviceType); // redis의 로그인 정보 ttl 또한 갱신
+                redisService.extendLoginInfoTtl(userId); // redis의 로그인 정보 ttl 또한 갱신
 
                 // 인증 정보 생성 및 세팅
                 Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, authentication);

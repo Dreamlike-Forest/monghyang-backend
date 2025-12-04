@@ -642,13 +642,12 @@ public class AuthServiceTest {
         String token = "refreshToken";
         given(request.getHeader("X-Refresh-Token"))
                 .willReturn(token);
-        JwtClaimsDto jwtDto = JwtClaimsDto.tidUserIdDeviceTypeRoleOf("t1234", 1L, "desktop", "ROLE_UESR");
+        JwtClaimsDto jwtDto = JwtClaimsDto.tidUserIdDeviceTypeRoleOf("t1234", 1L, "ROLE_UESR");
         Long userId = jwtDto.getUserId();
-        String deviceType = jwtDto.getDeviceType();
         String tid = jwtDto.getTid();
         String role = jwtDto.getRole();
         given(jwtUtil.parseRefreshToken(token)).willReturn(jwtDto);
-        given(redisService.verifyRefreshTokenTid(userId, deviceType, tid))
+        given(redisService.verifyRefreshTokenTid(userId, tid))
                 .willReturn(true);
         authService.updateRefreshToken(request, response);
     }
@@ -671,13 +670,12 @@ public class AuthServiceTest {
         String token = "refreshToken";
         given(request.getHeader("X-Refresh-Token"))
                 .willReturn(token);
-        JwtClaimsDto jwtDto = JwtClaimsDto.tidUserIdDeviceTypeRoleOf("t1234", 1L, "desktop", "ROLE_UESR");
+        JwtClaimsDto jwtDto = JwtClaimsDto.tidUserIdDeviceTypeRoleOf("t1234", 1L, "ROLE_UESR");
         Long userId = jwtDto.getUserId();
-        String deviceType = jwtDto.getDeviceType();
         String tid = jwtDto.getTid();
         String role = jwtDto.getRole();
         given(jwtUtil.parseRefreshToken(token)).willReturn(jwtDto);
-        given(redisService.verifyRefreshTokenTid(userId, deviceType, tid))
+        given(redisService.verifyRefreshTokenTid(userId, tid))
                 .willReturn(false);
         ApplicationException ex = assertThrows(ApplicationException.class, () -> authService.updateRefreshToken(request, response));
         assertEquals(ex.getApplicationError(), ApplicationError.CONCURRENT_CONNECTION);
