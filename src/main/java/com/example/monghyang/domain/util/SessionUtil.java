@@ -33,7 +33,7 @@ public class SessionUtil {
 
         // 동일 유저의 세션 정보 개수가 5개를 초과하면 가장 오래전에 생성된 세션 정보를 제거한다. (구현 예정)
 
-        String refreshToken = jwtUtil.createRefreshToken(userId, role); // redis에 refresh token 정보 저장
+        String refreshToken = jwtUtil.createRefreshToken(userId, role, session.getId()); // redis에 refresh token 정보 저장
         response.setHeader("X-Refresh-Token", refreshToken); // 응답 헤더에 refresh token 첨부
     }
 }

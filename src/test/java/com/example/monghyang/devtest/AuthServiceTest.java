@@ -647,8 +647,6 @@ public class AuthServiceTest {
         String tid = jwtDto.getTid();
         String role = jwtDto.getRole();
         given(jwtUtil.parseRefreshToken(token)).willReturn(jwtDto);
-        given(redisService.verifyRefreshTokenTid(userId, tid))
-                .willReturn(true);
         authService.updateRefreshToken(request, response);
     }
 
@@ -675,8 +673,6 @@ public class AuthServiceTest {
         String tid = jwtDto.getTid();
         String role = jwtDto.getRole();
         given(jwtUtil.parseRefreshToken(token)).willReturn(jwtDto);
-        given(redisService.verifyRefreshTokenTid(userId, tid))
-                .willReturn(false);
         ApplicationException ex = assertThrows(ApplicationException.class, () -> authService.updateRefreshToken(request, response));
         assertEquals(ex.getApplicationError(), ApplicationError.CONCURRENT_CONNECTION);
     }

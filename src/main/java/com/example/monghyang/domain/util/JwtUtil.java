@@ -61,9 +61,9 @@ public class JwtUtil {
     }
 
     // session refresh token 발급
-    public String createRefreshToken(Long userId, String role) {
+    public String createRefreshToken(Long userId, String role, String sessionId) {
         String refreshTokenId = UUID.randomUUID().toString();
-        redisService.setRefreshTokenTid(userId, refreshTokenId); // redis에 refresh token tid 저장
+        redisService.setRefreshTokenTid(userId, refreshTokenId, sessionId); // redis에 refresh token tid와 sid 저장
         return Jwts.builder()
                 .claim("userId", userId)
                 .claim("role", role)

@@ -34,58 +34,51 @@ public class RedisService {
         this.sessionRepository = sessionRepository;
     }
 
-    private String createRefreshTokenKey(Long userId) {
-        return "refresh:"+userId;
+    private String createRefreshTokenKey(Long userId, String tid) {
+        return "refresh:"+userId+":"+tid;
     }
 
     // 세션 리프레시 토큰 정보 저장
-    public void setRefreshTokenTid(Long userId, String tid) {
-        String key = createRefreshTokenKey(userId);
-        stringRedisTemplate.opsForValue().set(key, tid, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+    public void setRefreshTokenTid(Long userId, String tid, String sessionId) {
+        String key = createRefreshTokenKey(userId, tid);
+        stringRedisTemplate.opsForValue().set(key, sessionId, refreshTokenExpiration, TimeUnit.MILLISECONDS);
     }
 
-    // 유저의 refresh token tid 일치 여부 비교
-    public boolean verifyRefreshTokenTid(Long userId, String tid) {
-        String key = createRefreshTokenKey(userId);
-        String storedTid = stringRedisTemplate.opsForValue().get(key);
-        if(storedTid == null){
-            // 조회되는 것이 아무것도 없다면 토큰이 만료된 것 -> 재로그인 필요
-            throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
+    // 리프레시 토큰 및 세션 제거
+    public void deleteRefreshTokenTid(Long userId, String tid) {
+        String key = createRefreshTokenKey(userId, tid);
+        String storedSid = stringRedisTemplate.opsForValue().get(key);
+        if(storedSid != null){
+            deleteSession(storedSid);
         }
-        return storedTid.equals(tid);
-    }
-
-    // 리프레시 토큰 제거
-    public void deleteRefreshTokenTid(Long userId) {
-        String key = createRefreshTokenKey(userId);
         stringRedisTemplate.delete(key);
     }
 
-    public void deleteAllInfo(Long userId) {
-        int maxInfoNum = DeviceTypeUtil.DeviceType.values().length; // 한 유저가 가질 수 있는 최대 로그인 상태의 개수
+    public void deleteSession(String sessionId) {
+        if(sessionId == null || sessionId.isBlank()) {
+            return;
+        }
+        try {
+            sessionRepository.deleteById(sessionId);
+        } catch (Exception e) {
+            log.warn("세션 삭제 중 예외 발생. sessinoId={}", sessionId, e);
+        }
+    }
 
-        // 해당 유저의 모든 세션 제거
-        String loginInfoKeyPattern = "auth:"+userId;
-        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(loginInfoKeyPattern).count(maxInfoNum).build())) {
+    /**
+     * redis에서 특정 유저의 모든 세션 및 refresh token 정보 제거
+     * @param userId 회원 식별자
+     */
+    public void deleteAllInfoByUserId(Long userId) {
+        String refreshKeyPattern = "refresh:"+userId+":*";
+        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshKeyPattern).count(5).build())) {
             while (cursor.hasNext()) {
-                String curLoginInfoKey = cursor.next();
-                String curSessionId = "spring:session:sessions:" + stringRedisTemplate.opsForValue().get(curLoginInfoKey);
-                stringRedisTemplate.delete(curSessionId);
-                stringRedisTemplate.delete(curLoginInfoKey);
+                String curRefreshKey = cursor.next();
+                String curSessionId = stringRedisTemplate.opsForValue().get(curRefreshKey);
+                stringRedisTemplate.delete(curRefreshKey);
+                deleteSession(curSessionId);
             }
         }
-
-        // 해당 유저의 모든 RT 제거
-        String refreshTokenKeyPattern = "refresh:"+userId+":*";
-        try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(refreshTokenKeyPattern).count(maxInfoNum).build())) {
-            while (cursor.hasNext()) {
-                String curRefreshTokenKey = cursor.next();
-                if(curRefreshTokenKey != null){
-                    stringRedisTemplate.delete(curRefreshTokenKey);
-                }
-            }
-        }
-
     }
 
 }
