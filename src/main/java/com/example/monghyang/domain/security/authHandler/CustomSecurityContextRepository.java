@@ -56,8 +56,6 @@ public class CustomSecurityContextRepository implements SecurityContextRepositor
                 // 세션에 저장된 SessionUserInfo 객체 파싱
                 List<GrantedAuthority> authentication = Collections.singletonList(new SimpleGrantedAuthority(role));
 
-                redisService.extendLoginInfoTtl(userId); // redis의 로그인 정보 ttl 또한 갱신
-
                 // 인증 정보 생성 및 세팅
                 Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, authentication);
                 context.setAuthentication(auth);

@@ -33,28 +33,11 @@ public class RedisService {
         return "refresh:"+userId;
     }
 
-    private String createLoginInfoKey(Long userId) {
-        return "auth:"+userId;
-    }
-
-    // 로그인 세션 리스트 정보 저장
-    public void setLoginInfoWithDeviceType(Long userId, String sessionId) {
-        String key = createLoginInfoKey(userId);
-        stringRedisTemplate.opsForValue().set(key, sessionId, sessionExpiration, TimeUnit.MILLISECONDS);
-    }
-
     // 세션 리프레시 토큰 정보 저장
     public void setRefreshTokenTid(Long userId, String tid) {
         String key = createRefreshTokenKey(userId);
         stringRedisTemplate.opsForValue().set(key, tid, refreshTokenExpiration, TimeUnit.MILLISECONDS);
     }
-
-    // 회원 식별자, 디바이스 타입에 해당하는 기존 키의 value(sid)를 반환
-    public String getSessionIdWithUserIdAndDeviceType(Long userId) {
-        String key = createLoginInfoKey(userId);
-        return stringRedisTemplate.opsForValue().get(key);
-    }
-
 
     // 유저의 refresh token tid 일치 여부 비교
     public boolean verifyRefreshTokenTid(Long userId, String tid) {
@@ -66,13 +49,6 @@ public class RedisService {
         }
         return storedTid.equals(tid);
     }
-
-    // 로그인 정보 ttl 갱신
-    public void extendLoginInfoTtl(Long userId) {
-        String key = createLoginInfoKey(userId);
-        stringRedisTemplate.expire(key, sessionExpiration, TimeUnit.MILLISECONDS);
-    }
-
 
     // 세션 제거
     public void deleteSessionId(String sessionId) {
@@ -86,19 +62,11 @@ public class RedisService {
         stringRedisTemplate.delete(key);
     }
 
-    // 디바이스별 로그인 정보 제거
-    public void deleteLoginInfo(Long userId) {
-        String key = createLoginInfoKey(userId);
-        String sessionId = getSessionIdWithUserIdAndDeviceType(userId);
-        deleteSessionId(sessionId);
-        stringRedisTemplate.delete(key);
-    }
-
     public void deleteAllInfo(Long userId) {
         int maxInfoNum = DeviceTypeUtil.DeviceType.values().length; // 한 유저가 가질 수 있는 최대 로그인 상태의 개수
 
         // 해당 유저의 모든 세션 제거
-        String loginInfoKeyPattern = "auth:"+userId+":*";
+        String loginInfoKeyPattern = "auth:"+userId;
         try(Cursor<String> cursor = stringRedisTemplate.scan(ScanOptions.scanOptions().match(loginInfoKeyPattern).count(maxInfoNum).build())) {
             while (cursor.hasNext()) {
                 String curLoginInfoKey = cursor.next();
