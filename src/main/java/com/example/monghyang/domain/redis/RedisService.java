@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -21,12 +23,15 @@ public class RedisService {
     private final Long refreshTokenExpiration; // Redis 요소 수명
     private final Long sessionExpiration;
     private final RedisTemplate<String, String> stringRedisTemplate; // access token tid 저장용 redis 템플릿
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     @Autowired
     public RedisService(RedisTemplate<String, String> stringRedisTemplate, @Value("${jwt.refresh-expiration}") Duration refreshTokenExpiration,
-                        @Value("${spring.session.timeout}") Duration sessionExpiration) {
+                        @Value("${spring.session.timeout}") Duration sessionExpiration,
+                        FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.refreshTokenExpiration = refreshTokenExpiration.toMillis();
         this.sessionExpiration = sessionExpiration.toMillis();
+        this.sessionRepository = sessionRepository;
     }
 
     private String createRefreshTokenKey(Long userId) {
@@ -48,12 +53,6 @@ public class RedisService {
             throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
         }
         return storedTid.equals(tid);
-    }
-
-    // 세션 제거
-    public void deleteSessionId(String sessionId) {
-        String key = "spring:session:sessions:" + sessionId;
-        stringRedisTemplate.delete(key);
     }
 
     // 리프레시 토큰 제거

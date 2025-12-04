@@ -31,13 +31,7 @@ public class SessionUtil {
         // 마지막 로그인 지역 정보 저장
         session.setAttribute("lastAccessLocation", request.getRemoteAddr());
 
-        // 동일한 계정, 디바이스 타입의 로그인 정보가 이미 있는 경우, 기존 SID를 삭제하고 새로운 데이터로 덮어씌운다.(디바이스 별 세션 정보)
-        String storedSessionId = redisService.getSessionIdWithUserIdAndDeviceType(userId);
-        if(storedSessionId != null) {
-            redisService.deleteSessionId(storedSessionId);
-        }
-
-        redisService.setLoginInfoWithDeviceType(userId, session.getId()); // redis에 사용자 로그인 세션 정보 리스트 저장
+        // 동일 유저의 세션 정보 개수가 5개를 초과하면 가장 오래전에 생성된 세션 정보를 제거한다. (구현 예정)
 
         String refreshToken = jwtUtil.createRefreshToken(userId, role); // redis에 refresh token 정보 저장
         response.setHeader("X-Refresh-Token", refreshToken); // 응답 헤더에 refresh token 첨부

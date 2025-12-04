@@ -5,6 +5,7 @@ spring:
       namespace: spring:session
       flush-mode: on_save
       save-mode: on_set_attribute
+      repository-type: indexed # 유저 당 최대 세션 개수 제한을 위해 indexed 방식 활용
   jackson:
     mapper:
       accept-case-insensitive-enums: true # enum 대소문자 구분없이 매핑

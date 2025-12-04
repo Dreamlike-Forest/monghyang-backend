@@ -21,6 +21,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -32,16 +35,22 @@ public class SecurityConfig {
     private final List<String> clientUrl;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSecurityContextRepository customSecurityContextRepository;
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
 
     @Autowired
-    public SecurityConfig(@Value("${app.client-url}") List<String> clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository) {
+    public SecurityConfig(@Value("${app.client-url}") List<String> clientUrl, CustomOAuth2UserService customOAuth2UserService, CustomSecurityContextRepository customSecurityContextRepository, FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
         this.clientUrl = clientUrl;
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSecurityContextRepository = customSecurityContextRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     @Bean
     BCryptPasswordEncoder bCryptPasswordEncoder() { return new BCryptPasswordEncoder(); }
+    @Bean
+    public SpringSessionBackedSessionRegistry<? extends Session> sessionRegistry() {
+        return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
+    }
     @Bean
     SecurityContextLogoutHandler securityContextLogoutHandler() {
         return new SecurityContextLogoutHandler();
@@ -136,7 +145,14 @@ public class SecurityConfig {
                         .clearAuthentication(true)) // 현재 Security Context 비우기
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterAfter(securityMdcFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionConcurrency(concurrency -> concurrency
+                                .maximumSessions(5)
+                                .maxSessionsPreventsLogin(false)
+                                .sessionRegistry(sessionRegistry())
+                        )
+                );
         return http.build();
     }
 }
