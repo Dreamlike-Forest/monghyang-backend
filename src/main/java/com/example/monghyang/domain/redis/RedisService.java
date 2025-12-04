@@ -111,4 +111,14 @@ public class RedisService {
         }
     }
 
+    /**
+     * refresh token 존재 여부 검사
+     * @param userId 회원 식별자
+     * @param tid 토큰 식별자
+     * @return 존재하면 true 반환
+     */
+    public boolean isExistRefreshToken(Long userId, String tid) {
+        String key = createRefreshTokenKey(userId, tid);
+        return stringRedisTemplate.hasKey(key);
+    }
 }

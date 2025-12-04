@@ -44,14 +44,15 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody();
 
-            if(claims.getExpiration().before(new Date())) {
+            String tid = claims.getId();
+            Long userId = claims.get("userId", Long.class);
+            String role = claims.get("role", String.class);
+
+            if(!redisService.isExistRefreshToken(userId, tid) || claims.getExpiration().before(new Date())) {
                 // 토큰 만료 시 예외 발생
                 throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
             }
 
-            String tid = claims.getId();
-            Long userId = claims.get("userId", Long.class);
-            String role = claims.get("role", String.class);
             return JwtClaimsDto.tidUserIdDeviceTypeRoleOf(tid, userId, role);
         } catch (JwtException | IllegalArgumentException e) {
             // 토큰 파싱 예외 처리
