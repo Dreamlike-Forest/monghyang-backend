@@ -14,7 +14,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class SessionLogoutSeccessHandler implements LogoutSuccessHandler {
+public class SessionLogoutSuccessHandler implements LogoutSuccessHandler {
     private final ObjectMapper objectMapper;
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {

@@ -9,16 +9,41 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Component;
+
+import java.util.Comparator;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class SessionUtil {
-    private final RedisService redisService;
+    private static final int MAX_SESSIONS_PER_USER = 5;
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     private final JwtUtil jwtUtil;
+    private final RedisService redisService;
 
     // 새로운 세션 및 RT 생성
     public void createNewAuthInfo(HttpServletRequest request, HttpServletResponse response, Long userId, String role) {
+        String principal = userId.toString();
+        Map<String, ? extends Session> sessionsByPrincipal =
+                sessionRepository.findByIndexNameAndIndexValue(
+                        FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME,
+                        principal);
+        int currentSessionCount = sessionsByPrincipal.size();
+        if(currentSessionCount >= MAX_SESSIONS_PER_USER) {
+            int toDelete = currentSessionCount + 1 - MAX_SESSIONS_PER_USER;
+            sessionsByPrincipal.values().stream()
+                    .sorted(Comparator.comparing(Session::getCreationTime))
+                    .limit(toDelete)
+                    .forEach(session -> {
+                        redisService.deleteRefreshTokenByUserIdAndSid(userId, session.getId()); // refresh token 제거
+                        sessionRepository.deleteById(session.getId()); // 세션 제거
+                    });
+        }
+
+
         HttpSession session = request.getSession(true); // 기존에 존재하는 세션을 조회. 세션이 없다면 새로 생성(true)
         if(session == null) { // 세션이 생성되지 않은 경우 예외처리
             throw new ApplicationException(ApplicationError.SESSION_CREATE_ERROR);
@@ -31,17 +56,11 @@ public class SessionUtil {
         // 마지막 로그인 지역 정보 저장
         session.setAttribute("lastAccessLocation", request.getRemoteAddr());
 
-        String deviceType = DeviceTypeUtil.getDeviceType(request).name(); // 로그인을 시도한 클라이언트의 디바이스 타입
+        // index key 설정
+        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME,
+                userId.toString());
 
-        // 동일한 계정, 디바이스 타입의 로그인 정보가 이미 있는 경우, 기존 SID를 삭제하고 새로운 데이터로 덮어씌운다.(디바이스 별 세션 정보)
-        String storedSessionId = redisService.getSessionIdWithUserIdAndDeviceType(userId, deviceType);
-        if(storedSessionId != null) {
-            redisService.deleteSessionId(storedSessionId);
-        }
-
-        redisService.setLoginInfoWithDeviceType(userId, deviceType, session.getId()); // redis에 사용자 로그인 세션 정보 리스트 저장
-
-        String refreshToken = jwtUtil.createRefreshToken(userId, deviceType, role); // redis에 refresh token 정보 저장
+        String refreshToken = jwtUtil.createRefreshToken(userId, role, session.getId()); // redis에 refresh token 정보 저장
         response.setHeader("X-Refresh-Token", refreshToken); // 응답 헤더에 refresh token 첨부
     }
 }

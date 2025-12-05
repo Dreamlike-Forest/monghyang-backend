@@ -44,16 +44,16 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody();
 
-            if(claims.getExpiration().before(new Date())) {
+            String tid = claims.getId();
+            Long userId = claims.get("userId", Long.class);
+            String role = claims.get("role", String.class);
+
+            if(!redisService.isExistRefreshToken(userId, tid) || claims.getExpiration().before(new Date())) {
                 // 토큰 만료 시 예외 발생
                 throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
             }
 
-            String tid = claims.getId();
-            Long userId = claims.get("userId", Long.class);
-            String deviceType = claims.get("deviceType", String.class);
-            String role = claims.get("role", String.class);
-            return JwtClaimsDto.tidUserIdDeviceTypeRoleOf(tid, userId, deviceType, role);
+            return JwtClaimsDto.tidUserIdDeviceTypeRoleOf(tid, userId, role);
         } catch (JwtException | IllegalArgumentException e) {
             // 토큰 파싱 예외 처리
             log.error("토큰 훼손: {}", e.getMessage());
@@ -62,12 +62,11 @@ public class JwtUtil {
     }
 
     // session refresh token 발급
-    public String createRefreshToken(Long userId, String deviceType, String role) {
+    public String createRefreshToken(Long userId, String role, String sessionId) {
         String refreshTokenId = UUID.randomUUID().toString();
-        redisService.setRefreshTokenTid(userId, deviceType, refreshTokenId); // redis에 refresh token tid 저장
+        redisService.setRefreshTokenTid(userId, refreshTokenId, sessionId); // redis에 refresh token tid와 sid 저장
         return Jwts.builder()
                 .claim("userId", userId)
-                .claim("deviceType", deviceType)
                 .claim("role", role)
                 .setId(refreshTokenId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
