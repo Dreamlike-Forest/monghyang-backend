@@ -18,6 +18,7 @@ public enum ApplicationError {
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니가 비어있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
+    JOY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 댓글형 리뷰가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 예약 내역 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_TIME_UPDATE_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 변경할 수 있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_CANCEL_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 취소할 수 있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
