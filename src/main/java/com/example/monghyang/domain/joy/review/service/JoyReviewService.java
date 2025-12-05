@@ -12,6 +12,7 @@ import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -73,5 +74,17 @@ public class JoyReviewService {
         }
         joyReview.setDeleted(); // soft delete
         joyReviewRepository.save(joyReview);
+    }
+
+    /**
+     * 체험의 댓글형 리뷰의 조회수 1 증가
+     * @param joyReviewId 리뷰 식별자
+     */
+    @Transactional
+    public void increaseView(Long joyReviewId) {
+        int ret = joyReviewRepository.increaseView(joyReviewId);
+        if(ret != 1) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_VIEW_INCREASE_ERROR);
+        }
     }
 }

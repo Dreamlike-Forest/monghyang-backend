@@ -65,6 +65,7 @@ public enum ApplicationError {
     SESSION_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 파싱 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     MANIPULATE_ORDER_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "주문 금액이 조작된 요청입니다.", ErrorType.SECURITY, LogLevel.ERROR, true),
+    JOY_REVIEW_VIEW_INCREASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 조회수 증가에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 알 수 없는 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true);
 
 
