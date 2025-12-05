@@ -4,6 +4,8 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.product.dto.ResProductDto;
 import com.example.monghyang.domain.product.dto.ResProductListDto;
 import com.example.monghyang.domain.product.service.ProductService;
+import com.example.monghyang.domain.product.tag.ProductTagService;
+import com.example.monghyang.domain.tag.dto.ResTagListDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final ProductTagService productTagService;
 
     // 상품 필터링 조회(태그, 도수, 가격)
     @GetMapping("/search/{startOffset}")
@@ -50,5 +53,11 @@ public class ProductController {
     @Operation(summary = "상품 식별자 기준 세부 조회")
     public ResponseEntity<ResponseDataDto<ResProductDto>> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productService.getProductById(productId)));
+    }
+
+    @GetMapping("/tag-list/{productId}")
+    @Operation(summary = "특정 상품이 가지는 태그 목록 조회")
+    public ResponseEntity<ResponseDataDto<List<ResTagListDto>>> getProductTagList(@PathVariable Long productId) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(productTagService.getProductTagsById(productId)));
     }
 }

@@ -92,71 +92,6 @@ public class BreweryService {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
 
-        if(!reqBreweryDto.getAdd_images().isEmpty() || !reqBreweryDto.getRemove_images().isEmpty() || !reqBreweryDto.getModify_images().isEmpty()) {
-            // 이미지 관련 수정 사항이 존재하는 경우 아래의 로직 실행
-            List<BreweryImage> imageList = breweryImageRepository.findByBrewery(brewery);
-
-            // 해당 양조장이 가지고 있는 이미지의 식별자 리스트 set
-            // 아래부터는 set에 존재하는 식별자로만 이미지 조회를 수행
-            Set<Long> imageListIds = imageList.stream().map(BreweryImage::getId).collect(Collectors.toSet());
-
-            // dto에 담긴 '삭제 이미지 개수': del, '추가 이미지 개수': add
-            // 이미지 수정사항 반영 가능 여부 검증: curImageCount - del + add <= 5
-            if(imageList.size() - reqBreweryDto.getRemove_images().size() + reqBreweryDto.getAdd_images().size() > 5) {
-                throw new ApplicationException(ApplicationError.IMAGE_COUNT_INVALID);
-            }
-
-            // 이미지 삭제
-            for(Long removeImageId : reqBreweryDto.getRemove_images()) {
-                if(!imageListIds.contains(removeImageId)) {
-                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌것은 삭제 불가
-                }
-                BreweryImage breweryImage = breweryImageRepository.findById(removeImageId).orElseThrow(() ->
-                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
-                storageService.remove(breweryImage.getImageKey()); // 스토리지에서 이미지 삭제
-                breweryImageRepository.delete(breweryImage); // DB에서 이미지 정보 삭제
-                imageListIds.remove(removeImageId); // set에 이미지 삭제 반영
-            }
-
-            breweryImageRepository.flush(); // 삭제 정보 선반영: 이미지 순서 수정 혹은 생성 시 uk 제약조건 위배를 피하기 위함
-
-            // 이미지 순서 정보 수정
-            for(ModifySeqImageDto cur : reqBreweryDto.getModify_images()) {
-                if(!imageListIds.contains(cur.getImage_id())) {
-                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌 것은 수정 불가
-                }
-                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-                BreweryImage breweryImage = breweryImageRepository.findById(cur.getImage_id()).orElseThrow(() ->
-                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
-                breweryImage.updateSeq(cur.getSeq());
-                // 수정되자마자 즉시 DB로 변경사항 전송(추후 새 이미지 insert 시 uk 제약조건 위배를 방지하기 위함)
-                try{
-                    breweryImageRepository.save(breweryImage);
-                } catch (DataIntegrityViolationException e) {
-                    // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-            }
-
-            // 이미지 업로드
-            for(AddImageDto cur : reqBreweryDto.getAdd_images()) {
-                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-                // 스토리지에 업로드
-                String imageKey = storageService.upload(cur.getImage(), ImageType.BREWERY_IMAGE);
-                // DB에 업로드
-                try{
-                    breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, cur.getSeq(), cur.getImage().getSize()));
-                } catch (DataIntegrityViolationException e) {
-                    // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
-                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-                }
-            }
-        }
-
         // Brewery 테이블 컬럼에 대한 수정사항 반영
         if(reqBreweryDto.getBrewery_name() != null){
             brewery.updateBreweryName(reqBreweryDto.getBrewery_name());
@@ -200,6 +135,69 @@ public class BreweryService {
             LocalTime startTime = (reqBreweryDto.getStart_time() == null) ? brewery.getStartTime() : reqBreweryDto.getStart_time();
             if(startTime.isAfter(reqBreweryDto.getEnd_time())) {
                 throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
+        }
+
+        if(!reqBreweryDto.getAdd_images().isEmpty() || !reqBreweryDto.getRemove_images().isEmpty() || !reqBreweryDto.getModify_images().isEmpty()) {
+            // 이미지 관련 수정 사항이 존재하는 경우 아래의 로직 실행
+            List<BreweryImage> imageList = breweryImageRepository.findByBrewery(brewery);
+
+            // 해당 양조장이 가지고 있는 이미지의 식별자 리스트 set
+            // 아래부터는 set에 존재하는 식별자로만 이미지 조회를 수행
+            Set<Long> imageListIds = imageList.stream().map(BreweryImage::getId).collect(Collectors.toSet());
+
+            // dto에 담긴 '삭제 이미지 개수': del, '추가 이미지 개수': add
+            // 이미지 수정사항 반영 가능 여부 검증: curImageCount - del + add <= 5
+            if(imageList.size() - reqBreweryDto.getRemove_images().size() + reqBreweryDto.getAdd_images().size() > 5) {
+                throw new ApplicationException(ApplicationError.IMAGE_COUNT_INVALID);
+            }
+
+            // 이미지 삭제
+            for(Long removeImageId : reqBreweryDto.getRemove_images()) {
+                if(!imageListIds.contains(removeImageId)) {
+                    throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌것은 삭제 불가
+                }
+                BreweryImage breweryImage = breweryImageRepository.findById(removeImageId).orElseThrow(() ->
+                        new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
+                storageService.remove(breweryImage.getImageKey()); // 스토리지에서 이미지 삭제
+                breweryImageRepository.delete(breweryImage); // DB에서 이미지 정보 삭제
+                imageListIds.remove(removeImageId); // set에 이미지 삭제 반영
+            }
+
+            // 이미지 순서 정보 수정
+            try {
+                for(ModifySeqImageDto cur : reqBreweryDto.getModify_images()) {
+                    if(!imageListIds.contains(cur.getImage_id())) {
+                        throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN); // 자신의 이미지가 아닌 것은 수정 불가
+                    }
+                    if(cur.getSeq() > 5 || cur.getSeq() < 1) {
+                        throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                    }
+                    BreweryImage breweryImage = breweryImageRepository.findById(cur.getImage_id()).orElseThrow(() ->
+                            new ApplicationException(ApplicationError.IMAGE_NOT_FOUND));
+                    breweryImage.updateSeq(cur.getSeq() * -1);
+                    // 수정되자마자 즉시 DB로 변경사항 전송(추후 새 이미지 insert 시 uk 제약조건 위배를 방지하기 위함)
+                    breweryImageRepository.save(breweryImage);
+                }
+                breweryImageRepository.updateImageSeqToPositive(brewery.getId());
+            } catch (DataIntegrityViolationException e) {
+                throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+            }
+
+            // 이미지 업로드
+            for(AddImageDto cur : reqBreweryDto.getAdd_images()) {
+                if(cur.getSeq() > 5 || cur.getSeq() < 1) {
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
+                // 스토리지에 업로드
+                String imageKey = storageService.upload(cur.getImage(), ImageType.BREWERY_IMAGE);
+                // DB에 업로드
+                try{
+                    breweryImageRepository.save(BreweryImage.breweryKeySeqVolume(brewery, imageKey, cur.getSeq(), cur.getImage().getSize()));
+                } catch (DataIntegrityViolationException e) {
+                    // 중복된 seq 정보 존재할 경우 db insert 시 uk 제약조건 위배 예외 발생
+                    throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
+                }
             }
         }
     }

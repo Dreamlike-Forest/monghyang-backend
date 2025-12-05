@@ -1,10 +1,16 @@
 package com.example.monghyang.domain.users.service;
 
+import com.example.monghyang.domain.brewery.dto.ResBreweryImageDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryImage;
+import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.seller.dto.ResSellerImageDto;
 import com.example.monghyang.domain.seller.entity.Seller;
+import com.example.monghyang.domain.seller.entity.SellerImage;
+import com.example.monghyang.domain.seller.repository.SellerImageRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
 import com.example.monghyang.domain.users.dto.*;
 import com.example.monghyang.domain.users.entity.RoleType;
@@ -27,6 +33,8 @@ public class UsersService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder; // 패스워드 암호화 모듈
     private final SellerRepository sellerRepository;
     private final BreweryRepository breweryRepository;
+    private final BreweryImageRepository breweryImageRepository;
+    private final SellerImageRepository sellerImageRepository;
 
     public List<ResUsersDto> getUsersByEmail(String email) {
         List<Users> users = usersRepository.findByEmailJoinedRole(email);
@@ -36,6 +44,11 @@ public class UsersService {
         return users.stream().map(ResUsersDto::usersJoinedWithRoleToDto).toList();
     }
 
+    /**
+     * 자신의 정보 조회(양조장, 판매자의 경우 해당되는 테이블에 대한 추가 정보 및 이미지를 응답
+     * @param userId 회원 식별자
+     * @return
+     */
     public ResUsersPrivateInfoDto getMyUserInfo(Long userId) {
         Users users = usersRepository.findByIdJoinedRole(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
@@ -46,10 +59,20 @@ public class UsersService {
             Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                     new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
             result.setBrewery(new ResBreweryPrivateInfoDto(brewery));
+            List<BreweryImage> breweryImage = breweryImageRepository.findByBrewery(brewery);
+            for(BreweryImage image: breweryImage) {
+                ResBreweryImageDto imageDto = new ResBreweryImageDto(image.getId(), image.getImageKey(), image.getSeq());
+                result.getBrewery().getBrewery_images().add(imageDto);
+            }
         } else if(users.getRole().getName().equals(RoleType.ROLE_SELLER)) {
             Seller seller = sellerRepository.findByUserId(userId).orElseThrow(() ->
                     new ApplicationException(ApplicationError.SELLER_NOT_FOUND));
             result.setSeller(new ResSellerPrivateInfoDto(seller));
+            List<SellerImage> sellerImage = sellerImageRepository.findBySeller(seller);
+            for(SellerImage image: sellerImage) {
+                ResSellerImageDto imageDto = new ResSellerImageDto(image.getId(), image.getImageKey(), image.getSeq());
+                result.getSeller().getSeller_images().add(imageDto);
+            }
         }
 
         return result;

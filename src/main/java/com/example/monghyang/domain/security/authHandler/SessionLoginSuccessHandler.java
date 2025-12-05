@@ -1,13 +1,12 @@
 package com.example.monghyang.domain.security.authHandler;
 
-import com.example.monghyang.domain.security.filter.LoginDto;
+import com.example.monghyang.domain.security.dto.LoginDto;
 import com.example.monghyang.domain.auth.details.LoginUserDetails;
 import com.example.monghyang.domain.util.SessionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
