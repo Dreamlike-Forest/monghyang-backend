@@ -2,12 +2,13 @@ name: "Auto-close: non-dev -> main"
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
-    branches: [main]
+    types: [opened, reopened, synchronize, edited]
 
 jobs:
   # action 식별자: 'autoclose'
   autoclose:
+    # base가 main인 PR 에서만 검사
+    if: github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
