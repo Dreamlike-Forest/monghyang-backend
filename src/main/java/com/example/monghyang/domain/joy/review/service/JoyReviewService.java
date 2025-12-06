@@ -3,6 +3,7 @@ package com.example.monghyang.domain.joy.review.service;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.review.dto.ReqJoyReviewDto;
 import com.example.monghyang.domain.joy.review.dto.ReqUpdateJoyReviewDto;
@@ -25,6 +26,7 @@ public class JoyReviewService {
     private final JoyRepository joyRepository;
     private final UsersRepository usersRepository;
     private final JoyReviewLikeHistoryRepository joyReviewLikeHistoryRepository;
+    private final JoyOrderRepository joyOrderRepository;
 
     /**
      * 별점 값의 유효성 검증
@@ -46,6 +48,11 @@ public class JoyReviewService {
         Joy joy = joyRepository.findById(dto.getJoy_id()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         checkStarValid(dto.getStar());
+        Integer isOrdered = joyOrderRepository.findFirstByUserIdAndJoyId(userId, dto.getJoy_id());
+        if(isOrdered == null) {
+            // 해당 체험 이용 내역이 없으면 리뷰 작성 불가
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_CREATE_UNQUALIFIED);
+        }
 
         JoyReview joyReview = JoyReview.builder()
                 .user(users).joy(joy).content(dto.getContent())
@@ -136,4 +143,6 @@ public class JoyReviewService {
             throw new ApplicationException(ApplicationError.JOY_REVIEW_LIKE_CANCEL_ERROR);
         }
     }
+
+
 }
