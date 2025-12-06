@@ -91,14 +91,11 @@ public class AuthService {
 
         JwtClaimsDto jwtClaimsDto = jwtUtil.parseRefreshToken(refreshToken);
         Long userId = jwtClaimsDto.getUserId();
-        String deviceType = jwtClaimsDto.getDeviceType();
         String tid = jwtClaimsDto.getTid();
         String role = jwtClaimsDto.getRole();
 
-        if(!redisService.verifyRefreshTokenTid(userId, deviceType, tid)) {
-            // 동시접속 감지 기준: 해당 유저의 해당 디바이스 타입의 리프레시 토큰 tid와 요청에 담긴 RT의 tid가 동일하지 않은 경우
-            throw new ApplicationException(ApplicationError.CONCURRENT_CONNECTION);
-        }
+        // 갱신 전의 refresh token, session 제거
+        redisService.deleteRefreshTokenAndSession(userId, tid);
 
         // 세션 및 토큰 갱신
         sessionUtil.createNewAuthInfo(request, response, userId, role);

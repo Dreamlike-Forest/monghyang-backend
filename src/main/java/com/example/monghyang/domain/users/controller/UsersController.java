@@ -58,8 +58,6 @@ public class UsersController {
             @LoginUserId Long userId, @LoginUserRole String userRole,
             @Valid @ModelAttribute ReqUsersDto reqUsersDto,
             HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("유저 식별자: "+userId+", 유저 권한: "+userRole);
-
         usersService.updateUsers(userId, reqUsersDto, userRole);
 
         // 해당 유저의 현재 세션 정보를 제거
@@ -67,8 +65,8 @@ public class UsersController {
         if(auth != null) {
             securityContextLogoutHandler.logout(request, response, auth);
         }
-        // 해당 유저의 나머지 모든 세션 정보 및 refresh token 정보를 제거
-        redisService.deleteAllInfo(userId);
+        // 해당 유저의 나머지 모든 세션 정보 제거
+        redisService.deleteAllInfoByUserId(userId);
 
         return ResponseEntity.ok().body(ResponseDataDto.success("회원 수정이 완료되었습니다. 다시 로그인 해주세요."));
     }
@@ -89,7 +87,7 @@ public class UsersController {
             securityContextLogoutHandler.logout(request, response, auth);
         }
         // 해당 유저의 나머지 모든 세션 정보 및 refresh token 정보를 제거
-        redisService.deleteAllInfo(userId);
+        redisService.deleteAllInfoByUserId(userId);
         return ResponseEntity.ok().body(ResponseDataDto.success("회원 탈퇴가 완료되었습니다."));
     }
 }
