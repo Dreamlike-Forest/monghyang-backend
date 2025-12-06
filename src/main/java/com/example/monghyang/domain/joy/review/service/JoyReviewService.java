@@ -89,6 +89,17 @@ public class JoyReviewService {
         }
     }
 
+    /// 좋아요 추가/삭제 로직 추후 개선안
+    /// 예상 병목 현상: 특정 유저가 좋아요 추가/삭제를 연타하는 경우, 잦은 레코드 삽입/삭제로 인해 인덱스 구조가 자주 변경되어 부하 유발
+    /// 인덱스: (user_id, joy_review_id)
+    /// 개선안
+    ///     1. joy_review_like_history 테이블에 '좋아요 여부' 컬럼 추가
+    ///     2. 좋아요 추가/삭제 마다 insert/delete을 수행하는 것이 아니라, '좋아요 여부'값만 수정
+    ///     3. 좋아요 추가 로직: update 좋아요 여부 = 1 -> update된 레코드 수가 0이면 insert (특정 리뷰에 좋아요를 처음 누르는 경우)
+    ///     4. 좋아요 삭제 로직: update 좋아요 여부 = 0
+    /// 개선 효과: 잦은(혹은 악의적인) 좋아요 추가/삭제 시 인덱스 부하 방지
+    /// 단점: '첫 좋아요' 시 update, insert 쿼리를 한번씩 실행해야 한다.
+
     @Transactional
     public void likeJoyReview(Long userId, Long joyReviewId) {
 
