@@ -5,12 +5,15 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.review.dto.ReqJoyReviewDto;
+import com.example.monghyang.domain.joy.review.dto.ReqUpdateJoyReviewDto;
 import com.example.monghyang.domain.joy.review.entity.JoyReview;
+import com.example.monghyang.domain.joy.review.repository.JoyReviewLikeHistoryRepository;
 import com.example.monghyang.domain.joy.review.repository.JoyReviewRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +24,17 @@ public class JoyReviewService {
     private final JoyReviewRepository joyReviewRepository;
     private final JoyRepository joyRepository;
     private final UsersRepository usersRepository;
+    private final JoyReviewLikeHistoryRepository joyReviewLikeHistoryRepository;
 
+    /**
+     * 별점 값의 유효성 검증
+     * @param star 검증할 별점
+     */
+    private void checkStarValid(Double star) {
+        if(star < 0.0 || star > 5.0 || star % 0.5 != 0.0) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_STAR_INVALID);
+        }
+    }
     /**
      * 체험의 댓글형 리뷰 작성
      * @param userId 회원 식별자
@@ -32,6 +45,7 @@ public class JoyReviewService {
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         Joy joy = joyRepository.findById(dto.getJoy_id()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        checkStarValid(dto.getStar());
 
         JoyReview joyReview = JoyReview.builder()
                 .user(users).joy(joy).content(dto.getContent())
@@ -45,7 +59,7 @@ public class JoyReviewService {
      * @param joyReviewId 리뷰 식별자
      * @param dto ReqJoyReviewDto의 content, star 필드만 사용
      */
-    public void updateReview(Long userId, Long joyReviewId, ReqJoyReviewDto dto) {
+    public void updateReview(Long userId, Long joyReviewId, ReqUpdateJoyReviewDto dto) {
         JoyReview joyReview = joyReviewRepository.findById(joyReviewId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND));
         if(!joyReview.getUser().getId().equals(userId)) {
@@ -56,6 +70,7 @@ public class JoyReviewService {
             joyReview.updateContent(dto.getContent());
         }
         if(dto.getStar() != null) {
+            checkStarValid(dto.getStar());
             joyReview.updateStar(dto.getStar());
         }
         joyReviewRepository.save(joyReview);
@@ -100,13 +115,38 @@ public class JoyReviewService {
     /// 개선 효과: 잦은(혹은 악의적인) 좋아요 추가/삭제 시 인덱스 부하 방지
     /// 단점: '첫 좋아요' 시 update, insert 쿼리를 한번씩 실행해야 한다.
 
+    /**
+     * 특정 체험 댓글형 리뷰에 대해 좋아요 추가
+     * @param userId 회원 식별자
+     * @param joyReviewId 체험 댓글형 리뷰 식별자
+     */
     @Transactional
     public void likeJoyReview(Long userId, Long joyReviewId) {
-
+        try{
+            joyReviewLikeHistoryRepository.insertByUserIdAndJoyReviewId(userId, joyReviewId);
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_LIKE_ADD_ERROR, e);
+        }
+        int increaseCnt = joyReviewRepository.increaseLike(joyReviewId);
+        if(increaseCnt != 1) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_LIKE_ADD_ERROR);
+        }
     }
 
+    /**
+     * 특정 체험 댓글형 리뷰에 대해 좋아요 추가
+     * @param userId 회원 식별자
+     * @param joyReviewId 체험 댓글형 리뷰 식별자
+     */
     @Transactional
     public void unLikeJoyReview(Long userId, Long joyReviewId) {
-
+        int joyReviewLikeHistoryCnt = joyReviewLikeHistoryRepository.deleteByUserIdAndJoyReviewId(userId, joyReviewId);
+        if(joyReviewLikeHistoryCnt != 1) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_LIKE_CANCEL_ERROR);
+        }
+        int decreaseCnt = joyReviewRepository.decreaseLike(joyReviewId);
+        if(decreaseCnt != 1) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_LIKE_CANCEL_ERROR);
+        }
     }
 }

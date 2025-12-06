@@ -15,4 +15,12 @@ public interface JoyReviewRepository extends JpaRepository<JoyReview, Long> {
     @Modifying
     @Query("update JoyReview jr set jr.view = jr.view + 1 where jr.id = :joyReviewId")
     int increaseView(@Param("joyReviewId") Long joyReviewId);
+
+    @Modifying
+    @Query("update JoyReview jr set jr.likes = jr.likes + 1 where jr.id = :joyReviewId")
+    int increaseLike(@Param("joyReviewId") Long joyReviewId);
+
+    @Modifying
+    @Query("update JoyReview jr set jr.likes = jr.likes - 1 where jr.id = :joyReviewId")
+    int decreaseLike(@Param("joyReviewId") Long joyReviewId);
 }

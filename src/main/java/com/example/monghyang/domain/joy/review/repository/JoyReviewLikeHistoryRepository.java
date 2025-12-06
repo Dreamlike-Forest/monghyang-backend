@@ -9,10 +9,10 @@ import org.springframework.data.repository.query.Param;
 public interface JoyReviewLikeHistoryRepository extends CrudRepository<JoyReviewLikeHistory, Long> {
     @Modifying
     @Query(value = """
-        insert joy_review_like_history(user_id, joy_review_id)
-            values(:userId, :joyReviewId);
+        insert joy_review_like_history(user_id, joy_review_id, created_at)
+            values(:userId, :joyReviewId, now());
     """, nativeQuery = true)
-    void insertJoyLikeHistory(@Param("userId") Long userId, @Param("joyReviewId") Long joyReviewId);
+    void insertByUserIdAndJoyReviewId(@Param("userId") Long userId, @Param("joyReviewId") Long joyReviewId);
 
     @Modifying
     @Query("delete JoyReviewLikeHistory h where h.user.id = :userId and h.review.id = :joyReviewId")
