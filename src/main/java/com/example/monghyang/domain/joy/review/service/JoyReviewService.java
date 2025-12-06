@@ -91,19 +91,6 @@ public class JoyReviewService {
         joyReviewRepository.save(joyReview);
     }
 
-    /**
-     * 체험의 댓글형 리뷰의 조회수 1 증가
-     * @param joyReviewId 리뷰 식별자
-     * @throws ApplicationException 조회수 증가된 리뷰 레코드 수가 1이 아닌 경우 예외 발생
-     */
-    @Transactional
-    public void increaseView(Long joyReviewId) {
-        int ret = joyReviewRepository.increaseView(joyReviewId);
-        if(ret != 1) {
-            throw new ApplicationException(ApplicationError.JOY_REVIEW_VIEW_INCREASE_ERROR);
-        }
-    }
-
     /// 좋아요 추가/삭제 로직 추후 개선안
     /// 예상 병목 현상: 특정 유저가 좋아요 추가/삭제를 연타하는 경우, 잦은 레코드 삽입/삭제로 인해 인덱스 구조가 자주 변경되어 부하 유발
     /// 인덱스: (user_id, joy_review_id)
