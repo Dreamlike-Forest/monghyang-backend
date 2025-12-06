@@ -79,6 +79,7 @@ public class JoyReviewService {
     /**
      * 체험의 댓글형 리뷰의 조회수 1 증가
      * @param joyReviewId 리뷰 식별자
+     * @throws ApplicationException 조회수 증가된 리뷰 레코드 수가 1이 아닌 경우 예외 발생
      */
     @Transactional
     public void increaseView(Long joyReviewId) {
@@ -86,5 +87,15 @@ public class JoyReviewService {
         if(ret != 1) {
             throw new ApplicationException(ApplicationError.JOY_REVIEW_VIEW_INCREASE_ERROR);
         }
+    }
+
+    @Transactional
+    public void likeJoyReview(Long userId, Long joyReviewId) {
+
+    }
+
+    @Transactional
+    public void unLikeJoyReview(Long userId, Long joyReviewId) {
+
     }
 }
