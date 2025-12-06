@@ -9,6 +9,7 @@ import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.review.dto.ReqJoyReviewDto;
 import com.example.monghyang.domain.joy.review.dto.ReqUpdateJoyReviewDto;
+import com.example.monghyang.domain.joy.review.dto.ResJoyReviewDto;
 import com.example.monghyang.domain.joy.review.entity.JoyReview;
 import com.example.monghyang.domain.joy.review.repository.JoyReviewLikeHistoryRepository;
 import com.example.monghyang.domain.joy.review.repository.JoyReviewRepository;
@@ -17,6 +18,9 @@ import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +30,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @RequiredArgsConstructor
 public class JoyReviewService {
+    public static final int JOY_REVIEW_PAGE_SIZE = 10;
     private final JoyReviewRepository joyReviewRepository;
     private final JoyRepository joyRepository;
     private final UsersRepository usersRepository;
@@ -150,5 +155,111 @@ public class JoyReviewService {
         }
     }
 
+    /**
+     * 체험 구분 없이 최신순 조회
+     * @param breweryId 양조장 식별자
+     * @param startOffset 조회 시작 페이지 번호
+     * @return
+     */
+    public Page<ResJoyReviewDto> findLatest(Long breweryId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findLatestByBrewery(pageable, breweryId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
 
+    /**
+     * 체험 구분 없이 좋아요순 조회
+     * @param breweryId 양조장 식별자
+     * @param startOffset 조회 페이지 번호
+     * @return
+     */
+    public Page<ResJoyReviewDto> findLikesDesc(Long breweryId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findLikesDescByBrewery(pageable, breweryId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
+
+    /**
+     * 체험 구분 없이 별점순 조회
+     * @param breweryId 양조장 식별자
+     * @param startOffset 조회 페이지 번호
+     * @return
+     */
+    public Page<ResJoyReviewDto> findStarDesc(Long breweryId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findStarDescByBrewery(pageable, breweryId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
+
+    /**
+     * 특정 체험 리뷰 최신순 조회
+     * @param joyId 체험 식별자
+     * @param startOffset 조회 시작 페이지
+     * @return
+     */
+    public Page<ResJoyReviewDto> findByJoyLatest(Long joyId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findLatestByJoy(pageable, joyId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
+
+    /**
+     * 특정 체험 리뷰 좋아요순 조회
+     * @param joyId 체험 식별자
+     * @param startOffset 조회 시작 페이지
+     * @return
+     */
+    public Page<ResJoyReviewDto> findByJoyLikesDesc(Long joyId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findLikesDescByJoy(pageable, joyId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
+
+    /**
+     * 특정 체험 리뷰 별점순 조회
+     * @param joyId 체험 식별자
+     * @param startOffset 조회 시작 페이지
+     * @return
+     */
+    public Page<ResJoyReviewDto> findByJoyStarDesc(Long joyId, Integer startOffset) {
+        if(startOffset < 0) {
+            startOffset = 0;
+        }
+        Pageable pageable = PageRequest.of(startOffset, JOY_REVIEW_PAGE_SIZE);
+        Page<JoyReview> joyReviews = joyReviewRepository.findStarDescByJoy(pageable, joyId);
+        if(joyReviews.isEmpty()) {
+            throw new ApplicationException(ApplicationError.JOY_REVIEW_NOT_FOUND);
+        }
+        return joyReviews.map(ResJoyReviewDto::userAndJoyJoinedJoyReviewFrom);
+    }
 }

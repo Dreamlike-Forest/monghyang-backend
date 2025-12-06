@@ -4,10 +4,12 @@ import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.joy.review.dto.ReqJoyReviewDto;
 import com.example.monghyang.domain.joy.review.dto.ReqUpdateJoyReviewDto;
+import com.example.monghyang.domain.joy.review.dto.ResJoyReviewDto;
 import com.example.monghyang.domain.joy.review.service.JoyReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,5 +52,41 @@ public class JoyReviewController {
     public ResponseEntity<ResponseDataDto<Void>> unlikeJoyReview(@LoginUserId Long userId, @PathVariable Long joyReviewId) {
         joyReviewService.unLikeJoyReview(userId, joyReviewId);
         return ResponseEntity.ok().body(ResponseDataDto.success("좋아요를 삭제하였습니다."));
+    }
+
+    @GetMapping("/latest/by-brewery/{breweryId}/{startOffset}")
+    @Operation(summary = "특정 양조장의 체험 댓글형 리뷰 최신순 조회(체험 구분 X)")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByBreweryIdLatest(@PathVariable Long breweryId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findLatest(breweryId, startOffset)));
+    }
+
+    @GetMapping("/likes-desc/by-brewery/{breweryId}/{startOffset}")
+    @Operation(summary = "특정 양조장의 체험 댓글형 리뷰 좋아요 많은 순 조회(체험 구분 X)")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByBreweryIdLikesDesc(@PathVariable Long breweryId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findLikesDesc(breweryId, startOffset)));
+    }
+
+    @GetMapping("/star-desc/by-brewery/{breweryId}/{startOffset}")
+    @Operation(summary = "특정 양조장의 체험 댓글형 리뷰 별점 높은 순 조회(체험 구분 X)")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByBreweryIdStarDesc(@PathVariable Long breweryId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findStarDesc(breweryId, startOffset)));
+    }
+
+    @GetMapping("/latest/by-joy/{joyId}/{startOffset}")
+    @Operation(summary = "특정 체험의 댓글형 리뷰 최신순 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByJoyIdLatest(@PathVariable Long joyId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findByJoyLatest(joyId, startOffset)));
+    }
+
+    @GetMapping("/likes-desc/by-joy/{joyId}/{startOffset}")
+    @Operation(summary = "특정 체험의 댓글형 리뷰 좋아요 많은 순 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByJoyIdLikesDesc(@PathVariable Long joyId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findByJoyLikesDesc(joyId, startOffset)));
+    }
+
+    @GetMapping("/star-desc/by-joy/{joyId}/{startOffset}")
+    @Operation(summary = "특정 체험의 댓글형 리뷰 별점 높은 순 조회")
+    public ResponseEntity<ResponseDataDto<Page<ResJoyReviewDto>>> findByJoyIdStarDesc(@PathVariable Long joyId, @PathVariable Integer startOffset) {
+        return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyReviewService.findByJoyStarDesc(joyId, startOffset)));
     }
 }
