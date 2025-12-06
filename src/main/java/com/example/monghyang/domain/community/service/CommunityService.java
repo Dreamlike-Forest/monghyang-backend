@@ -192,12 +192,11 @@ public class CommunityService {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
-        // 좋아요가 존재하는지 확인
-        if (!communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId)) {
-            throw new ApplicationException(ApplicationError.LIKE_NOT_FOUND);
-        }
+        // 좋아요 엔티티 조회 후 삭제
+        CommunityLike like = communityLikeRepository.findByCommunityIdAndUserId(communityId, userId)
+                .orElseThrow(() -> new ApplicationException(ApplicationError.LIKE_NOT_FOUND));
 
-        communityLikeRepository.deleteByCommunityIdAndUserId(communityId, userId);
+        communityLikeRepository.delete(like);
         community.decreaseLikes();
     }
 }
