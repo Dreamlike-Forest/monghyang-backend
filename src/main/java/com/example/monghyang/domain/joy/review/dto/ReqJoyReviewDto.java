@@ -10,6 +10,8 @@ import lombok.Setter;
 public class ReqJoyReviewDto {
     @NotNull(message = "체험 댓글형 리뷰 식별자를 입력해주세요.")
     private Long joy_id;
+    @NotNull(message = "체험 예약(주문)내역 식별자를 입력해주세요.")
+    private Long joy_order_id;
     @NotBlank(message = "리뷰 본문을 입력해주세요.")
     private String content;
     @NotNull(message = "별점을 입력해주세요.")

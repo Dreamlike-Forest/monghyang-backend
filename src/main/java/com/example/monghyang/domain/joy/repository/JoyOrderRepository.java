@@ -46,7 +46,4 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
 
     @Query("select jo from JoyOrder jo where jo.pgOrderId = :pgOrderId")
     Optional<JoyOrder> findByPgOrderIdForSetFailed(@Param("pgOrderId") UUID pgOrderId);
-
-    @Query("select 1 from JoyOrder jo where jo.users.id = :userId and jo.joy.id = :joyId")
-    Integer findFirstByUserIdAndJoyId(Long userId, Long joyId);
 }

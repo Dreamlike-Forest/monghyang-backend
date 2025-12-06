@@ -3,6 +3,8 @@ package com.example.monghyang.domain.joy.review.service;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.entity.JoyOrder;
+import com.example.monghyang.domain.joy.entity.JoyPaymentStatus;
 import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.review.dto.ReqJoyReviewDto;
@@ -17,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -43,14 +47,16 @@ public class JoyReviewService {
      * @param dto ReqJoyReviewDto
      */
     public void addReview(Long userId, ReqJoyReviewDto dto) {
+        checkStarValid(dto.getStar());
         Users users = usersRepository.findById(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         Joy joy = joyRepository.findById(dto.getJoy_id()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
-        checkStarValid(dto.getStar());
-        Integer isOrdered = joyOrderRepository.findFirstByUserIdAndJoyId(userId, dto.getJoy_id());
-        if(isOrdered == null) {
-            // 해당 체험 이용 내역이 없으면 리뷰 작성 불가
+        JoyOrder joyOrder = joyOrderRepository.findByIdAndUserId(dto.getJoy_order_id(), userId).orElseThrow(() ->
+                // 해당 체험 이용 내역이 없으면 리뷰 작성 불가
+                new ApplicationException(ApplicationError.JOY_REVIEW_CREATE_UNQUALIFIED));
+        if(!joyOrder.getJoyPaymentStatus().equals(JoyPaymentStatus.PAID) || LocalDateTime.now().isBefore(joyOrder.getReservation())) {
+            // 체험 예약이 '결제 완료'상태가 아니거나, '체험 시작 시각' 이전인 경우 리뷰 작성 불가
             throw new ApplicationException(ApplicationError.JOY_REVIEW_CREATE_UNQUALIFIED);
         }
 

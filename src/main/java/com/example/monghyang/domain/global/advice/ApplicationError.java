@@ -65,7 +65,7 @@ public enum ApplicationError {
     SESSION_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 파싱 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     MANIPULATE_ORDER_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "주문 금액이 조작된 요청입니다.", ErrorType.SECURITY, LogLevel.ERROR, true),
-    JOY_REVIEW_CREATE_UNQUALIFIED(HttpStatus.BAD_REQUEST, "해당 체험에 대한 리뷰 작성 권한이 없습니다.", ErrorType.BUSINESS, LogLevel.WARN, true),
+    JOY_REVIEW_CREATE_UNQUALIFIED(HttpStatus.BAD_REQUEST, "체험 예약 결제 후 체험을 한 사용자만 리뷰를 작성할 수 있습니다.", ErrorType.BUSINESS, LogLevel.WARN, true),
     JOY_REVIEW_VIEW_INCREASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 조회수 증가에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     JOY_REVIEW_LIKE_CANCEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 좋아요 취소에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     JOY_REVIEW_LIKE_ADD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 좋아요 추가에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
