@@ -18,6 +18,7 @@ public enum ApplicationError {
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니가 비어있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "리뷰 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
+    JOY_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 댓글형 리뷰가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "체험 예약 내역 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_TIME_UPDATE_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 변경할 수 있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_ORDER_CANCEL_ERROR(HttpStatus.BAD_REQUEST, "체험 날짜 하루 전날까지만 취소할 수 있습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
@@ -64,6 +65,11 @@ public enum ApplicationError {
     SESSION_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 파싱 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     SESSION_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "세션 생성 중 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
     MANIPULATE_ORDER_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "주문 금액이 조작된 요청입니다.", ErrorType.SECURITY, LogLevel.ERROR, true),
+    JOY_REVIEW_CREATE_UNQUALIFIED(HttpStatus.FORBIDDEN, "체험 예약 결제 후 체험을 한 사용자만 리뷰를 작성할 수 있습니다.", ErrorType.BUSINESS, LogLevel.WARN, true),
+    JOY_REVIEW_VIEW_INCREASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 조회수 증가에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
+    JOY_REVIEW_LIKE_CANCEL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 좋아요 취소에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
+    JOY_REVIEW_LIKE_ADD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버의 오류로 좋아요 추가에 실패했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true),
+    JOY_REVIEW_STAR_INVALID(HttpStatus.BAD_REQUEST, "올바르지 않은 형식의 별점입니다. 0.0 ~ 5.0 범위 내 0.5 간격의 별점을 입력해주세요.", ErrorType.BUSINESS, LogLevel.INFO, false),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 알 수 없는 에러가 발생했습니다.", ErrorType.SYSTEM, LogLevel.ERROR, true);
 
 

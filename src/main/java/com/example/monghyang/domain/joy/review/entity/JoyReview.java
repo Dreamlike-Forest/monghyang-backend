@@ -25,8 +25,6 @@ public class JoyReview {
     @Column(nullable = false)
     private Double star;
     @Column(nullable = false)
-    private Integer view;
-    @Column(nullable = false)
     private Integer likes;
     @CreationTimestamp
     @Column(nullable = false)
@@ -40,7 +38,6 @@ public class JoyReview {
         this.joy = joy;
         this.content = content;
         this.star = star;
-        this.view = 0;
         this.likes = 0;
     }
 
