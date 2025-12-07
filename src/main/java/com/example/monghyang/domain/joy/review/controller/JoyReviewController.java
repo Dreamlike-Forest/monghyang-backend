@@ -47,7 +47,7 @@ public class JoyReviewController {
         return ResponseEntity.ok().body(ResponseDataDto.success("좋아요를 표시하였습니다."));
     }
 
-    @PostMapping("/unlike/{joyReviewId}")
+    @DeleteMapping("/unlike/{joyReviewId}")
     @Operation(summary = "체험 댓글형 리뷰 좋아요 삭제")
     public ResponseEntity<ResponseDataDto<Void>> unlikeJoyReview(@LoginUserId Long userId, @PathVariable Long joyReviewId) {
         joyReviewService.unLikeJoyReview(userId, joyReviewId);
