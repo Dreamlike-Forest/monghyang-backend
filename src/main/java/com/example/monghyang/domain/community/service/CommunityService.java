@@ -110,8 +110,8 @@ public class CommunityService {
 
         community.increaseViewCount();
 
-        // 로그인한 사용자의 좋아요 여부 확인
-        Boolean isLiked = null;
+        // 로그인한 사용자의 좋아요 여부 확인 (비로그인 시 false)
+        Boolean isLiked = false;
         if (userId != null) {
             isLiked = communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId);
         }

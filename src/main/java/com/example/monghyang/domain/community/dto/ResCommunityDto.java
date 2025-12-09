@@ -71,7 +71,7 @@ public class ResCommunityDto {
                 .viewCount(community.getViewCount())
                 .likes(community.getLikes())
                 .comments(community.getComments())
-                .isLiked(null)
+                .isLiked(false)
                 .build();
     }
 

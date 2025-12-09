@@ -55,6 +55,8 @@ public enum ApplicationError {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글이 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),   // 추가
     ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시글입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),  // 추가
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시글입니다.", ErrorType.BUSINESS, LogLevel.INFO, false), // 추가
+    ALREADY_FOLLOWED(HttpStatus.CONFLICT, "이미 팔로우한 사용자입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
+    FOLLOW_NOT_FOUND(HttpStatus.NOT_FOUND, "팔로우하지 않은 사용자입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다.", ErrorType.SECURITY, LogLevel.ERROR, true),    // 추가
     TERMS_AND_CONDITIONS_NOT_AGREED(HttpStatus.CONFLICT, "약관에 동의하지 않으면 회원 가입하실 수 없습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     EMAIL_DUPLICATE(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
