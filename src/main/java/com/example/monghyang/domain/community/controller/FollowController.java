@@ -9,9 +9,6 @@ import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,8 +40,9 @@ public class FollowController {
 
     @GetMapping("/{userId}/followers")
     @Operation(summary = "팔로워 목록 조회", description = "특정 사용자의 팔로워 목록을 조회합니다.")
-    public ResponseDataDto<List<ResFollowDto>> getFollowers(@PathVariable Long userId) {
-        Long currentUserId = getCurrentUserId();
+    public ResponseDataDto<List<ResFollowDto>> getFollowers(
+            @PathVariable Long userId,
+            @LoginUserId Long currentUserId) {
         List<ResFollowDto> result = followService.getFollowers(userId, currentUserId);
         return ResponseDataDto.contentFrom(result);
     }
@@ -53,8 +51,8 @@ public class FollowController {
     @Operation(summary = "팔로워 목록 조회 (페이징)", description = "특정 사용자의 팔로워 목록을 페이징하여 조회합니다.")
     public ResponseDataDto<PageResponseDto<ResFollowDto>> getFollowersWithPaging(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page) {
-        Long currentUserId = getCurrentUserId();
+            @RequestParam(defaultValue = "0") int page,
+            @LoginUserId Long currentUserId) {
         PageResponseDto<ResFollowDto> result = followService.getFollowersWithPaging(userId, currentUserId, page);
         return ResponseDataDto.contentFrom(result);
     }
@@ -77,8 +75,9 @@ public class FollowController {
 
     @GetMapping("/{userId}/count")
     @Operation(summary = "팔로우 카운트 조회", description = "특정 사용자의 팔로워/팔로잉 수와 팔로우 상태를 조회합니다.")
-    public ResponseDataDto<ResFollowCountDto> getFollowCount(@PathVariable Long userId) {
-        Long currentUserId = getCurrentUserId();
+    public ResponseDataDto<ResFollowCountDto> getFollowCount(
+            @PathVariable Long userId,
+            @LoginUserId Long currentUserId) {
         ResFollowCountDto result = followService.getFollowCount(userId, currentUserId);
         return ResponseDataDto.contentFrom(result);
     }
@@ -86,17 +85,9 @@ public class FollowController {
     @GetMapping("/{userId}/status")
     @Operation(summary = "팔로우 상태 확인", description = "현재 로그인한 사용자가 특정 사용자를 팔로우하는지 확인합니다.")
     public ResponseDataDto<Boolean> checkFollowStatus(
-            @LoginUserId Long currentUserId,
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            @LoginUserId Long currentUserId) {
         boolean isFollowing = followService.isFollowing(currentUserId, userId);
         return ResponseDataDto.contentFrom(isFollowing);
-    }
-
-    private Long getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            return null;
-        }
-        return (Long) auth.getPrincipal();
     }
 }
