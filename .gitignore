@@ -7,6 +7,9 @@ build/
 /src/test/com/example/monghyang/devtest/**
 logs/
 
+.DS_Store
+src/.DS_Store
+
 ### STS ###
 .apt_generated
 .classpath
