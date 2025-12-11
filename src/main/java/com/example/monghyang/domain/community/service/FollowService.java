@@ -77,7 +77,10 @@ public class FollowService {
     }
 
     // 팔로워 목록 조회 (페이징)
-    public PageResponseDto<ResFollowDto> getFollowersWithPaging(Long userId, Long currentUserId, int page) {
+    public PageResponseDto<ResFollowDto> getFollowersWithPaging(Long userId, Long currentUserId, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Follow> followerPage = followRepository.findByFollowingIdOrderByCreatedAtDesc(userId, pageable);
 
@@ -101,7 +104,10 @@ public class FollowService {
     }
 
     // 팔로잉 목록 조회 (페이징)
-    public PageResponseDto<ResFollowDto> getFollowingsWithPaging(Long userId, int page) {
+    public PageResponseDto<ResFollowDto> getFollowingsWithPaging(Long userId, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Follow> followingPage = followRepository.findByFollowerIdOrderByCreatedAtDesc(userId, pageable);
 

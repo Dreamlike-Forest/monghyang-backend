@@ -47,11 +47,11 @@ public class FollowController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @GetMapping("/{userId}/followers/page")
+    @GetMapping("/{userId}/followers/page/{page}")
     @Operation(summary = "팔로워 목록 조회 (페이징)", description = "특정 사용자의 팔로워 목록을 페이징하여 조회합니다.")
     public ResponseDataDto<PageResponseDto<ResFollowDto>> getFollowersWithPaging(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
+            @PathVariable Integer page,
             @LoginUserId Long currentUserId) {
         PageResponseDto<ResFollowDto> result = followService.getFollowersWithPaging(userId, currentUserId, page);
         return ResponseDataDto.contentFrom(result);
@@ -64,11 +64,11 @@ public class FollowController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @GetMapping("/{userId}/followings/page")
+    @GetMapping("/{userId}/followings/page/{page}")
     @Operation(summary = "팔로잉 목록 조회 (페이징)", description = "특정 사용자가 팔로우하는 사람들의 목록을 페이징하여 조회합니다.")
     public ResponseDataDto<PageResponseDto<ResFollowDto>> getFollowingsWithPaging(
             @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page) {
+            @PathVariable Integer page) {
         PageResponseDto<ResFollowDto> result = followService.getFollowingsWithPaging(userId, page);
         return ResponseDataDto.contentFrom(result);
     }

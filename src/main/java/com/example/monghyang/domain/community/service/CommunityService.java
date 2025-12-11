@@ -68,7 +68,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getAllCommunitiesWithPaging(int page) {
+    public PageResponseDto<ResCommunityListDto> getAllCommunitiesWithPaging(Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByIsDeletedFalseOrderByCreatedAtDesc(pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
@@ -82,7 +85,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getCommunitiesByCategoryWithPaging(String category, int page) {
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByCategoryWithPaging(String category, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByCategoryAndIsDeletedFalseOrderByCreatedAtDesc(category, pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
@@ -96,7 +102,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getCommunitiesByUserWithPaging(Long userId, int page) {
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByUserWithPaging(Long userId, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
