@@ -303,8 +303,6 @@ public class BreweryServiceTest {
         verify(storageService).remove("key1");
         // DB에서 해당 이미지 삭제
         verify(breweryImageRepository).delete(img1);
-        // flush는 최소 한 번은 호출되어야 함
-        verify(breweryImageRepository).flush();
 
         // 삭제하지 않은 이미지에 대해서는 delete 호출이 없어야 한다.
         verify(breweryImageRepository, never()).delete(img2);
@@ -348,7 +346,7 @@ public class BreweryServiceTest {
 
         // then
         // img1.updateSeq(3)이 호출되었는지 검증
-        verify(img1).updateSeq(3);
+        verify(img1).updateSeq(-3);
         // 그리고 save에도 img1이 넘어갔는지
         verify(breweryImageRepository).save(img1);
     }

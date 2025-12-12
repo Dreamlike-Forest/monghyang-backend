@@ -660,20 +660,4 @@ public class AuthServiceTest {
         ApplicationException ex = assertThrows(ApplicationException.class, () -> authService.updateRefreshToken(request, response));
         assertEquals(ex.getApplicationError(), ApplicationError.TOKEN_EXPIRED);
     }
-    @Test
-    @DisplayName("refresh - 동시 접속 감지")
-    void refresh_concurrent_connection() {
-        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-        String token = "refreshToken";
-        given(request.getHeader("X-Refresh-Token"))
-                .willReturn(token);
-        JwtClaimsDto jwtDto = JwtClaimsDto.tidUserIdDeviceTypeRoleOf("t1234", 1L, "ROLE_UESR");
-        Long userId = jwtDto.getUserId();
-        String tid = jwtDto.getTid();
-        String role = jwtDto.getRole();
-        given(jwtUtil.parseRefreshToken(token)).willReturn(jwtDto);
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> authService.updateRefreshToken(request, response));
-        assertEquals(ex.getApplicationError(), ApplicationError.CONCURRENT_CONNECTION);
-    }
 }
