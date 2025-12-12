@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -65,10 +66,14 @@ public class SecurityConfig {
     public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
         // actuator 요청에 대한 Security Filter Chain
         http
-                .securityContext(c -> c // security context를 세션에 저장하지 않는 설정
+                .securityContext(sc -> sc
                         .securityContextRepository(customSecurityContextRepository)
-                        .requireExplicitSave(true))
+                        .requireExplicitSave(false))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable) // 요청에 대한 캐시 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .securityMatcher("/actuator/**")
                 .authorizeHttpRequests(auth ->
                         auth
