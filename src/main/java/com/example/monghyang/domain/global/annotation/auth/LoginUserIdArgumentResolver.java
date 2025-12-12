@@ -29,11 +29,23 @@ public class LoginUserIdArgumentResolver implements HandlerMethodArgumentResolve
         // supportsParameter() 가 true를 반환하면 파라메터에 주입할 실제 값을 만들어 반환한다.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
+        LoginUserId loginUserId = parameter.getParameterAnnotation(LoginUserId.class);
+        boolean required = loginUserId == null || loginUserId.required(); // 인증 정보 필수 여부 옵션의 값
+
         if(auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken){
-            // 인증 객체가 존재하지 않거나, '익명 유저'인 경우 userId 파싱 불가
-            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+            if(required == true) {
+                // 인증 정보가 필수로 존재해야 하지만 인증 객체가 존재하지 않거나, '익명 유저'인 경우 userId 파싱 불가
+                throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+            }
+            return null;
         }
 
-        return auth.getPrincipal();
+        Object principal = auth.getPrincipal();
+
+        if(principal == null && required == true) {
+            // 인증 정보가 필수이면서 인증 정보가 null인 경우에는 예외 발생
+            throw new ApplicationException(ApplicationError.AUTH_INFO_NOT_FOUND);
+        }
+        return principal;
     }
 }
