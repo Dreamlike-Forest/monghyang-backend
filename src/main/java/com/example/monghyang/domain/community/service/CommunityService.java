@@ -68,7 +68,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getAllCommunitiesWithPaging(int page) {
+    public PageResponseDto<ResCommunityListDto> getAllCommunitiesWithPaging(Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByIsDeletedFalseOrderByCreatedAtDesc(pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
@@ -82,7 +85,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getCommunitiesByCategoryWithPaging(String category, int page) {
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByCategoryWithPaging(String category, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByCategoryAndIsDeletedFalseOrderByCreatedAtDesc(category, pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
@@ -96,7 +102,10 @@ public class CommunityService {
                 .collect(Collectors.toList());
     }
 
-    public PageResponseDto<ResCommunityListDto> getCommunitiesByUserWithPaging(Long userId, int page) {
+    public PageResponseDto<ResCommunityListDto> getCommunitiesByUserWithPaging(Long userId, Integer page) {
+        if (page == null || page < 0) {
+            page = 0;
+        }
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         Page<Community> communityPage = communityRepository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, pageable);
         Page<ResCommunityListDto> dtoPage = communityPage.map(ResCommunityListDto::from);
@@ -104,12 +113,19 @@ public class CommunityService {
     }
 
     @Transactional
-    public ResCommunityDto getCommunityById(Long communityId) {
+    public ResCommunityDto getCommunityById(Long communityId, Long userId) {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
         community.increaseViewCount();
-        return ResCommunityDto.from(community);
+
+        // 로그인한 사용자의 좋아요 여부 확인 (비로그인 시 false)
+        Boolean isLiked = false;
+        if (userId != null) {
+            isLiked = communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId);
+        }
+
+        return ResCommunityDto.from(community, isLiked);
     }
 
     @Transactional
@@ -185,12 +201,11 @@ public class CommunityService {
         Community community = communityRepository.findByIdAndIsDeletedFalse(communityId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.COMMUNITY_NOT_FOUND));
 
-        // 좋아요가 존재하는지 확인
-        if (!communityLikeRepository.existsByCommunityIdAndUserId(communityId, userId)) {
-            throw new ApplicationException(ApplicationError.LIKE_NOT_FOUND);
-        }
+        // 좋아요 엔티티 조회 후 삭제
+        CommunityLike like = communityLikeRepository.findByCommunityIdAndUserId(communityId, userId)
+                .orElseThrow(() -> new ApplicationException(ApplicationError.LIKE_NOT_FOUND));
 
-        communityLikeRepository.deleteByCommunityIdAndUserId(communityId, userId);
+        communityLikeRepository.delete(like);
         community.decreaseLikes();
     }
 }
