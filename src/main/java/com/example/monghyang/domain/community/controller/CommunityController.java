@@ -81,7 +81,7 @@ public class CommunityController {
     @Operation(summary = "커뮤니티 게시글 상세 조회", description = "특정 커뮤니티 게시글의 상세 정보를 조회합니다.")
     public ResponseDataDto<ResCommunityDto> getCommunityById(
             @PathVariable Long communityId,
-            @LoginUserId(required = false) Long userId) {
+            @LoginUserId Long userId) {
         ResCommunityDto result = communityService.getCommunityById(communityId, userId);
         return ResponseDataDto.contentFrom(result);
     }
