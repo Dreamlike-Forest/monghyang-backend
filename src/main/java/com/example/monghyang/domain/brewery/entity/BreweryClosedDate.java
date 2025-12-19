@@ -11,6 +11,12 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_brewery_closed_date",
+                columnNames = {"brewery_id", "closed_date"}
+        )
+})
 public class BreweryClosedDate {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

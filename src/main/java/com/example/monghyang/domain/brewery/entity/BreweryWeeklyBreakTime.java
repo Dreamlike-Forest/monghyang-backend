@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,6 +14,13 @@ import java.time.LocalTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Check(constraints = "break_start < break_end")
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_brewery_break_week",
+                columnNames = {"brewery_id", "effective_date", "day_of_week"}
+        )
+})
 public class BreweryWeeklyBreakTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

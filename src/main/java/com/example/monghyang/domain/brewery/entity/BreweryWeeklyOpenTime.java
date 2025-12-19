@@ -3,6 +3,7 @@ package com.example.monghyang.domain.brewery.entity;
 import com.example.monghyang.domain.global.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Check;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -10,6 +11,13 @@ import java.time.LocalTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Check(constraints = "open_time < close_time")
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_brewery_open_week",
+                columnNames = {"brewery_id", "effective_date", "day_of_week"}
+        )
+})
 public class BreweryWeeklyOpenTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
