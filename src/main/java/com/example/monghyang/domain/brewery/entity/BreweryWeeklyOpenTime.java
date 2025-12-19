@@ -26,6 +26,14 @@ public class BreweryWeeklyOpenTime {
     @Column(nullable = false)
     private LocalDate effectiveDate;
 
+    /**
+     * 양조장 요일별 정기 운영일
+     * @param brewery 양조장 엔티티
+     * @param dayOfWeek 요일 정보
+     * @param openTime 운영 시작 시간
+     * @param closeTime 운영 종료 시간
+     * @param effectiveDate 적용 시작일
+     */
     @Builder
     public BreweryWeeklyOpenTime(@NonNull Brewery brewery, @NonNull DayOfWeek dayOfWeek, @NonNull LocalTime openTime, @NonNull LocalTime closeTime, @NonNull LocalDate effectiveDate) {
         this.brewery = brewery;
