@@ -130,9 +130,6 @@ public class AuthService {
         if(!sellerJoinDto.getIs_agreed() || !sellerJoinDto.getIs_agreed_seller()) {
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
-        if(sellerJoinDto.getImages() != null && sellerJoinDto.getImages().size() > 5) {
-            throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-        }
         // 판매자 회원 플랫폼 회원가입
         Users users = createUser(sellerJoinDto, RoleType.ROLE_SELLER);
         usersRepository.save(users);
@@ -174,14 +171,6 @@ public class AuthService {
             // 약관에 모두 동의하지 않으면 가입 불가
             throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
-        if(breweryJoinDto.getSchedules() == null) {
-            // 양조장 운영 시간대 정보가 존재하지 않는다면 예외 발생
-            throw new ApplicationException(ApplicationError.BREWERY_SCHEDULE_NOT_FOUND);
-        }
-        if(breweryJoinDto.getImages() != null && breweryJoinDto.getImages().size() > 5) {
-            throw new ApplicationException(ApplicationError.IMAGE_SEQ_INVALID);
-        }
-
         Set<DayOfWeek> dayOfWeekSet = new HashSet<>(); // 요일 별로 하나의 스케줄 정보만 입력받기 위한 검증용 set
         // 양조장 엔티티 생성 전 검증하는 이유: 무결성 검증으로 인한 DB 롤백을 최소화하기 위함
         for(BreweryScheduleDto schedule : breweryJoinDto.getSchedules()) {
