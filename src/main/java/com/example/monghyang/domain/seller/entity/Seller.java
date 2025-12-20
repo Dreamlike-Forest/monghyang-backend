@@ -44,10 +44,6 @@ public class Seller {
 
     @Builder(builderMethodName = "sellerBuilder")
     public Seller(@NonNull Users user, @NonNull String sellerName, @NonNull String sellerAddress, @NonNull String sellerAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String sellerAccountNumber, @NonNull String sellerDepositor, @NonNull String sellerBankName, String introduction, @NonNull Boolean isAgreedSeller) {
-        if(isAgreedSeller == Boolean.FALSE) {
-            // 판매자 약관에 동의하지 않으면 회원 가입 불가
-            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
-        }
         this.user = user;
         this.sellerName = sellerName;
         this.sellerAddress = sellerAddress;

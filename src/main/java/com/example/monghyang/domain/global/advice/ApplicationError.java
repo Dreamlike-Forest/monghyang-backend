@@ -12,6 +12,7 @@ public enum ApplicationError {
     SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "판매자 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     BREWERY_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     BREWERY_OPENING_TIME_INVALID(HttpStatus.BAD_REQUEST, "양조장 운영 시간대가 잘못되었습니다.", ErrorType.BUSINESS, LogLevel.WARN, true),
+    BREWERY_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "양조장 운영 시간대 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 정보가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     PRODUCT_CANNOT_ORDER(HttpStatus.BAD_REQUEST, "주문할 수 없는 상품입니다.", ErrorType.BUSINESS, LogLevel.WARN, true),
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장바구니 요소가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),

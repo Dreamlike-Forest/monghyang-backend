@@ -16,8 +16,7 @@ public class BreweryScheduleDto {
     private LocalTime open_time;
     @NotNull(message = "해당 요일의 운영 종료 시간을 입력해주세요.")
     private LocalTime close_time;
-    @NotNull(message = "해당 요일의 휴게 시작 시간을 입력해주세요.")
+    // 휴게시간은 선택사항입니다. 단, 시작/종료 시간이 둘 다 없거나 둘 다 있어야 합니다.
     private LocalTime break_start;
-    @NotNull(message = "해당 요일의 휴게 종료 시간을 입력해주세요.")
     private LocalTime break_end;
 }
