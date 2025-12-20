@@ -67,10 +67,7 @@ public class Brewery {
     private Boolean isDeleted = Boolean.FALSE;
     
     @Builder(builderMethodName = "breweryBuilder")
-    public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery, @NonNull LocalTime startTime, @NonNull LocalTime endTime) {
-        if(isAgreedBrewery == Boolean.FALSE){
-            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
-        }
+    public Brewery(@NonNull Users user, @NonNull RegionType regionType, @NonNull String breweryName, @NonNull String breweryAddress, @NonNull String breweryAddressDetail, @NonNull String businessRegistrationNumber, @NonNull String breweryDepositor, @NonNull String breweryAccountNumber, @NonNull String breweryBankName, String introduction, String breweryWebsite, @NonNull Boolean isRegularVisit, @NonNull Boolean isAgreedBrewery) {
         this.user = user;
         this.regionType = regionType;
         this.breweryName = breweryName;
@@ -85,8 +82,8 @@ public class Brewery {
         this.isRegularVisit = isRegularVisit;
         this.isAgreedBrewery = isAgreedBrewery;
         // 운영시간은 '분' 단위까지만 취급
-        this.startTime = startTime.withSecond(0).withNano(0);
-        this.endTime = endTime.withSecond(0).withNano(0);
+        this.startTime = LocalTime.of(0, 0, 0);
+        this.endTime = LocalTime.of(23, 59, 59);
     }
 
     public void setVisitingBrewery() {
