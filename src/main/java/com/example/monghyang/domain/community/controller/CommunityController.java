@@ -77,11 +77,11 @@ public class CommunityController {
         return ResponseDataDto.contentFrom(result);
     }
 
-    @GetMapping("/{communityId}")
+    @GetMapping("/{communityId}") // 비로그인자도 조회 가능
     @Operation(summary = "커뮤니티 게시글 상세 조회", description = "특정 커뮤니티 게시글의 상세 정보를 조회합니다.")
     public ResponseDataDto<ResCommunityDto> getCommunityById(
             @PathVariable Long communityId,
-            @LoginUserId Long userId) {
+            @LoginUserId(required = false) Long userId) {
         ResCommunityDto result = communityService.getCommunityById(communityId, userId);
         return ResponseDataDto.contentFrom(result);
     }
