@@ -146,7 +146,7 @@ public class BreweryPrivController {
         // time이 null이 아니라면 해당 date의 특정 time에 대해서 환불 요청
         // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
         // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
-        breweryService.addClosedDate(userId, dto);
+        breweryService.addClosedDateTry(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 설정되었습니다."));
     }
 

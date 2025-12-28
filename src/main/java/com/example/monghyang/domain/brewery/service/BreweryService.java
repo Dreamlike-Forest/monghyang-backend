@@ -6,6 +6,7 @@ import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
+import com.example.monghyang.domain.global.ClosedStatus;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
@@ -318,11 +319,11 @@ public class BreweryService {
     }
 
     /**
-     * 특정 날짜에 대해 별도 휴무일 처리(영향받는 체험 예약에 대한 환불 처리 선행 필요)
+     * 특정 날짜에 대해 별도 휴무일 처리 시도(pending)
      * @param userId 회원 식별자
      * @param dto ReqClosedDateDto
      */
-    public void addClosedDate(Long userId, ReqClosedDateTimeDto dto) {
+    public void addClosedDateTry(Long userId, ReqClosedDateTimeDto dto) {
         if(dto.getClosed_date().isBefore(LocalDate.now())) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
@@ -332,6 +333,23 @@ public class BreweryService {
             breweryClosedDateRepository.save(BreweryClosedDate.breweryClosedDateReasonOf(brewery, dto.getClosed_date(), dto.getReason()));
         } catch (DataIntegrityViolationException e) {
             throw new ApplicationException(ApplicationError.ADD_CLOSED_DATE_DUPLICATE);
+        }
+    }
+
+    @Transactional
+    public void addClosedDateConfirmed(Long userId, ReqClosedDateTimeDto dto) {
+        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        BreweryClosedDate breweryClosedDate = breweryClosedDateRepository.findByBreweryIdAndClosedDate(brewery.getId(), dto.getClosed_date()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.INVALID_TIME));
+        if(!breweryClosedDate.getClosedStatus().equals(ClosedStatus.PENDING)) {
+            // pending 상태의 '별도 휴무일'을 confirmed 로 갱신
+            breweryClosedDate.updateClosedStatusConfirmed();
+
+            // 환불 대상 체험 예약을 모두 'refund_requested' 상태로 일괄 갱신
         }
     }
 }

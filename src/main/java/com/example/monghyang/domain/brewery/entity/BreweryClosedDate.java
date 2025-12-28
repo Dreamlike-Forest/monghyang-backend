@@ -48,4 +48,8 @@ public class BreweryClosedDate {
     public static BreweryClosedDate breweryClosedDateReasonOf(@NonNull Brewery brewery, @NonNull LocalDate closedDate, String reason) {
         return new BreweryClosedDate(brewery, closedDate, reason);
     }
+
+    public void updateClosedStatusConfirmed() {
+        this.closedStatus = ClosedStatus.CONFIRMED;
+    }
 }
