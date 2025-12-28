@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.brewery.entity;
 
+import com.example.monghyang.domain.global.ClosedStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,12 +26,16 @@ public class BreweryClosedDate {
     private Brewery brewery;
     @Column(nullable = false)
     private LocalDate closedDate;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ClosedStatus closedStatus;
     private String reason;
 
     private BreweryClosedDate(Brewery brewery, LocalDate closedDate, String reason) {
         this.brewery = brewery;
         this.closedDate = closedDate;
         this.reason = reason;
+        this.closedStatus = ClosedStatus.PENDING; // 생성 시 '보류(검토) 중' 상태로 초기화
     }
 
     /**
