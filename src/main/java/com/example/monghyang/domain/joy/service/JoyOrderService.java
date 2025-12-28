@@ -1,5 +1,8 @@
 package com.example.monghyang.domain.joy.service;
 
+import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
+import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
+import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.global.order.PaymentManager;
 import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
 import com.example.monghyang.domain.global.order.ReqOrderDto;
@@ -8,7 +11,6 @@ import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.*;
 import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
-import com.example.monghyang.domain.joy.repository.JoySlotRepository;
 import com.example.monghyang.domain.brewery.dto.JoyInfoDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
@@ -20,7 +22,6 @@ import com.example.monghyang.domain.users.repository.UsersRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -47,6 +50,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final BreweryRepository breweryRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoySlotService joySlotService;
+    private final BreweryClosedDateRepository breweryClosedDateRepository;
 
     /**
      * 체험 시간대 유효성 검증
@@ -322,6 +326,29 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
             throw new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND);
         }
         return result;
+    }
+
+    /**
+     * 날짜, 시간 정보를 기준으로 'joy_order'을 'refund_requested' 상태로 일괄 변경
+     * @param userId 양조장의 회원 식별자
+     * @param dto ReqClosedDateDto
+     * @return
+     */
+    public void setRefundRequestedJoyOrderByBreweryClosedDateAndTime(Long userId, ReqClosedDateTimeDto dto) {
+        // 1. 취소 대상 날짜가 실제로 '해당 양조장의 별도 휴무일'에 해당하는지 재차 검증
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        Optional<BreweryClosedDate> breweryClosedDate = breweryClosedDateRepository.findByBreweryIdAndClosedDate(brewery.getId(), dto.getClosed_date());
+        if(breweryClosedDate.isEmpty()) {
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+        // 2. 양조장 휴무에 영향받는 체험 식별자 조회
+        List<Long> breweryJoyIdList = joyRepository.findIdByBreweryId(brewery.getId());
+        if(breweryJoyIdList.isEmpty()) {
+            return;
+        }
+        // 3. 양조장의 모든 체험 중 휴무일 날짜에 해당하는 모든 예약의 상태를 'refund_requested'로 일괄 수정
+
     }
 
 }

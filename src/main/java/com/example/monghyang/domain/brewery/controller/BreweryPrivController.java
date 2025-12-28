@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.brewery.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
 import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
@@ -14,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -138,4 +138,29 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBreweryByDate(@LoginUserId Long userId, @PathVariable Integer startOffset, @PathVariable LocalDate date) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBreweryByDate(userId, startOffset, date)));
     }
+
+    @PostMapping("/brewery-close-try")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 시도", description = "휴무일 지정으로 인해 취소되는 체험 예약의 리스트를 반환합니다.")
+    public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        // time이 null이면 해당 date 전체에 대해 환불 요청
+        // time이 null이 아니라면 해당 date의 특정 time에 대해서 환불 요청
+        // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
+        // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
+        breweryService.addClosedDate(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 설정되었습니다."));
+    }
+
+    @PostMapping("/brewery-close-confirmed")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 확정")
+    public ResponseEntity<ResponseDataDto<Void>> confirmedBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 확정되었습니다."));
+    }
+
+    @DeleteMapping("/brewery-close")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 해제")
+    public ResponseEntity<ResponseDataDto<Void>> deleteBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        breweryService.deleteClosedDate(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 해제되었습니다."));
+    }
+
 }

@@ -1,15 +1,14 @@
 package com.example.monghyang.domain.brewery.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.brewery.dto.ResRegionDto;
+import com.example.monghyang.domain.brewery.dto.*;
+import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.brewery.entity.RegionType;
+import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
-import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryDto;
-import com.example.monghyang.domain.brewery.dto.ResBreweryDto;
-import com.example.monghyang.domain.brewery.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryImage;
 import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
@@ -37,6 +36,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -56,6 +56,7 @@ public class BreweryService {
     private final JoyRepository joyRepository;
     private final ProductService productService;
     private final RegionTypeRepository regionTypeRepository;
+    private final BreweryClosedDateRepository breweryClosedDateRepository;
 
     /**
      * 양조장 지역 종류 전체를 반환
@@ -297,4 +298,40 @@ public class BreweryService {
         return result;
     }
 
+    /**
+     * 특정 날짜에 대해 별도 휴무일 해제
+     * @param userId 회원 식별자
+     * @param dto ReqClosedDateDto
+     */
+    public void deleteClosedDate(Long userId, ReqClosedDateTimeDto dto) {
+        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+            // 휴무 지정일은 과거일 수 없습니다.
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+
+        int ret = breweryClosedDateRepository.deleteByBreweryIdAndClosedDate(brewery.getId(), dto.getClosed_date());
+        if(ret != 1) {
+            throw new ApplicationException(ApplicationError.DELETE_CLOSED_DATE_DUPLICATE);
+        }
+    }
+
+    /**
+     * 특정 날짜에 대해 별도 휴무일 처리(영향받는 체험 예약에 대한 환불 처리 선행 필요)
+     * @param userId 회원 식별자
+     * @param dto ReqClosedDateDto
+     */
+    public void addClosedDate(Long userId, ReqClosedDateTimeDto dto) {
+        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        try {
+            breweryClosedDateRepository.save(BreweryClosedDate.breweryClosedDateReasonOf(brewery, dto.getClosed_date(), dto.getReason()));
+        } catch (DataIntegrityViolationException e) {
+            throw new ApplicationException(ApplicationError.ADD_CLOSED_DATE_DUPLICATE);
+        }
+    }
 }

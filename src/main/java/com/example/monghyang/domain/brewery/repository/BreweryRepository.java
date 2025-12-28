@@ -4,6 +4,7 @@ import com.example.monghyang.domain.brewery.dto.JoyInfoDto;
 import com.example.monghyang.domain.brewery.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.product.dto.ResProductOwnerDto;
+import com.example.monghyang.domain.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -78,5 +79,4 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      */
     @Query("select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(b.startTime, b.endTime, j.timeUnit, j.maxCount) from Joy j join j.brewery b where j.id = :joyId")
     Optional<JoyInfoDto> findJoyTimeInfoByJoyId(@Param("joyId") Long joyId);
-
 }
