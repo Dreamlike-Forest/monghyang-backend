@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.joy.entity;
 
+import com.example.monghyang.domain.global.ClosedStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,11 +26,15 @@ public class JoyClosedStartTime {
     private JoyClosedDate joyClosedDate;
     @Column(nullable = false)
     private LocalTime closedStartTime;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ClosedStatus closedStatus;
     private String reason;
     private JoyClosedStartTime(JoyClosedDate joyClosedDate, LocalTime closedStartTime, String reason) {
         this.joyClosedDate = joyClosedDate;
         this.closedStartTime = closedStartTime;
         this.reason = reason;
+        this.closedStatus = ClosedStatus.PENDING;
     }
 
     /**
