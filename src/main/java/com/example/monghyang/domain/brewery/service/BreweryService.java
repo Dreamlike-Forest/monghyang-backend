@@ -9,6 +9,10 @@ import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.ClosedStatus;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.entity.JoyOrder;
+import com.example.monghyang.domain.joy.entity.JoyPaymentStatus;
+import com.example.monghyang.domain.joy.entity.JoyStatusHistory;
+import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryImage;
@@ -21,6 +25,8 @@ import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
+import com.example.monghyang.domain.orders.entity.PaymentStatus;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
@@ -58,6 +64,8 @@ public class BreweryService {
     private final ProductService productService;
     private final RegionTypeRepository regionTypeRepository;
     private final BreweryClosedDateRepository breweryClosedDateRepository;
+    private final JoyOrderRepository joyOrderRepository;
+    private final JoyStatusHistoryRepository joyStatusHistoryRepository;
 
     /**
      * 양조장 지역 종류 전체를 반환
@@ -345,11 +353,22 @@ public class BreweryService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         BreweryClosedDate breweryClosedDate = breweryClosedDateRepository.findByBreweryIdAndClosedDate(brewery.getId(), dto.getClosed_date()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.INVALID_TIME));
-        if(!breweryClosedDate.getClosedStatus().equals(ClosedStatus.PENDING)) {
+        if(breweryClosedDate.getClosedStatus().equals(ClosedStatus.PENDING)) {
             // pending 상태의 '별도 휴무일'을 confirmed 로 갱신
             breweryClosedDate.updateClosedStatusConfirmed();
 
             // 환불 대상 체험 예약을 모두 'refund_requested' 상태로 일괄 갱신
+            List<Long> joyIdList = joyRepository.findIdByBreweryId(brewery.getId());
+            if(joyIdList.isEmpty()) {
+                return;
+            }
+            // 삭제 대상 '체험 예약 레코드' 선정
+            List<Long> joyOrderList = joyOrderRepository.findIdByJoyIdListAndReservationAndStatus(joyIdList, dto.getClosed_date(), JoyPaymentStatus.PAID);
+            // 체험 예약 레코드 상태를 refund_requested 로 일괄 갱신
+            joyOrderRepository.updatePaymentStatusToRefundRequestedByJoyIdListAndDate(joyOrderList);
+
+            // status log insert
+
         }
     }
 }

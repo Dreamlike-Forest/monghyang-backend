@@ -142,17 +142,18 @@ public class BreweryPrivController {
     @PostMapping("/brewery-close-try")
     @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 시도", description = "휴무일 지정으로 인해 취소되는 체험 예약의 리스트를 반환합니다.")
     public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
-        // time이 null이면 해당 date 전체에 대해 환불 요청
-        // time이 null이 아니라면 해당 date의 특정 time에 대해서 환불 요청
-        // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
-        // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
+        // 해당 날짜를 휴무일로 지정하고, 'PENDING' 상태로 설정
+        // 이때는 신규 예약만 차단하고, 아직 환불 절차는 수행하지 않는 단계
         breweryService.addClosedDateTry(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 설정되었습니다."));
     }
 
     @PostMapping("/brewery-close-confirmed")
-    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 확정")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 확정", description = "양조장 측이 '환불 영향'을 모두 확인한 뒤 '휴무일 지정'을 확정하기 위해 사용하는 API")
     public ResponseEntity<ResponseDataDto<Void>> confirmedBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
+        // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
+        breweryService.addClosedDateConfirmed(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 확정되었습니다."));
     }
 
