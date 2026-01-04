@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,8 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoySlotService joySlotService;
     private final BreweryClosedDateRepository breweryClosedDateRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final JoyStatusHistoryBatchService joyStatusHistoryBatchService;
 
     /**
      * 체험 시간대 유효성 검증
@@ -329,26 +332,28 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     }
 
     /**
-     * 날짜, 시간 정보를 기준으로 'joy_order'을 'refund_requested' 상태로 일괄 변경
-     * @param userId 양조장의 회원 식별자
+     * 해당되는 모든 'joy_order'의 상태를 'refund_requested'로 일괄 변경 및 상태 변경 로그 생성
+     * @param breweryId 양조장 식별자
      * @param dto ReqClosedDateDto
      * @return
      */
-    public void setRefundRequestedJoyOrderByBreweryClosedDateAndTime(Long userId, ReqClosedDateTimeDto dto) {
-        // 1. 취소 대상 날짜가 실제로 '해당 양조장의 별도 휴무일'에 해당하는지 재차 검증
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Optional<BreweryClosedDate> breweryClosedDate = breweryClosedDateRepository.findByBreweryIdAndClosedDate(brewery.getId(), dto.getClosed_date());
-        if(breweryClosedDate.isEmpty()) {
-            throw new ApplicationException(ApplicationError.INVALID_TIME);
-        }
-        // 2. 양조장 휴무에 영향받는 체험 식별자 조회
-        List<Long> breweryJoyIdList = joyRepository.findIdByBreweryId(brewery.getId());
-        if(breweryJoyIdList.isEmpty()) {
+    public void setRefundRequestedJoyOrderByBreweryClosedDateAndTime(Long breweryId, ReqClosedDateTimeDto dto) {
+        // 환불 대상 체험 예약을 모두 'refund_requested' 상태로 일괄 갱신
+        List<Long> joyIdList = joyRepository.findIdByBreweryId(breweryId);
+        if(joyIdList.isEmpty()) {
             return;
         }
-        // 3. 양조장의 모든 체험 중 휴무일 날짜에 해당하는 모든 예약의 상태를 'refund_requested'로 일괄 수정
+        // 삭제 대상 '체험 예약 레코드' 선정
+        List<Long> joyOrderList = joyOrderRepository.findIdByJoyIdListAndReservationAndStatus(joyIdList, dto.getClosed_date(), JoyPaymentStatus.PAID);
+        // 체험 예약 레코드 상태를 refund_requested 로 일괄 갱신
+        joyOrderRepository.updatePaymentStatusToRefundRequestedByJoyIdListAndDate(joyOrderList);
 
+        // status log batch insert
+        // 삭제 대상 '체험 예약 레코드 식별자'를 이용하여 JoyStatusHistoryBatchRow를 만든 다음 리스트화하여 인자로 전달
+        int ret = joyStatusHistoryBatchService.batchInsert(joyOrderList.stream().map(jo -> {
+            return new JoyStatusHistoryBatchService.JoyStatusHistoryBatchRow(jo, JoyPaymentStatus.REFUND_REQUESTED, "양조장 일정 변경");
+        }).toList());
+        log.info("JoyStatusHistory Batch Insert Count: {}", ret); // batch insert count logging
     }
 
 }

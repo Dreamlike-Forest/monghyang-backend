@@ -26,6 +26,7 @@ import com.example.monghyang.domain.image.dto.ModifySeqImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
+import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.orders.entity.PaymentStatus;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
@@ -66,6 +67,7 @@ public class BreweryService {
     private final BreweryClosedDateRepository breweryClosedDateRepository;
     private final JoyOrderRepository joyOrderRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
+    private final JoyOrderService joyOrderService;
 
     /**
      * 양조장 지역 종류 전체를 반환
@@ -357,17 +359,7 @@ public class BreweryService {
             // pending 상태의 '별도 휴무일'을 confirmed 로 갱신
             breweryClosedDate.updateClosedStatusConfirmed();
 
-            // 환불 대상 체험 예약을 모두 'refund_requested' 상태로 일괄 갱신
-            List<Long> joyIdList = joyRepository.findIdByBreweryId(brewery.getId());
-            if(joyIdList.isEmpty()) {
-                return;
-            }
-            // 삭제 대상 '체험 예약 레코드' 선정
-            List<Long> joyOrderList = joyOrderRepository.findIdByJoyIdListAndReservationAndStatus(joyIdList, dto.getClosed_date(), JoyPaymentStatus.PAID);
-            // 체험 예약 레코드 상태를 refund_requested 로 일괄 갱신
-            joyOrderRepository.updatePaymentStatusToRefundRequestedByJoyIdListAndDate(joyOrderList);
-
-            // status log insert
+            joyOrderService.setRefundRequestedJoyOrderByBreweryClosedDateAndTime(brewery.getId(), dto);
 
         }
     }
