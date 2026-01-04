@@ -33,3 +33,9 @@ logging:
           servlet: debug
           multipart: debug
         validation: debug
+        jdbc:
+          core:
+            JdbcTemplate: debug
+            StatementCreatorUtils: trace
+      mariadb:
+        jdbc: debug
