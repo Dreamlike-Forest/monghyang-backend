@@ -2,7 +2,6 @@ package com.example.monghyang.domain.qna.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,11 +24,14 @@ public class QnaImage {
     @Column(nullable = false)
     private Integer volume;
 
-    @Builder
-    public QnaImage(Qna qna, String imageKey, Integer volume) {
+    private QnaImage(Qna qna, String imageKey, Integer volume) {
         this.qna = qna;
         this.imageKey = imageKey;
         this.volume = volume;
+    }
+
+    public static QnaImage of(Qna qna, String imageKey, Integer volume) {
+        return new QnaImage(qna, imageKey, volume);
     }
 
     public void updateImageKey(String imageKey) {

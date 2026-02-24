@@ -20,7 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// transactional 삭제
 public class QnaService {
     private final QnaRepository qnaRepository;
     private final QnaAnswerRepository qnaAnswerRepository;
@@ -34,11 +34,7 @@ public class QnaService {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new ApplicationException(ApplicationError.USER_NOT_FOUND));
 
-        Qna qna = Qna.builder()
-                .user(user)
-                .qnaTitle(dto.getQnaTitle())
-                .content(dto.getContent())
-                .build();
+        Qna qna = Qna.of(user, dto.getQnaTitle(), dto.getContent());
 
         Qna saved = qnaRepository.save(qna);
 
@@ -161,11 +157,7 @@ public class QnaService {
             answer = existingAnswer;
         } else {
             // 새 답변 생성
-            answer = QnaAnswer.builder()
-                    .qna(qna)
-                    .user(adminUser)
-                    .content(dto.getContent())
-                    .build();
+            answer = QnaAnswer.of(qna, adminUser, dto.getContent());
             qnaAnswerRepository.save(answer);
         }
 

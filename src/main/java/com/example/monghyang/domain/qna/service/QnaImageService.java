@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+// transactional 삭제
 public class QnaImageService {
     private final QnaImageRepository qnaImageRepository;
     private final QnaRepository qnaRepository;
@@ -42,11 +42,7 @@ public class QnaImageService {
         Integer volume = (int) file.getSize();
 
         // QnaImage 엔티티 생성
-        QnaImage qnaImage = QnaImage.builder()
-                .qna(qna)
-                .imageKey(imageKey)
-                .volume(volume)
-                .build();
+        QnaImage qnaImage = QnaImage.of(qna, imageKey, volume);
 
         QnaImage saved = qnaImageRepository.save(qnaImage);
         return ResQnaImageDto.from(saved);

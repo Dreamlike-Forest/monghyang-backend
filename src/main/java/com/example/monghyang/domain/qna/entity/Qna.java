@@ -3,7 +3,6 @@ package com.example.monghyang.domain.qna.entity;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,11 +31,14 @@ public class Qna {
     @Column(columnDefinition = "TINYINT(1)", nullable = false)
     private Boolean isDeleted = Boolean.FALSE;
 
-    @Builder
-    public Qna(Users user, String qnaTitle, String content) {
+    private Qna(Users user, String qnaTitle, String content) {
         this.user = user;
         this.qnaTitle = qnaTitle;
         this.content = content;
+    }
+
+    public static Qna of(Users user, String qnaTitle, String content) {
+        return new Qna(user, qnaTitle, content);
     }
 
     public void updateQnaTitle(String qnaTitle) {

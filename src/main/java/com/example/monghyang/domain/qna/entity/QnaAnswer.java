@@ -3,7 +3,6 @@ package com.example.monghyang.domain.qna.entity;
 import com.example.monghyang.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,11 +33,14 @@ public class QnaAnswer {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Builder
-    public QnaAnswer(Qna qna, Users user, String content) {
+    private QnaAnswer(Qna qna, Users user, String content) {
         this.qna = qna;
         this.user = user;
         this.content = content;
+    }
+
+    public static QnaAnswer of(Qna qna, Users user, String content) {
+        return new QnaAnswer(qna, user, content);
     }
 
     public void updateContent(String content) {
