@@ -53,6 +53,7 @@ public enum ApplicationError {
     TAG_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "태그 카테고리가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "태그가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "커뮤니티 게시글이 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false), // 추가
+    QNA_NOT_FOUND(HttpStatus.NOT_FOUND, "문의가 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),  // 추가
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글이 존재하지 않습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),   // 추가
     ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시글입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),  // 추가
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시글입니다.", ErrorType.BUSINESS, LogLevel.INFO, false), // 추가
