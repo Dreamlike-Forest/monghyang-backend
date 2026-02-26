@@ -1,9 +1,13 @@
 package com.example.monghyang.domain.joy.service;
 
+import com.example.monghyang.domain.batch.dto.JoyStatusHistoryBatchRow;
+import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
+import com.example.monghyang.domain.batch.service.JoyOrderRefundService;
 import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
-import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.global.order.PaymentManager;
+import com.example.monghyang.domain.global.pg.PayDBInfoDto;
+import com.example.monghyang.domain.global.pg.Payment;
 import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
 import com.example.monghyang.domain.global.order.ReqOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
@@ -28,6 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +41,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -51,9 +55,8 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final BreweryRepository breweryRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoySlotService joySlotService;
-    private final BreweryClosedDateRepository breweryClosedDateRepository;
-    private final JdbcTemplate jdbcTemplate;
-    private final JoyStatusHistoryBatchService joyStatusHistoryBatchService;
+    private final JoyOrderBatchService joyOrderBatchService;
+    private final JoyOrderRefundService joyOrderRefundService;
 
     /**
      * 체험 시간대 유효성 검증
@@ -337,6 +340,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
      * @param dto ReqClosedDateDto
      * @return
      */
+    @Transactional
     public void setRefundRequestedJoyOrderByBreweryClosedDateAndTime(Long breweryId, ReqClosedDateTimeDto dto) {
         // 환불 대상 체험 예약을 모두 'refund_requested' 상태로 일괄 갱신
         List<Long> joyIdList = joyRepository.findIdByBreweryId(breweryId);
@@ -346,14 +350,28 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         // 삭제 대상 '체험 예약 레코드' 선정
         List<Long> joyOrderList = joyOrderRepository.findIdByJoyIdListAndReservationAndStatus(joyIdList, dto.getClosed_date(), JoyPaymentStatus.PAID);
         // 체험 예약 레코드 상태를 refund_requested 로 일괄 갱신
-        joyOrderRepository.updatePaymentStatusToRefundRequestedByJoyIdListAndDate(joyOrderList);
+        joyOrderRepository.updatePaymentStatusByJoyIdListAndStatus(joyOrderList, JoyPaymentStatus.REFUND_REQUESTED);
 
         // status log batch insert
         // 삭제 대상 '체험 예약 레코드 식별자'를 이용하여 JoyStatusHistoryBatchRow를 만든 다음 리스트화하여 인자로 전달
-        int ret = joyStatusHistoryBatchService.batchInsert(joyOrderList.stream().map(jo -> {
-            return new JoyStatusHistoryBatchService.JoyStatusHistoryBatchRow(jo, JoyPaymentStatus.REFUND_REQUESTED, "양조장 일정 변경");
+        int ret = joyOrderBatchService.batchInsert(joyOrderList.stream().map(jo -> {
+            return new JoyStatusHistoryBatchRow(jo, JoyPaymentStatus.REFUND_REQUESTED, "양조장 일정 변경");
         }).toList());
         log.info("JoyStatusHistory Batch Insert Count: {}", ret); // batch insert count logging
+    }
+
+    /**
+     * 체험 예약 환불 처리 스케줄러
+     */
+    @Scheduled(cron = "0 */5 * * * *")
+    public void joyOrderRefundScheduling() {
+        List<PayDBInfoDto> payDBInfoDtoList = joyOrderBatchService.getPayInfoListAndUpdateStatusToRefundProcessing();
+        if(payDBInfoDtoList.isEmpty()) {
+            System.out.println("환불 대상 레코드가 없습니다.");
+            return;
+        }
+        List<Payment> refundResult = joyOrderRefundService.pgRefundProcess(payDBInfoDtoList);
+        joyOrderBatchService.refundResultProcess(refundResult);
     }
 
 }

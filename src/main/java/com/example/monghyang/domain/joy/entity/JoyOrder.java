@@ -87,4 +87,13 @@ public class JoyOrder {
     public void setFailed() {
         this.joyPaymentStatus = JoyPaymentStatus.FAILED;
     }
+    public void setRefundProcessing() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUND_PROCESSING;
+    }
+    public void setRefunded() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUNDED;
+    }
+    public void setRefundFailed() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUND_FAILED;
+    }
 }

@@ -1,17 +1,17 @@
 package com.example.monghyang.domain.brewery.service;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.brewery.dto.*;
 import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.ClosedStatus;
+import com.example.monghyang.domain.global.pg.PayDBInfoDto;
+import com.example.monghyang.domain.global.pg.Payment;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
-import com.example.monghyang.domain.joy.entity.JoyOrder;
-import com.example.monghyang.domain.joy.entity.JoyPaymentStatus;
-import com.example.monghyang.domain.joy.entity.JoyStatusHistory;
 import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
@@ -27,7 +27,6 @@ import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
-import com.example.monghyang.domain.orders.entity.PaymentStatus;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.tag.dto.TagNameDto;
 import com.example.monghyang.domain.users.entity.Users;
@@ -40,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +68,7 @@ public class BreweryService {
     private final JoyOrderRepository joyOrderRepository;
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoyOrderService joyOrderService;
+    private final JoyOrderBatchService joyOrderBatchService;
 
     /**
      * 양조장 지역 종류 전체를 반환

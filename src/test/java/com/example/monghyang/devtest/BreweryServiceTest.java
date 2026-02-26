@@ -81,7 +81,6 @@ public class BreweryServiceTest {
                 .businessRegistrationNumber("test registration number").breweryDepositor("test depositor")
                 .breweryAccountNumber("test account").breweryBankName("test bank").introduction("test introduction")
                 .breweryWebsite("test web site url").isAgreedBrewery(true)
-                .startTime(LocalTime.of(8, 0)).endTime(LocalTime.of(18, 0))
                 .isRegularVisit(true).build();
     }
 

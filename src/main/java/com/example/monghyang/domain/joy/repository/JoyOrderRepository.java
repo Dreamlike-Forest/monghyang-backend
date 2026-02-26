@@ -3,9 +3,11 @@ package com.example.monghyang.domain.joy.repository;
 import com.example.monghyang.domain.joy.dto.ResJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.JoyOrder;
 import com.example.monghyang.domain.joy.entity.JoyPaymentStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,15 +52,16 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
     Optional<JoyOrder> findByPgOrderIdForSetFailed(@Param("pgOrderId") UUID pgOrderId);
 
     /**
-     * 지정된 '체험 예약 레코드'를 refund_requested 상태로 일괄 갱신
-     * @param joyOrderIdList
+     * PK를 조건으로, '체험 예약 레코드'를 특정 JoyPaymentStatus 상태로 일괄 갱신
+     * @param joyOrderIdList 체험 예약 레코드 식별자 리스트
+     * @param status JoyPaymentStatus
      */
     @Modifying
     @Query("""
-    update JoyOrder jo set jo.joyPaymentStatus = com.example.monghyang.domain.joy.entity.JoyPaymentStatus.REFUND_REQUESTED
+    update JoyOrder jo set jo.joyPaymentStatus = :status
     where jo.id in :joyOrderIdList
     """)
-    void updatePaymentStatusToRefundRequestedByJoyIdListAndDate(@Param("joyOrderIdList") List<Long> joyOrderIdList);
+    void updatePaymentStatusByJoyIdListAndStatus(@Param("joyOrderIdList") List<Long> joyOrderIdList, @Param("status") JoyPaymentStatus status);
 
     /**
      * 특정 체험들의 특정 날의 특정 상태인 '체험 예약'의 식별자 리스트 조회
@@ -74,4 +77,14 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
     and jo.joyPaymentStatus = :status
     """)
     List<Long> findIdByJoyIdListAndReservationAndStatus(@Param("joyIdList") List<Long> joyIdList, @Param("closedDate") LocalDate closedDate, @Param("status")JoyPaymentStatus status);
+
+    /**
+     * 특정 status 인 레코드 N개 select for update
+     * @param pageable 조회할 레코드 수(0, N)
+     * @param status 조회 조건
+     * @return N개의 레코드
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select jo from JoyOrder jo where jo.joyPaymentStatus = :status")
+    List<JoyOrder> findPaymentKeyByJoyPaymentStatusAndPageableForUpdate(Pageable pageable, @Param("status") JoyPaymentStatus status);
 }

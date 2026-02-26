@@ -463,8 +463,8 @@ public class AuthServiceTest {
         dto.setRegion_type_id(1); // RegionType id 1 가정
 
         // 영업 시작/종료 시간 (start < end)
-        dto.setStart_time(LocalTime.of(9, 0));
-        dto.setEnd_time(LocalTime.of(18, 0));
+//        dto.setStart_time(LocalTime.of(9, 0));
+//        dto.setEnd_time(LocalTime.of(18, 0));
 
         // 이미지 1장 추가
         List<AddImageDto> imageList = new ArrayList<>();
@@ -558,8 +558,8 @@ public class AuthServiceTest {
         assertEquals("https://brewery.test", savedBrewery.getBreweryWebsite());
         assertTrue(savedBrewery.getIsRegularVisit());
         assertTrue(savedBrewery.getIsAgreedBrewery());
-        assertEquals(joinDto.getStart_time(), savedBrewery.getStartTime());
-        assertEquals(joinDto.getEnd_time(), savedBrewery.getEndTime());
+//        assertEquals(joinDto.getStart_time(), savedBrewery.getStartTime());
+//        assertEquals(joinDto.getEnd_time(), savedBrewery.getEndTime());
 
         // BreweryImage 매핑 검증
         assertEquals("breweryImageKey", savedBreweryImage.getImageKey());
@@ -573,8 +573,8 @@ public class AuthServiceTest {
         // given
         BreweryJoinDto dto = createBreweryJoinDto();
         // start_time > end_time 이 되도록 세팅
-        dto.setStart_time(LocalTime.of(18, 0));
-        dto.setEnd_time(LocalTime.of(9, 0));
+//        dto.setStart_time(LocalTime.of(18, 0));
+//        dto.setEnd_time(LocalTime.of(9, 0));
 
         // when
         ApplicationException ex = assertThrows(
@@ -598,8 +598,8 @@ public class AuthServiceTest {
         // given
         BreweryJoinDto dto = createBreweryJoinDto();
         dto.setRegion_type_id(999); // 존재하지 않는 지역 ID 라고 가정
-        dto.setStart_time(LocalTime.of(9, 0));   // 정상 시간
-        dto.setEnd_time(LocalTime.of(18, 0));    // 정상 시간
+//        dto.setStart_time(LocalTime.of(9, 0));   // 정상 시간
+//        dto.setEnd_time(LocalTime.of(18, 0));    // 정상 시간
 
         // createUser 내부에서 호출되는 Role, 비밀번호 인코딩 stubbing
         Role role = new Role();

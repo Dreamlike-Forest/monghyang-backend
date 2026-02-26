@@ -51,4 +51,5 @@ public class Payment { // 결제 정보를 담는 객체
     private CashReceipt cashReceipt; // 현금영수증 정보
     private List<CashReceiptHistory> cashReceipts; // 현금영수증 발행 및 취소 이력이 담기는 배열
     private Discount discount; // 카드사 및 퀵계좌이체의 즉시 할인 프로모션 정보
+    private PayDBInfoDto payDBInfoDto; // 환불 대상 db 레코드의 핵심 정보(본 서버 비즈니스 로직에 사용되는 필드)
 }
