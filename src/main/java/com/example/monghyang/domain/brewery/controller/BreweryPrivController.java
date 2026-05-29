@@ -2,6 +2,7 @@ package com.example.monghyang.domain.brewery.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
+import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryScheduleDto;
 import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
@@ -162,6 +163,20 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Void>> deleteBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
         breweryService.deleteClosedDate(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 해제되었습니다."));
+    }
+
+    @PostMapping("/schedule")
+    @Operation(
+            summary = "양조장 운영시간/휴게시간 일정 변경",
+            description = "effective_date(적용 시작일)부터 적용될 요일별 운영시간/휴게시간 스냅샷을 등록합니다. "
+                    + "effective_date 이후에 예약된 PAID 상태의 체험 예약은 자동으로 환불 처리됩니다."
+    )
+    public ResponseEntity<ResponseDataDto<Void>> updateBrewerySchedule(
+            @LoginUserId Long userId,
+            @Valid @ModelAttribute ReqUpdateBreweryScheduleDto dto
+    ) {
+        breweryService.updateBrewerySchedule(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("양조장 일정이 변경되었습니다."));
     }
 
 }

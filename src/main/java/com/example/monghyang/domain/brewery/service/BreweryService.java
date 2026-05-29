@@ -1,13 +1,19 @@
 package com.example.monghyang.domain.brewery.service;
 
+import com.example.monghyang.domain.auth.dto.BreweryScheduleDto;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.brewery.dto.*;
 import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepository;
 import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.global.ClosedStatus;
+import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.pg.PayDBInfoDto;
 import com.example.monghyang.domain.global.pg.Payment;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
@@ -69,6 +75,8 @@ public class BreweryService {
     private final JoyStatusHistoryRepository joyStatusHistoryRepository;
     private final JoyOrderService joyOrderService;
     private final JoyOrderBatchService joyOrderBatchService;
+    private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
+    private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
 
     /**
      * 양조장 지역 종류 전체를 반환
@@ -363,5 +371,71 @@ public class BreweryService {
             joyOrderService.setRefundRequestedJoyOrderByBreweryClosedDateAndTime(brewery.getId(), dto);
 
         }
+    }
+
+    /**
+     * 양조장 운영시간/휴게시간 스케줄을 주간 스냅샷 단위로 변경합니다.
+     * <p>
+     * 동일 effective_date가 이미 존재하면 해당 날짜의 기존 레코드를 삭제 후 재삽입합니다.
+     * 이전 effective_date 스냅샷은 보존됩니다.
+     * effective_date 이후 예약된 해당 양조장 체험의 PAID 예약은 REFUND_REQUESTED로 전환됩니다.
+     *
+     * @param userId 요청 회원 식별자
+     * @param dto    스케줄 변경 요청 DTO
+     */
+    @Transactional
+    public void updateBrewerySchedule(Long userId, ReqUpdateBreweryScheduleDto dto) {
+        // 1. 양조장 조회
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+
+        // 2. effective_date 과거 날짜 여부 검증
+        //    (@FutureOrPresent로 1차 검증되나 서비스 레이어에서 명시적 재검증)
+        if (dto.getEffective_date().isBefore(LocalDate.now())) {
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+
+        // 3. 입력값 검증: 중복 요일, 휴게시간이 운영시간 범위를 벗어나는지 확인
+        Set<DayOfWeek> dayOfWeekSet = new HashSet<>();
+        for (BreweryScheduleDto schedule : dto.getSchedules()) {
+            if (dayOfWeekSet.contains(schedule.getDay_of_week())) {
+                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
+            if (schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
+                if (schedule.getBreak_start().isBefore(schedule.getOpen_time())
+                        || schedule.getBreak_end().isAfter(schedule.getClose_time())) {
+                    throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+                }
+            }
+            dayOfWeekSet.add(schedule.getDay_of_week());
+        }
+
+        // 4. 동일 effective_date의 기존 스냅샷이 있으면 삭제 (재등록 허용)
+        LocalDate effectiveDate = dto.getEffective_date();
+        breweryWeeklyOpenTimeRepository.deleteByBreweryIdAndEffectiveDate(brewery.getId(), effectiveDate);
+        breweryWeeklyBreakTimeRepository.deleteByBreweryIdAndEffectiveDate(brewery.getId(), effectiveDate);
+
+        // 5. 신규 스냅샷 INSERT
+        for (BreweryScheduleDto schedule : dto.getSchedules()) {
+            breweryWeeklyOpenTimeRepository.save(BreweryWeeklyOpenTime.builder()
+                    .brewery(brewery)
+                    .dayOfWeek(schedule.getDay_of_week())
+                    .openTime(schedule.getOpen_time())
+                    .closeTime(schedule.getClose_time())
+                    .effectiveDate(effectiveDate)
+                    .build());
+            if (schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
+                breweryWeeklyBreakTimeRepository.save(BreweryWeeklyBreakTime.builder()
+                        .brewery(brewery)
+                        .dayOfWeek(schedule.getDay_of_week())
+                        .breakStart(schedule.getBreak_start())
+                        .breakEnd(schedule.getBreak_end())
+                        .effectiveDate(effectiveDate)
+                        .build());
+            }
+        }
+
+        // 6. effective_date 이후 체험 예약 환불 처리 트리거
+        joyOrderService.setRefundRequestedByScheduleChange(brewery.getId(), effectiveDate);
     }
 }

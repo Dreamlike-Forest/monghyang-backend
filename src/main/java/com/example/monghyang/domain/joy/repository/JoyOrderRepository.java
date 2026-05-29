@@ -87,4 +87,26 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select jo from JoyOrder jo where jo.joyPaymentStatus = :status")
     List<JoyOrder> findPaymentKeyByJoyPaymentStatusAndPageableForUpdate(Pageable pageable, @Param("status") JoyPaymentStatus status);
+
+    /**
+     * 특정 체험 목록의 effective_date 포함 이후 날짜에 예약된 특정 상태의 체험 예약 식별자 목록을 조회합니다.
+     * 양조장 스케줄 변경 시 환불 처리 대상 예약을 선정하는 데 사용합니다.
+     *
+     * @param joyIdList     체험 식별자 리스트
+     * @param effectiveDate 스케줄 적용 시작일 (이 날짜 포함 이후)
+     * @param status        조회 대상 결제 상태
+     * @return 조건에 해당하는 체험 예약 식별자 리스트
+     */
+    @Query("""
+    select jo.id from JoyOrder jo
+    where jo.joy.id in :joyIdList
+    and date(jo.reservation) >= :effectiveDate
+    and jo.joyPaymentStatus = :status
+    """)
+    List<Long> findIdByJoyIdListAndReservationOnOrAfterAndStatus(
+            @Param("joyIdList") List<Long> joyIdList,
+            @Param("effectiveDate") LocalDate effectiveDate,
+            @Param("status") JoyPaymentStatus status
+    );
 }
+
