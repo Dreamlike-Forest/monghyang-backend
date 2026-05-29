@@ -77,6 +77,6 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      * @param joyId
      * @return
      */
-    @Query("select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(b.startTime, b.endTime, j.timeUnit, j.maxCount) from Joy j join j.brewery b where j.id = :joyId")
+    @Query("select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(b.startTime, b.endTime, j.timeUnit, j.maxCount, j.minCount) from Joy j join j.brewery b where j.id = :joyId")
     Optional<JoyInfoDto> findJoyTimeInfoByJoyId(@Param("joyId") Long joyId);
 }
