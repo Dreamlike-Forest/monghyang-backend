@@ -206,18 +206,10 @@ Mermaid diagrams **must** be included in the following situations:
 - Use **Korean labels** for nodes and edges to improve readability.
   - **Exception:** Proper nouns such as **class names** and **method names** MUST remain in English to maintain technical accuracy. You may append a Korean explanation alongside the English name (e.g., `TrafficRefillService (트래픽 리필 서비스)`).
 - Labels containing special characters must be wrapped in quotes (`"..."`).
-- Diagrams **MUST be rendered with a white background**, not transparent.  
-  Always place the following init directive at the top of every Mermaid diagram block:
-  ```
-  %%{init: {"theme": "default", "themeVariables": {"background": "#ffffff"}}}%%
-  ```
-
-- **No HTML Wrapping Rule**: Do NOT wrap Mermaid diagram blocks in HTML `<div>` tags. Previously, this was required to force a white background, but it causes `Invalid mermaid header` parsing errors in the chat UI due to HTML escaping of quotes within the JSON init directive.
-- The `init` directive alone is sufficient to enforce the white background.
-- Simply output pure markdown:
+- **No HTML & No Init Directive Rule**: Do NOT wrap Mermaid diagram blocks in HTML `<div>` tags, and do NOT use the `%%{init: ...}%%` directive. Both can cause parsing errors or display issues in the chat UI.
+- Simply output pure markdown without any background-color hacks:
   ````markdown
   ```mermaid
-  %%{init: {"theme": "default", "themeVariables": {"background": "#ffffff"}}}%%
   ... diagram code ...
   ```
   ````
