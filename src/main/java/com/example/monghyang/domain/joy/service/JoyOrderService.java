@@ -60,20 +60,18 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
 
     /**
      * 체험 시간대 유효성 검증
-     * @param joyId 체험 식별자
+     * @param joyInfoDto 체험 간단 정보 dto
      * @param reservationDate 예약 희망 일자
      * @param reservationTime 예약 희망 시간대
      * @param count 예약 인원 수                        
      */
-    private void verifyReservation(Long joyId, LocalDate reservationDate, LocalTime reservationTime, Integer count) {
-        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+    private void verifyReservation(JoyInfoDto joyInfoDto, LocalDate reservationDate, LocalTime reservationTime, Integer count) {
         if(count > joyInfoDto.maxCount()) {
+            throw new ApplicationException(ApplicationError.JOY_COUNT_OVER);
+        } else if(count < joyInfoDto.minCount()) {
             throw new ApplicationException(ApplicationError.JOY_COUNT_OVER);
         }
         long minDiff = ChronoUnit.MINUTES.between(joyInfoDto.breweryStartTime(), reservationTime);
-        System.out.println("양조장 운영시간: "+joyInfoDto.breweryStartTime()+" "+joyInfoDto.breweryEndTime());
-        System.out.println("입력받은 시간값: "+reservationTime+" "+reservationTime.plusMinutes(joyInfoDto.timeUnit()));
 
         // 검증 과정
         // 1. 예약 일시가 현재보다 이전인지
@@ -97,7 +95,9 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
      */
     @Transactional
     public void incrementJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
-        verifyReservation(joyId, date, time, count);
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        verifyReservation(joyInfoDto, date, time, count);
 
         int ret;
         // Transactional 적용을 위해 JoySlotService의 메서드를 각각 따로 호출합니다.
