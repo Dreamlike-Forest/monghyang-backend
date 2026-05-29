@@ -73,6 +73,13 @@ public class JoyOrder {
         this.reservation = reservation.withSecond(0).withNano(0);
     }
 
+    public void updateCount(Integer count) {
+        if(count < 0) {
+            count = 0;
+        }
+        this.count = count;
+    }
+
     public void setPgPaymentKey(String pgPaymentKey) {
         if(this.pgPaymentKey == null) {
             // 딱 한번만 수정 가능

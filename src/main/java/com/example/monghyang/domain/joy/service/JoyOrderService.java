@@ -4,7 +4,6 @@ import com.example.monghyang.domain.batch.dto.JoyStatusHistoryBatchRow;
 import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.batch.service.JoyOrderRefundService;
 import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
-import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import com.example.monghyang.domain.global.order.PaymentManager;
 import com.example.monghyang.domain.global.pg.PayDBInfoDto;
 import com.example.monghyang.domain.global.pg.Payment;
@@ -31,7 +30,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,22 +92,12 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
      * @param count
      */
     @Transactional
-    public void incrementJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
+    public void reservationJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
         JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         verifyReservation(joyInfoDto, date, time, count);
-
-        int ret;
-        // Transactional 적용을 위해 JoySlotService의 메서드를 각각 따로 호출합니다.
-        try {
-            ret = joySlotService.createJoySlot(joyId, date, time, count);
-        } catch (DataIntegrityViolationException e) {
-            // joy slot 업데이트 쿼리
-            ret = joySlotService.incrementJoySlotCount(joyId, date, time, count);
-        }
-        if(ret != 1) {
-            throw new ApplicationException(ApplicationError.JOY_COUNT_OVER);
-        }
+        // 체험 예약 슬롯 upsert(insert -> 중복 발생 시 조건부 update)
+        joySlotService.reservationJoySlot(joyId, date, time, count, joyInfoDto.maxCount());
     }
 
     @Override
@@ -194,6 +182,9 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     public void updateReservation(Long userId, ReqUpdateJoyOrderDto dto) {
         JoyOrder joyOrder = joyOrderRepository.findById(dto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        verifyReservation(joyInfoDto, dto.getReservation_date(), dto.getReservation_time(), dto.getCount());
         if(!joyOrder.getUsers().getId().equals(userId)) {
             throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
         }
@@ -206,13 +197,14 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         int count = (dto.getCount() == null) ? joyOrder.getCount() : dto.getCount();
 
         // 시간대 및 인원 변경 반영
-        incrementJoySlotCount(joyOrder.getJoy().getId(), dto.getReservation_date(), dto.getReservation_time(), count);
+        joySlotService.reservationJoySlot(joyOrder.getJoy().getId(), dto.getReservation_date(), dto.getReservation_time(), count, joyInfoDto.maxCount());
 
         // 기존 예약 슬롯 카운트 감소 or 제거
         joySlotService.decrementJoySlotCount(joyOrder.getJoy().getId(), joyOrder.getReservation().toLocalDate(), joyOrder.getReservation().toLocalTime(), joyOrder.getCount());
 
-        // 예약 내역의 예약 시간대 정보 갱신
+        // 예약 내역의 예약 시간대 정보 및 예약 인원수 갱신
         joyOrder.updateReservation(LocalDateTime.of(dto.getReservation_date(), dto.getReservation_time()));
+        joyOrder.updateCount(count);
     }
 
     // 체험 시간 변경(양조장용, 변경 조건 제한 없음)
@@ -220,16 +212,18 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     public void updateReservationByBrewery(Long userId, ReqUpdateJoyOrderDto dto) {
         JoyOrder joyOrder = joyOrderRepository.findByIdAndBreweryUserId(dto.getId(), userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
-
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         // 수정하려는 시간대의 유효성 검증
         int count = (dto.getCount() == null) ? joyOrder.getCount() : dto.getCount();
         // 시간대 및 인원 변경 반영
-        incrementJoySlotCount(dto.getId(), dto.getReservation_date(), dto.getReservation_time(), count);
+        joySlotService.reservationJoySlot(dto.getId(), dto.getReservation_date(), dto.getReservation_time(), count, joyInfoDto.maxCount());
         // 기존 예약 슬롯 카운트 감소 or 제거
         joySlotService.decrementJoySlotCount(joyOrder.getJoy().getId(), dto.getReservation_date(), dto.getReservation_time(), joyOrder.getCount());
 
-        // 예약 내역의 예약 시간대 정보 갱신
+        // 예약 내역의 예약 시간대 정보 및 예약 인원수 갱신
         joyOrder.updateReservation(LocalDateTime.of(dto.getReservation_date(), dto.getReservation_time()));
+        joyOrder.updateCount(count);
     }
 
     // 체험 취소(환불) 요청(체험 시작 하루 전까지만 취소 가능)

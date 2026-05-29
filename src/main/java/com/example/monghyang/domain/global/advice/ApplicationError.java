@@ -34,6 +34,7 @@ public enum ApplicationError {
     INVALID_TIME(HttpStatus.BAD_REQUEST, "잘못된 시간/날짜 정보입니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_COUNT_OVER(HttpStatus.BAD_REQUEST, "예약 가능 인원수를 초과하였습니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
     JOY_COUNT_UNDER(HttpStatus.BAD_REQUEST, "예약 가능 최소 인원수에 미달됩니다.", ErrorType.BUSINESS, LogLevel.INFO, false),
+    JOY_DB_COUNT_INVALID(HttpStatus.INTERNAL_SERVER_ERROR, "DB의 예약 인원수의 정합성이 깨졌습니다.", ErrorType.SYSTEM, LogLevel.ERROR, false),
     AUTH_INFO_NOT_FOUND(HttpStatus.UNAUTHORIZED, "세션(인증) 정보가 존재하지 않습니다.", ErrorType.SECURITY, LogLevel.WARN, true),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "요청의 헤더에 refresh token이 존재하지 않습니다.", ErrorType.SECURITY, LogLevel.WARN, true),
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "아이디와 비밀번호가 일치하지 않습니다.", ErrorType.SECURITY, LogLevel.WARN, true),

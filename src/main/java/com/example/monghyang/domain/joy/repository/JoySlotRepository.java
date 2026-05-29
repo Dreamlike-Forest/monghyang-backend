@@ -15,19 +15,25 @@ import java.util.Optional;
 
 public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     /**
-     * 예약 슬롯 새로 생성
-     * @param joyId
-     * @param date
-     * @param time
-     * @param count
-     * @return
+     * 예약 슬롯 upsert (native query)
      */
     @Modifying
     @Query(value = """
         insert into joy_slot(joy_id, reservation_date, reservation_time, count)
-        values(:joyId, :date, :time, :count);
+        values(:joyId, :date, :time, :incCount)
+        on duplicate key update
+            `count` = if(
+                `count` + :incCount <= :maxCount,
+                `count` + :incCount,
+                `count`
+            );
     """, nativeQuery = true)
-    int insertJoySlot(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time, @Param("count") Integer count);
+    int upsertJoySlot(@Param("joyId") Long joyId,
+                      @Param("date") LocalDate date,
+                      @Param("time") LocalTime time,
+                      @Param("incCount") Integer incCount,
+                      @Param("maxCount") Integer maxCount
+    );
 
     /**
      * 기존 예약 슬롯의 카운트 증가
@@ -57,7 +63,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     @Query("""
     update JoySlot js set js.count = js.count - :count
     where js.joy.id = :joyId and js.reservationDate = :date and js.reservationTime = :time
-    and js.count - :count > 0
+    and js.count - :count >= 0
     """)
     int decrementJoySlotCount(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time, @Param("count") Integer count);
 

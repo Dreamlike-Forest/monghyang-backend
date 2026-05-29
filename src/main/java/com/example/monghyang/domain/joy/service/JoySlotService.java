@@ -33,20 +33,22 @@ public class JoySlotService {
      * @param joyId
      * @param date
      * @param time
-     * @param count
+     * @param incCount 예약 인원 수
+     * @param maxCount 해당 체험 최대 예약 가능 인원수
      * @return
      * @throws DataIntegrityViolationException
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int createJoySlot(Long joyId, LocalDate date, LocalTime time, Integer count) throws DataIntegrityViolationException {
+    @Transactional
+    public void reservationJoySlot(Long joyId, LocalDate date, LocalTime time, Integer incCount, Integer maxCount) throws DataIntegrityViolationException {
         // JDBC 예외 발생으로 인한 트랜잭션 강제 롤백을 insert 수행에 대해서만 적용되도록 하기 위해 트랜잭션 분리
 
-        return joySlotRepository.insertJoySlot(joyId, date, time, count);
-    }
+        int ret =  joySlotRepository.upsertJoySlot(joyId, date, time, incCount, maxCount);
+        if(ret == 0) {
+            throw new ApplicationException(ApplicationError.JOY_COUNT_OVER);
+        } else if(ret == 2) {
+            log.info("체험 예약 슬롯 생성 upsert 발생. 체험 식별자: {}, 예약 일자: {}, 예약 시간대: {}, 예약 인원: {}", joyId, date, time, incCount);
+        }
 
-    @Transactional
-    public int incrementJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
-        return joySlotRepository.incrementJoySlotCount(joyId, date, time, count);
     }
 
     /**
@@ -60,9 +62,9 @@ public class JoySlotService {
     public void decrementJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
         int ret = joySlotRepository.decrementJoySlotCount(joyId, date, time, count);
         if(ret == 0) {
-            // 카운트 감소 후 카운트가 0이 되는 경우 감소되지 않는다. (ret == 0)
-            // 이 경우 해당 슬롯을 아예 제거한다.
-            joySlotRepository.deleteJoySlot(joyId, date, time);
+            // 차감이 불가한 경우 정합성이 깨진 것이므로, 예외 반환 및 로그 기록
+            log.info("DB의 체험 예약 인원수 정합성이 깨졌습니다. 체험 식별자: {}, 체험 일자: {}, 체험 시간대: {}, 차감하려는 인원수: {}", joyId, date, time, count);
+            throw new ApplicationException(ApplicationError.JOY_DB_COUNT_INVALID);
         }
     }
 
