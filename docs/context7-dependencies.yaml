@@ -1,0 +1,486 @@
+# 이 파일은 AGENTS.md의 의존성 및 Context7 기준 문서입니다.
+# 버전은 build.gradle, Gradle dependencyManagement, Gradle resolved dependency 출력 기준입니다.
+# Context7 직접 조회는 2026-05-30에 Spring Boot, Spring Security, Spring Data JPA에 대해 수행했습니다.
+
+metadata:
+  generated_at: "2026-05-30"
+  generated_by: "Codex"
+  source_files:
+    - "build.gradle"
+    - "gradle/wrapper/gradle-wrapper.properties"
+  verification_commands:
+    - "./gradlew dependencyManagement"
+    - "./gradlew dependencies --configuration compileClasspath"
+    - "./gradlew dependencies --configuration testRuntimeClasspath"
+  context7_resolution_policy:
+    primary_usage: "클래스/API 사용, 구현 예시, 코드 생성에는 repository slug를 우선 사용합니다."
+    fallback_usage: "설정 reference table, property reference, DSL guide, reference chapter 의미 확인에만 website/reference slug를 사용합니다."
+    call_optimization: "같은 dependency에 대해 기본 1회 호출을 원칙으로 하고, 요구사항 변경 또는 정확한 signature 재검증이 필요할 때만 추가 호출합니다."
+
+project:
+  java:
+    version: "21"
+  gradle:
+    wrapper_version: "8.14.2"
+  spring_boot:
+    version: "3.5.3"
+    plugin: "org.springframework.boot"
+  dependency_management:
+    plugin: "io.spring.dependency-management"
+    version: "1.1.7"
+
+context7_resolved_libraries:
+  spring_boot:
+    queried: true
+    title: "Spring Boot"
+    primary_library_id: "/spring-projects/spring-boot"
+    version_selector: "v3.5.3"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-boot_3_5"
+      - "/websites/spring_io_spring-boot"
+  spring_security:
+    queried: true
+    title: "Spring Security"
+    primary_library_id: "/spring-projects/spring-security"
+    version_selector: "6.5.1"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-security_reference_6_5"
+  spring_data_jpa:
+    queried: true
+    title: "Spring Data JPA"
+    primary_library_id: "/spring-projects/spring-data-jpa"
+    version_selector: "3.5.1"
+    fallback_library_ids: []
+
+dependencies:
+  spring_boot:
+    version: "3.5.3"
+    version_source: "build.gradle plugin org.springframework.boot"
+    primary_library_id: "/spring-projects/spring-boot"
+    context7_version_selector: "v3.5.3"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-boot_3_5"
+      - "/websites/spring_io_spring-boot"
+    artifacts:
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-actuator"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-oauth2-client"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-data-jpa"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-security"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-web"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-data-redis"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-validation"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+      - group: "org.springframework.boot"
+        name: "spring-boot-starter-test"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+
+  spring_framework:
+    version: "6.2.8"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/spring-projects/spring-framework"
+    context7_version_selector: "6.2.8"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-framework_reference"
+    artifacts:
+      - group: "org.springframework"
+        name: "spring-core"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-context"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-web"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-webmvc"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-jdbc"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-tx"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "org.springframework"
+        name: "spring-test"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+
+  spring_security:
+    version: "6.5.1"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/spring-projects/spring-security"
+    context7_version_selector: "6.5.1"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-security_reference_6_5"
+    artifacts:
+      - group: "org.springframework.security"
+        name: "spring-security-config"
+        declared_version: "managed"
+        resolved_version: "6.5.1"
+      - group: "org.springframework.security"
+        name: "spring-security-core"
+        declared_version: "managed"
+        resolved_version: "6.5.1"
+      - group: "org.springframework.security"
+        name: "spring-security-web"
+        declared_version: "managed"
+        resolved_version: "6.5.1"
+      - group: "org.springframework.security"
+        name: "spring-security-oauth2-client"
+        declared_version: "managed"
+        resolved_version: "6.5.1"
+      - group: "org.springframework.security"
+        name: "spring-security-test"
+        declared_version: "managed"
+        resolved_version: "6.5.1"
+
+  spring_data_jpa:
+    version: "3.5.1"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/spring-projects/spring-data-jpa"
+    context7_version_selector: "3.5.1"
+    fallback_library_ids: []
+    artifacts:
+      - group: "org.springframework.data"
+        name: "spring-data-jpa"
+        declared_version: "managed"
+        resolved_version: "3.5.1"
+      - group: "org.springframework.data"
+        name: "spring-data-commons"
+        declared_version: "managed"
+        resolved_version: "3.5.1"
+      - group: "org.hibernate.orm"
+        name: "hibernate-core"
+        declared_version: "managed"
+        resolved_version: "6.6.18.Final"
+      - group: "jakarta.persistence"
+        name: "jakarta.persistence-api"
+        declared_version: "managed"
+        resolved_version: "3.1.0"
+
+  redis:
+    version: "3.5.1"
+    version_source: "Spring Boot 3.5.3 dependency management for Spring Data Redis"
+    primary_library_id: "/spring-projects/spring-data-redis"
+    context7_version_selector: "3.5.1"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-data-redis_reference"
+    artifacts:
+      - group: "org.springframework.data"
+        name: "spring-data-redis"
+        declared_version: "managed"
+        resolved_version: "3.5.1"
+      - group: "io.lettuce"
+        name: "lettuce-core"
+        declared_version: "managed"
+        resolved_version: "6.6.0.RELEASE"
+
+  spring_session:
+    version: "3.5.1"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/spring-projects/spring-session"
+    context7_version_selector: "3.5.1"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-session_reference"
+    artifacts:
+      - group: "org.springframework.session"
+        name: "spring-session-data-redis"
+        declared_version: "managed"
+        resolved_version: "3.5.1"
+      - group: "org.springframework.session"
+        name: "spring-session-core"
+        declared_version: "managed"
+        resolved_version: "3.5.1"
+
+  jdbc:
+    version: "6.2.8"
+    version_source: "Spring Framework 6.2.8 and Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/spring-projects/spring-framework"
+    context7_version_selector: "6.2.8"
+    fallback_library_ids:
+      - "/websites/spring_io_spring-framework_reference"
+    artifacts:
+      - group: "org.springframework"
+        name: "spring-jdbc"
+        declared_version: "managed"
+        resolved_version: "6.2.8"
+      - group: "com.zaxxer"
+        name: "HikariCP"
+        declared_version: "managed"
+        resolved_version: "6.3.0"
+      - group: "org.mariadb.jdbc"
+        name: "mariadb-java-client"
+        declared_version: "managed"
+        resolved_version: "3.5.3"
+
+  validation:
+    version: "3.0.2"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/hibernate/hibernate-validator"
+    context7_version_selector: "8.0.2.Final"
+    fallback_library_ids:
+      - "/websites/hibernate_validator"
+    artifacts:
+      - group: "org.hibernate.validator"
+        name: "hibernate-validator"
+        declared_version: "managed"
+        resolved_version: "8.0.2.Final"
+      - group: "jakarta.validation"
+        name: "jakarta.validation-api"
+        declared_version: "managed"
+        resolved_version: "3.0.2"
+
+  jackson:
+    version: "2.19.1"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/fasterxml/jackson"
+    context7_version_selector: "2.19.1"
+    fallback_library_ids: []
+    artifacts:
+      - group: "com.fasterxml.jackson.datatype"
+        name: "jackson-datatype-jsr310"
+        declared_version: "managed"
+        resolved_version: "2.19.1"
+      - group: "com.fasterxml.jackson.core"
+        name: "jackson-databind"
+        declared_version: "transitive"
+        resolved_version: "2.19.1"
+      - group: "com.fasterxml.jackson.core"
+        name: "jackson-core"
+        declared_version: "transitive"
+        resolved_version: "2.19.1"
+      - group: "com.fasterxml.jackson.core"
+        name: "jackson-annotations"
+        declared_version: "transitive"
+        resolved_version: "2.19.1"
+
+  junit:
+    version: "5.12.2"
+    version_source: "Spring Boot 3.5.3 dependency management via spring-boot-starter-test"
+    primary_library_id: "/junit-team/junit5"
+    context7_version_selector: "5.12.2"
+    fallback_library_ids:
+      - "/websites/junit_org_junit5"
+    artifacts:
+      - group: "org.junit.jupiter"
+        name: "junit-jupiter"
+        declared_version: "managed"
+        resolved_version: "5.12.2"
+      - group: "org.junit.platform"
+        name: "junit-platform-launcher"
+        declared_version: "managed"
+        resolved_version: "1.12.2"
+
+  mockito:
+    version: "5.17.0"
+    version_source: "Spring Boot 3.5.3 dependency management with explicit test dependency overrides"
+    primary_library_id: "/mockito/mockito"
+    context7_version_selector: "5.17.0"
+    fallback_library_ids: []
+    artifacts:
+      - group: "org.mockito"
+        name: "mockito-core"
+        declared_version: "transitive"
+        resolved_version: "5.17.0"
+      - group: "org.mockito"
+        name: "mockito-junit-jupiter"
+        declared_version: "5.14.2"
+        resolved_version: "5.14.2"
+      - group: "org.mockito"
+        name: "mockito-inline"
+        declared_version: "5.2.0"
+        resolved_version: "5.2.0"
+
+  testcontainers:
+    version: "1.20.2"
+    version_source: "build.gradle explicit dependency declaration"
+    primary_library_id: "/testcontainers/testcontainers-java"
+    context7_version_selector: "1.20.2"
+    fallback_library_ids:
+      - "/websites/testcontainers"
+    artifacts:
+      - group: "org.testcontainers"
+        name: "junit-jupiter"
+        declared_version: "1.20.2"
+        resolved_version: "1.20.2"
+      - group: "org.testcontainers"
+        name: "mariadb"
+        declared_version: "1.20.2"
+        resolved_version: "1.20.2"
+      - group: "org.testcontainers"
+        name: "testcontainers"
+        declared_version: "transitive"
+        resolved_version: "1.21.2"
+        note: "Spring Boot dependency management constraint upgrades the transitive core module."
+
+  aws_sdk:
+    version: "2.25.47"
+    version_source: "build.gradle explicit dependency declaration"
+    primary_library_id: "/aws/aws-sdk-java-v2"
+    context7_version_selector: "2.25.47"
+    fallback_library_ids:
+      - "/websites/aws_amazon_sdk_for_java_2_x_developer_guide"
+    artifacts:
+      - group: "software.amazon.awssdk"
+        name: "s3"
+        declared_version: "2.25.47"
+        resolved_version: "2.25.47"
+      - group: "software.amazon.awssdk"
+        name: "sdk-core"
+        declared_version: "transitive"
+        resolved_version: "2.25.47"
+      - group: "software.amazon.awssdk"
+        name: "auth"
+        declared_version: "transitive"
+        resolved_version: "2.25.47"
+      - group: "software.amazon.awssdk"
+        name: "regions"
+        declared_version: "transitive"
+        resolved_version: "2.25.47"
+
+  jjwt:
+    version: "0.11.5"
+    version_source: "build.gradle explicit dependency declaration"
+    primary_library_id: "/jwtk/jjwt"
+    context7_version_selector: "0.11.5"
+    fallback_library_ids: []
+    artifacts:
+      - group: "io.jsonwebtoken"
+        name: "jjwt-api"
+        declared_version: "0.11.5"
+        resolved_version: "0.11.5"
+      - group: "io.jsonwebtoken"
+        name: "jjwt-impl"
+        declared_version: "0.11.5"
+        resolved_version: "0.11.5"
+      - group: "io.jsonwebtoken"
+        name: "jjwt-jackson"
+        declared_version: "0.11.5"
+        resolved_version: "0.11.5"
+
+  springdoc_openapi:
+    version: "2.8.0"
+    version_source: "build.gradle explicit dependency declaration"
+    primary_library_id: "/springdoc/springdoc-openapi"
+    context7_version_selector: "2.8.0"
+    fallback_library_ids:
+      - "/websites/springdoc"
+    artifacts:
+      - group: "org.springdoc"
+        name: "springdoc-openapi-starter-webmvc-ui"
+        declared_version: "2.8.0"
+        resolved_version: "2.8.0"
+
+  flyway:
+    version: "11.7.2"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/flyway/flyway"
+    context7_version_selector: "11.7.2"
+    fallback_library_ids:
+      - "/websites/flywaydb"
+    artifacts:
+      - group: "org.flywaydb"
+        name: "flyway-core"
+        declared_version: "managed"
+        resolved_version: "11.7.2"
+      - group: "org.flywaydb"
+        name: "flyway-mysql"
+        declared_version: "managed"
+        resolved_version: "11.7.2"
+
+  lombok:
+    version: "1.18.38"
+    version_source: "Spring Boot 3.5.3 dependency management"
+    primary_library_id: "/projectlombok/lombok"
+    context7_version_selector: "1.18.38"
+    fallback_library_ids:
+      - "/websites/projectlombok"
+    artifacts:
+      - group: "org.projectlombok"
+        name: "lombok"
+        declared_version: "managed"
+        resolved_version: "1.18.38"
+
+  logstash_logback_encoder:
+    version: "7.4"
+    version_source: "build.gradle explicit dependency declaration"
+    primary_library_id: "/logfellow/logstash-logback-encoder"
+    context7_version_selector: "7.4"
+    fallback_library_ids: []
+    artifacts:
+      - group: "net.logstash.logback"
+        name: "logstash-logback-encoder"
+        declared_version: "7.4"
+        resolved_version: "7.4"
+
+not_present_dependencies:
+  mybatis:
+    present: false
+    note: "현재 build.gradle에 MyBatis 관련 dependency가 없습니다. MyBatis 구현 또는 API 답변이 필요하면 사용자 확인 후 dependency를 추가해야 합니다."
+
+artifact_aliases:
+  spring_boot:
+    - "org.springframework.boot:spring-boot-starter-*"
+  spring_security:
+    - "org.springframework.security:*"
+  spring_data_jpa:
+    - "org.springframework.data:spring-data-jpa"
+    - "org.hibernate.orm:hibernate-core"
+    - "jakarta.persistence:jakarta.persistence-api"
+  redis:
+    - "org.springframework.boot:spring-boot-starter-data-redis"
+    - "org.springframework.data:spring-data-redis"
+    - "io.lettuce:lettuce-core"
+  jdbc:
+    - "org.springframework:spring-jdbc"
+    - "org.mariadb.jdbc:mariadb-java-client"
+    - "com.zaxxer:HikariCP"
+  junit:
+    - "org.junit.jupiter:*"
+    - "org.junit.platform:*"
+  aws_sdk:
+    - "software.amazon.awssdk:*"
+
+usage_rules:
+  context7_required_when:
+    - "정확한 API signature가 필요할 때"
+    - "버전별 설정 옵션이나 property reference가 필요할 때"
+    - "deprecated 또는 removed API 여부를 확인해야 할 때"
+    - "Spring Security 설정처럼 버전 의존성이 큰 코드를 작성할 때"
+    - "공식 예제 코드가 필요한 경우"
+  context7_not_required_when:
+    - "일반 Java 개념 설명"
+    - "고수준 아키텍처 설명"
+    - "알고리즘 설명"
+    - "저장소 내부 코드 흐름만 분석하는 경우"
+  output_format_required_for_library_specific_answers:
+    - "version"
+    - "source: docs/context7-dependencies.yaml"
+    - "context7_library_id"
