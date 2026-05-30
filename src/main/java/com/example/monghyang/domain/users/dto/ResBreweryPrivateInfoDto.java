@@ -24,8 +24,6 @@ public class ResBreweryPrivateInfoDto {
     private final String brewery_bank_name;
     private final String brewery_introduction;
     private final String brewery_website;
-    private final LocalTime brewery_start_time;
-    private final LocalTime brewery_end_time;
     private final Boolean brewery_is_regular_visit;
     private final Boolean brewery_is_visiting_brewery;
     private final Boolean brewery_is_agreed_brewery;
@@ -50,8 +48,6 @@ public class ResBreweryPrivateInfoDto {
         this.brewery_bank_name = brewery.getBreweryBankName();
         this.brewery_introduction = brewery.getIntroduction();
         this.brewery_website = brewery.getBreweryWebsite();
-        this.brewery_start_time = brewery.getStartTime();
-        this.brewery_end_time = brewery.getEndTime();
         this.brewery_is_regular_visit = brewery.getIsRegularVisit();
         this.brewery_is_visiting_brewery = brewery.getIsVisitingBrewery();
         this.brewery_is_agreed_brewery = brewery.getIsAgreedBrewery();
