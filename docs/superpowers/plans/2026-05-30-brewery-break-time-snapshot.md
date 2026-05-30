@@ -8,6 +8,10 @@
 
 **Tech Stack:** Java 21, Spring Boot 3.5.3, Spring Data JPA 3.5.1, JUnit 5, Mockito. 정확한 라이브러리 버전은 `docs/context7-dependencies.yaml` 기준이다.
 
+**상태:** 1차 구현 완료 / 추가 개선 계획 수립
+
+**검증:** `./gradlew test --tests '*BreweryWeeklyBreakTimeRepositoryTest' --tests '*JoySlotServiceTest' --tests '*JoyOrderServiceTest'`, `./gradlew test`
+
 ---
 
 ## 승인 및 실행 경계
@@ -47,6 +51,16 @@
   - 휴게시간과 겹치는 예약 생성/변경이 `JOY_ORDER_TIME_INVALID`로 거부되는지 검증한다.
 - Test: `src/test/java/com/example/monghyang/domain/brewery/repository/BreweryWeeklyBreakTimeRepositoryTest.java`
   - 새 repository 메서드 signature가 서비스에서 요구하는 인자를 그대로 받는지 검증한다. 현재 저장소의 repository 테스트가 mock 기반이므로 같은 범위로 맞춘다.
+- 추가 Modify: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
+  - 체험 생성 및 체험 일정 변경 요청에서 양조장 휴게시간과 겹치는 시작 시간을 저장 전에 반려한다.
+- 추가 Modify: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
+  - 휴게시간 변경 이후 영향을 받을 수 있는 `PAID` 예약 후보를 조회한다.
+- 추가 Modify: `src/main/java/com/example/monghyang/domain/joy/service/JoyOrderService.java`
+  - 양조장 스케줄 변경 환불 대상을 전체 예약이 아니라 새 휴게시간과 실제로 겹치는 예약으로 좁힌다.
+- 추가 Test: `src/test/java/com/example/monghyang/domain/joy/service/JoyServiceTest.java`
+  - 체험 생성/수정 시 휴게시간 충돌 요청 반려를 검증한다.
+- 추가 Test: `src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java`
+  - 휴게시간 변경으로 실제 충돌한 예약만 환불 요청 상태로 전환하는지 검증한다.
 
 ---
 
@@ -898,10 +912,460 @@ self-review:
 
 ---
 
+## 추가 승인 범위: 체험 일정 반려 및 휴게시간 변경 정밀 환불
+
+사용자 승인 정책:
+
+- 체험 운영 시간대 정보를 신규 생성하거나 수정할 때 양조장의 유효 휴게시간과 충돌하면 요청 자체를 반려한다.
+- 양조장 휴게시간 변경은 요청 자체를 반려하지 않는다.
+- 휴게시간 변경으로 영향을 받는 기존 체험 시간대는 조회/예약 검증 로직에서 더 이상 예약받지 못하게 한다.
+- 휴게시간 변경으로 이미 존재하는 `PAID` 예약 중 실제 휴게시간과 겹치는 예약만 `REFUND_REQUESTED`로 전환한다.
+
+### Task 6: 체험 생성/수정 휴게시간 충돌 반려
+
+**Files:**
+- Modify: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
+- Test: `src/test/java/com/example/monghyang/domain/joy/service/JoyServiceTest.java`
+
+- [ ] **Step 6.1: 실패 테스트 추가**
+
+`JoyServiceTest`에 `BreweryWeeklyBreakTimeRepository` mock을 추가한다.
+
+```java
+@Mock
+BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+```
+
+`createJoy` 반려 테스트를 추가한다.
+
+```java
+@Test
+@DisplayName("체험 생성 시 양조장 휴게시간과 겹치는 시작 시간이 있으면 요청을 반려한다")
+void create_joy_rejects_start_time_overlapping_break_time() {
+    Long userId = 1L;
+    Brewery brewery = brewery();
+    ReflectionTestUtils.setField(brewery, "id", 5L);
+    ReqJoyDto dto = reqJoyDto();
+    dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
+    given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+    given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, LocalDate.now(), DayOfWeek.Mon))
+            .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+    ApplicationException exception = assertThrows(
+            ApplicationException.class,
+            () -> joyService.createJoy(userId, dto)
+    );
+
+    assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+}
+```
+
+`updateJoySchedule` 반려 테스트를 추가한다.
+
+```java
+@Test
+@DisplayName("체험 일정 변경 시 양조장 휴게시간과 겹치는 시작 시간이 있으면 요청을 반려한다")
+void update_joy_schedule_rejects_start_time_overlapping_break_time() {
+    Long userId = 1L;
+    Long joyId = 10L;
+    LocalDate effectiveDate = LocalDate.now().plusDays(1);
+    Brewery brewery = brewery();
+    ReflectionTestUtils.setField(brewery, "id", 5L);
+    Joy joy = joy(brewery);
+    ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+    dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
+    given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+    given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+    given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, effectiveDate, DayOfWeek.Mon))
+            .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+    ApplicationException exception = assertThrows(
+            ApplicationException.class,
+            () -> joyService.updateJoySchedule(userId, dto)
+    );
+
+    assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+}
+```
+
+필요한 helper를 추가한다.
+
+```java
+private BreweryWeeklyBreakTime breakTime(LocalTime breakStart, LocalTime breakEnd) {
+    return BreweryWeeklyBreakTime.builder()
+            .brewery(brewery())
+            .dayOfWeek(DayOfWeek.Mon)
+            .breakStart(breakStart)
+            .breakEnd(breakEnd)
+            .effectiveDate(LocalDate.now())
+            .build();
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests '*JoyServiceTest'
+```
+
+Expected:
+
+```text
+컴파일 실패 또는 검증 실패: JoyService에 BreweryWeeklyBreakTimeRepository 의존성과 휴게시간 충돌 검증이 없다.
+```
+
+- [ ] **Step 6.2: `JoyService`에 휴게시간 충돌 검증 의존성 추가**
+
+Add imports:
+
+```java
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
+```
+
+Add field:
+
+```java
+private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+```
+
+- [ ] **Step 6.3: `JoyService` helper 추가**
+
+```java
+/**
+ * 체험 시작 시간 요청이 적용일 기준 양조장 휴게시간과 겹치면 예외를 발생시킵니다.
+ *
+ * @param brewery      체험이 속한 양조장
+ * @param schedules    요청된 요일별 체험 시작 시간
+ * @param effectiveDate 체험 일정 적용 시작일
+ * @param timeUnit     체험 진행 시간 단위
+ */
+private void validateNotOverlappingBreakTimes(Brewery brewery, List<JoyScheduleDto> schedules, LocalDate effectiveDate, Integer timeUnit) {
+    for (JoyScheduleDto schedule : schedules) {
+        List<BreweryWeeklyBreakTime> breakTimes = breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(
+                brewery.getId(),
+                effectiveDate,
+                schedule.getDay_of_week()
+        );
+        for (LocalTime startTime : schedule.getStart_times()) {
+            LocalTime endTime = startTime.plusMinutes(timeUnit);
+            boolean overlapsBreakTime = breakTimes.stream()
+                    .anyMatch(b -> startTime.isBefore(b.getBreakEnd()) && endTime.isAfter(b.getBreakStart()));
+            if (overlapsBreakTime) {
+                throw new ApplicationException(ApplicationError.INVALID_TIME);
+            }
+        }
+    }
+}
+```
+
+- [ ] **Step 6.4: 체험 생성과 일정 변경 저장 전 검증 호출**
+
+`createJoy`에서는 `saveWeeklyStartTimes` 호출 전에 검증한다.
+
+```java
+validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), LocalDate.now(), reqJoyDto.getTime_unit());
+```
+
+`updateJoySchedule`에서는 `deleteByJoyIdAndEffectiveDate` 호출 전에 검증한다.
+
+```java
+validateNotOverlappingBreakTimes(brewery, dto.getSchedules(), dto.getEffective_date(), joy.getTimeUnit());
+```
+
+검토 기준:
+
+- 체험 생성/수정 요청을 반려하는 요구사항만 처리한다.
+- 양조장 운영시간 범위 밖 체험 시작 시간 검증은 이번 추가 범위에 포함하지 않는다.
+- 휴게시간이 나중에 변경되어 기존 체험 시작 시간과 충돌하는 경우는 `JoySlotService`와 `JoyOrderService` 조회/예약 검증에서 막는다.
+
+- [ ] **Step 6.5: `JoyServiceTest` 통과 확인**
+
+Run:
+
+```bash
+./gradlew test --tests '*JoyServiceTest'
+```
+
+Expected:
+
+```text
+JoyServiceTest PASS
+```
+
+### Task 7: 휴게시간 변경 환불 대상 후보 조회 추가
+
+**Files:**
+- Modify: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
+- Test: `src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java`
+
+- [ ] **Step 7.1: repository 메서드 추가**
+
+`JoyOrderRepository`에 후보 예약 조회 메서드를 추가한다. 휴게시간 겹침은 JPQL에 억지로 넣지 않고 서비스에서 `Joy.timeUnit`과 예약 시각으로 판정한다.
+
+```java
+/**
+ * 양조장의 스케줄 적용일 이후 PAID 예약 후보를 조회합니다.
+ *
+ * @param breweryId        양조장 식별자
+ * @param reservationFrom  적용일 시작 시각
+ * @param joyPaymentStatus 결제 상태
+ * @param isDeleted        삭제 여부
+ * @return 휴게시간 영향 여부를 서비스에서 판정할 예약 후보 목록
+ */
+@Query("""
+select jo from JoyOrder jo
+join fetch jo.joy j
+where j.brewery.id = :breweryId
+and jo.reservation >= :reservationFrom
+and jo.joyPaymentStatus = :joyPaymentStatus
+and jo.isDeleted = :isDeleted
+""")
+List<JoyOrder> findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+        @Param("breweryId") Long breweryId,
+        @Param("reservationFrom") LocalDateTime reservationFrom,
+        @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
+        @Param("isDeleted") Boolean isDeleted
+);
+```
+
+- [ ] **Step 7.2: 컴파일 확인**
+
+Run:
+
+```bash
+./gradlew compileJava
+```
+
+Expected:
+
+```text
+BUILD SUCCESSFUL
+```
+
+### Task 8: 휴게시간 변경 정밀 환불 구현
+
+**Files:**
+- Modify: `src/main/java/com/example/monghyang/domain/joy/service/JoyOrderService.java`
+- Test: `src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java`
+
+- [ ] **Step 8.1: 실패 테스트 추가**
+
+`JoyOrderServiceTest`에 휴게시간 변경 영향 예약만 환불하는 테스트를 추가한다.
+
+```java
+@Test
+@SuppressWarnings("unchecked")
+@DisplayName("양조장 휴게시간 변경은 실제 휴게시간과 겹치는 PAID 예약만 환불 요청으로 전환한다")
+void set_refund_requested_by_schedule_change_updates_only_orders_overlapping_break_time() {
+    Long breweryId = 20L;
+    LocalDate effectiveDate = LocalDate.of(2026, 6, 1);
+    Joy overlappedJoy = mock(Joy.class);
+    Joy unaffectedJoy = mock(Joy.class);
+    JoyOrder overlappedOrder = mock(JoyOrder.class);
+    JoyOrder unaffectedOrder = mock(JoyOrder.class);
+    given(overlappedJoy.getTimeUnit()).willReturn(60);
+    given(unaffectedJoy.getTimeUnit()).willReturn(60);
+    given(overlappedOrder.getId()).willReturn(1L);
+    given(overlappedOrder.getJoy()).willReturn(overlappedJoy);
+    given(overlappedOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 1).atTime(LocalTime.of(12, 0)));
+    given(unaffectedOrder.getId()).willReturn(2L);
+    given(unaffectedOrder.getJoy()).willReturn(unaffectedJoy);
+    given(unaffectedOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 1).atTime(LocalTime.of(10, 0)));
+    given(joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+            breweryId,
+            effectiveDate.atStartOfDay(),
+            JoyPaymentStatus.PAID,
+            false
+    )).willReturn(List.of(overlappedOrder, unaffectedOrder));
+    given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(
+            breweryId,
+            LocalDate.of(2026, 6, 1),
+            DayOfWeek.Mon
+    )).willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+    joyOrderService.setRefundRequestedByScheduleChange(breweryId, effectiveDate);
+
+    verify(joyOrderRepository).updatePaymentStatusByJoyIdListAndStatus(
+            List.of(1L),
+            JoyPaymentStatus.REFUND_REQUESTED
+    );
+    ArgumentCaptor<List<JoyStatusHistoryBatchRow>> captor = ArgumentCaptor.forClass(List.class);
+    verify(joyOrderBatchService).batchInsert(captor.capture());
+    assertEquals(1, captor.getValue().size());
+    assertEquals(1L, captor.getValue().getFirst().getJoyOrderId());
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests '*JoyOrderServiceTest'
+```
+
+Expected:
+
+```text
+검증 실패: setRefundRequestedByScheduleChange가 effectiveDate 이후 전체 PAID 예약을 환불 대상으로 잡는다.
+```
+
+- [ ] **Step 8.2: `JoyOrderService.setRefundRequestedByScheduleChange` 정밀 필터링 구현**
+
+기존 `joyRepository.findIdByBreweryId` 및 `findIdByJoyIdListAndReservationOnOrAfterAndStatus` 기반 전체 환불 로직을 후보 예약 조회 후 휴게시간 겹침 필터로 바꾼다.
+
+```java
+@Transactional
+public void setRefundRequestedByScheduleChange(Long breweryId, LocalDate effectiveDate) {
+    List<JoyOrder> candidates = joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+            breweryId,
+            effectiveDate.atStartOfDay(),
+            JoyPaymentStatus.PAID,
+            false
+    );
+    if (candidates.isEmpty()) {
+        return;
+    }
+
+    List<Long> joyOrderIdList = candidates.stream()
+            .filter(order -> overlapsActiveBreakTime(breweryId, order))
+            .map(JoyOrder::getId)
+            .toList();
+    if (joyOrderIdList.isEmpty()) {
+        return;
+    }
+
+    joyOrderRepository.updatePaymentStatusByJoyIdListAndStatus(joyOrderIdList, JoyPaymentStatus.REFUND_REQUESTED);
+    int ret = joyOrderBatchService.batchInsert(
+            joyOrderIdList.stream()
+                    .map(id -> new JoyStatusHistoryBatchRow(id, JoyPaymentStatus.REFUND_REQUESTED, "양조장 휴게시간 변경"))
+                    .toList()
+    );
+    log.info("휴게시간 변경으로 인한 JoyStatusHistory Batch Insert 건수: {}", ret);
+}
+```
+
+helper를 추가한다.
+
+```java
+/**
+ * 예약 진행 시간이 예약일 기준 활성 양조장 휴게시간과 겹치는지 확인합니다.
+ *
+ * @param breweryId 양조장 식별자
+ * @param order     환불 후보 예약
+ * @return 휴게시간과 겹치면 true
+ */
+private boolean overlapsActiveBreakTime(Long breweryId, JoyOrder order) {
+    LocalDate reservationDate = order.getReservation().toLocalDate();
+    DayOfWeek dayOfWeek = DayOfWeek.from(reservationDate.getDayOfWeek());
+    LocalTime reservationStart = order.getReservation().toLocalTime();
+    LocalTime reservationEnd = reservationStart.plusMinutes(order.getJoy().getTimeUnit());
+    return breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, dayOfWeek)
+            .stream()
+            .anyMatch(b -> reservationStart.isBefore(b.getBreakEnd()) && reservationEnd.isAfter(b.getBreakStart()));
+}
+```
+
+검토 기준:
+
+- 휴게시간 변경 요청은 반려하지 않는다.
+- `effectiveDate` 이후 전체 예약을 환불하지 않는다.
+- 실제 휴게시간과 겹치는 `PAID`, `isDeleted=false` 예약만 환불한다.
+- 체험 시간대 조회/예약 검증 차단은 Task 1~5에서 구현한 `JoySlotService`, `JoyOrderService.verifyReservation` 흐름을 그대로 사용한다.
+
+- [ ] **Step 8.3: `JoyOrderServiceTest` 통과 확인**
+
+Run:
+
+```bash
+./gradlew test --tests '*JoyOrderServiceTest'
+```
+
+Expected:
+
+```text
+JoyOrderServiceTest PASS
+```
+
+### Task 9: 추가 범위 통합 검증 및 self-review
+
+**Files:**
+- Review: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
+- Review: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
+- Review: `src/main/java/com/example/monghyang/domain/joy/service/JoyOrderService.java`
+- Review: `src/test/java/com/example/monghyang/domain/joy/service/JoyServiceTest.java`
+- Review: `src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java`
+
+- [ ] **Step 9.1: 추가 범위 관련 테스트 실행**
+
+Run:
+
+```bash
+./gradlew test --tests '*JoyServiceTest' --tests '*JoyOrderServiceTest' --tests '*JoySlotServiceTest'
+```
+
+Expected:
+
+```text
+BUILD SUCCESSFUL
+```
+
+- [ ] **Step 9.2: 전체 테스트 실행**
+
+Run:
+
+```bash
+./gradlew test
+```
+
+Expected:
+
+```text
+BUILD SUCCESSFUL
+```
+
+- [ ] **Step 9.3: 추가 범위 self-review 체크**
+
+검토 질문:
+
+- `createJoy`와 `updateJoySchedule`이 휴게시간 충돌 요청을 저장 전에 반려하는가?
+- `updateBrewerySchedule`은 휴게시간 충돌이 있어도 요청 자체를 허용하는가?
+- 휴게시간 변경 환불 대상이 `effectiveDate` 이후 전체 예약이 아니라 실제 겹치는 예약으로 제한되는가?
+- 기존 체험 시작 시간 스냅샷을 삭제하거나 변형하지 않고 조회/예약 검증에서만 예약 불가 처리하는가?
+- 테스트 편의를 위한 production visibility 완화, test-only constructor, 불필요한 새 abstraction을 추가하지 않았는가?
+
+- [ ] **Step 9.4: 완료 보고**
+
+보고에는 다음을 포함한다.
+
+```text
+추가 변경 파일:
+- src/main/java/com/example/monghyang/domain/joy/service/JoyService.java
+- src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java
+- src/main/java/com/example/monghyang/domain/joy/service/JoyOrderService.java
+- src/test/java/com/example/monghyang/domain/joy/service/JoyServiceTest.java
+- src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java
+
+추가 구현 동작:
+- 체험 생성/수정 시 휴게시간과 겹치는 시작 시간 요청 반려
+- 휴게시간 변경 시 실제 영향을 받는 PAID 예약만 REFUND_REQUESTED 전환
+
+검증:
+- ./gradlew test --tests '*JoyServiceTest' --tests '*JoyOrderServiceTest' --tests '*JoySlotServiceTest'
+- ./gradlew test
+
+알려진 위험:
+- 체험 스케줄 생성/수정 검증은 요청 effectiveDate 시점의 활성 휴게시간 기준이다. 이후 휴게시간이 다시 변경되는 경우는 휴게시간 변경 흐름의 조회 차단 및 정밀 환불이 담당한다.
+```
+
+---
+
 ## 계획 self-review 결과
 
 - `[결함1]`의 세 경로인 예약 가능 날짜 조회, 남은 자리 시간대 조회, 예약 생성/변경 검증을 모두 작업에 포함했다.
 - 휴게시간 제외 후 매진 여부 계산이 기존 count projection으로는 부정확해질 수 있어, 시간 단위 projection을 추가하는 이유를 명시했다.
 - 새 서비스, 새 공통 abstraction, 새 dependency는 추가하지 않는다.
 - `JoyInfoDto`에 `breweryId`를 추가해 기존 조회 결과를 재사용하므로 예약 검증 단계의 추가 repository 왕복을 피한다.
+- 추가 승인 범위에서 체험 스케줄 변경 반려와 휴게시간 변경 정밀 환불을 분리했다.
+- 휴게시간 변경은 기존 체험 시작 시간 스냅샷을 직접 수정하지 않고 조회/예약 검증 및 환불 흐름으로 대처한다.
+- 환불 대상은 `PAID`, `isDeleted=false`, `effectiveDate` 이후, 실제 휴게시간 겹침 조건으로 제한했다.
 - Context7은 사용하지 않았다. 정확한 외부 API signature 확인이 아니라 기존 Spring Data JPA 패턴 확장이기 때문이다.
