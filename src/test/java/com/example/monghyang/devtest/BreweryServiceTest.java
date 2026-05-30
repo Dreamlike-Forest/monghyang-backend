@@ -229,38 +229,7 @@ public class BreweryServiceTest {
         verify(storageService, never()).remove(anyString());
     }
 
-    @Test
-    @DisplayName("양조장 정보 수정 - 시작 시간이 종료 시간보다 늦게 설정되면 BREWERY_OPENING_TIME_INVALID")
-    void brewery_update_invalid_opening_time_start_after_end() {
-        // given
-        Users users = createMockUsers();
-        RegionType regionType = RegionType.nameFrom("서울");
-        Brewery brewery = createMockBrewery(users, regionType);
-        // 기존 시간: 08:00 ~ 18:00
 
-        Long userId = 1L;
-        given(breweryRepository.findByUserId(userId))
-                .willReturn(Optional.of(brewery));
-
-        ReqUpdateBreweryDto dto = new ReqUpdateBreweryDto();
-        // start_time만 수정, 기존 endTime(18:00) 기준으로 검증
-        dto.setStart_time(LocalTime.of(20, 0)); // 20:00 > 18:00 → 예외
-        dto.setAdd_images(Collections.emptyList());
-        dto.setRemove_images(Collections.emptyList());
-        dto.setModify_images(Collections.emptyList());
-
-        // when
-        ApplicationException ex = assertThrows(
-                ApplicationException.class,
-                () -> breweryService.breweryUpdate(userId, dto)
-        );
-
-        // then
-        assertEquals(ApplicationError.BREWERY_OPENING_TIME_INVALID, ex.getApplicationError());
-        // 이후 이미지/컬럼/시간 반영 로직은 실행되어서는 안 된다.
-        verify(breweryImageRepository, never()).findByBrewery(any());
-        verify(storageService, never()).upload(any(), any());
-    }
 
     @Test
     @DisplayName("양조장 정보 수정 - 자신의 이미지 삭제 성공")

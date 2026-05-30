@@ -5,9 +5,7 @@ import com.example.monghyang.domain.auth.service.AuthService;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryImage;
 import com.example.monghyang.domain.brewery.entity.RegionType;
-import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
-import com.example.monghyang.domain.brewery.repository.BreweryRepository;
-import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
+import com.example.monghyang.domain.brewery.repository.*;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
@@ -75,6 +73,10 @@ public class AuthServiceTest {
     BreweryImageRepository breweryImageRepository;
     @Mock
     SellerImageRepository sellerImageRepository;
+    @Mock
+    BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
+    @Mock
+    BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     @InjectMocks
     AuthService authService;
 
@@ -462,9 +464,17 @@ public class AuthServiceTest {
 
         dto.setRegion_type_id(1); // RegionType id 1 가정
 
-        // 영업 시작/종료 시간 (start < end)
-//        dto.setStart_time(LocalTime.of(9, 0));
-//        dto.setEnd_time(LocalTime.of(18, 0));
+        // 요일별 스케줄 정보 추가 (스냅샷 기반 관리용)
+        BreweryScheduleDto scheduleDto = new BreweryScheduleDto();
+        scheduleDto.setDay_of_week(com.example.monghyang.domain.global.DayOfWeek.Mon);
+        scheduleDto.setOpen_time(LocalTime.of(9, 0));
+        scheduleDto.setClose_time(LocalTime.of(18, 0));
+        scheduleDto.setBreak_start(LocalTime.of(12, 0));
+        scheduleDto.setBreak_end(LocalTime.of(13, 0));
+
+        List<BreweryScheduleDto> schedules = new ArrayList<>();
+        schedules.add(scheduleDto);
+        dto.setSchedules(schedules);
 
         // 이미지 1장 추가
         List<AddImageDto> imageList = new ArrayList<>();
@@ -572,9 +582,9 @@ public class AuthServiceTest {
     void breweryJoin_invalidOpeningTime_throws() {
         // given
         BreweryJoinDto dto = createBreweryJoinDto();
-        // start_time > end_time 이 되도록 세팅
-//        dto.setStart_time(LocalTime.of(18, 0));
-//        dto.setEnd_time(LocalTime.of(9, 0));
+        // 휴게시간이 영업 시작 시간 범위(09:00 ~ 18:00)를 벗어나도록 세팅하여 예외 트리거
+        dto.getSchedules().getFirst().setBreak_start(LocalTime.of(8, 0));
+        dto.getSchedules().getFirst().setBreak_end(LocalTime.of(12, 0));
 
         // when
         ApplicationException ex = assertThrows(
