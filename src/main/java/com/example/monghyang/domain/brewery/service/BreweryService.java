@@ -364,7 +364,7 @@ public class BreweryService {
      * <p>
      * 동일 effective_date가 이미 존재하면 해당 날짜의 기존 레코드를 삭제 후 재삽입합니다.
      * 이전 effective_date 스냅샷은 보존됩니다.
-     * effective_date 이후 예약된 해당 양조장 체험의 PAID 예약은 REFUND_REQUESTED로 전환됩니다.
+     * effective_date 이후 PAID 예약과 새 휴게시간에 실제로 겹치는 PAID 예약은 REFUND_REQUESTED로 전환됩니다.
      *
      * @param userId 요청 회원 식별자
      * @param dto    스케줄 변경 요청 DTO
@@ -421,7 +421,7 @@ public class BreweryService {
             }
         }
 
-        // 6. effective_date 이후 체험 예약 환불 처리 트리거
+        // 6. 기존 적용일 이후 대상과 휴게시간 충돌 대상의 체험 예약 환불 처리 트리거
         joyOrderService.setRefundRequestedByScheduleChange(brewery.getId(), effectiveDate);
     }
 }
