@@ -44,8 +44,8 @@
   - 동일 `effectiveDate` 삭제, 특정 예약일 활성 시작 시간 조회 추가.
 - 수정: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
   - 특정 체험의 적용일 이후 `PAID` 예약 ID 조회 쿼리 추가. 기존 양조장 일정 변경 쿼리의 `date(reservation)` 사용은 별도 개선 대상으로 검토한다.
-- 생성: `src/main/resources/db/migration/V<timestamp>__add_indexes_for_joy_schedule_snapshot.sql`
-  - `joy_weekly_start_time` 활성 스냅샷 조회 보조 인덱스와 `joy_order` 환불 대상 조회 보조 인덱스 추가.
+- 생성: `src/main/resources/db/migration/V<timestamp>__add_index_for_joy_order_refund_schedule.sql`
+  - `joy_order` 환불 대상 조회와 환불 스케줄러 상태 조회를 위한 보조 인덱스 추가. `joy_weekly_start_time`은 기존 unique index를 사용한다.
 - 수정: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
   - 체험 생성 시 최초 스냅샷 저장, 체험 일정 변경 처리 추가.
 - 수정: `src/main/java/com/example/monghyang/domain/joy/service/JoyOrderService.java`
@@ -164,7 +164,7 @@ Expected:
 **Files:**
 - Modify: `src/main/java/com/example/monghyang/domain/joy/repository/JoyWeeklyStartTimeRepository.java`
 - Modify: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
-- Create: `src/main/resources/db/migration/V<timestamp>__add_indexes_for_joy_schedule_snapshot.sql`
+- Create: `src/main/resources/db/migration/V<timestamp>__add_index_for_joy_order_refund_schedule.sql`
 - Test: `src/test/java/com/example/monghyang/domain/joy/repository/JoyWeeklyStartTimeRepositoryTest.java`
 
 - [ ] **Step 3.1: 활성 스냅샷 조회 실패 테스트 작성**
@@ -187,7 +187,7 @@ Expected:
 효율성 기준:
 
 - 삭제 쿼리는 기존 unique key `(joy_id, effective_date, day_of_week, start_time)`의 prefix를 활용한다.
-- 활성 스냅샷 조회는 `joy_id`, `day_of_week`, `effective_date <= targetDate` 조건을 사용한다.
+- 활성 스냅샷 조회는 `joy_id`, `day_of_week`, `effective_date <= targetDate` 조건을 사용하되, 새 인덱스를 추가하지 않고 기존 unique key `(joy_id, effective_date, day_of_week, start_time)`를 활용한다.
 
 - [ ] **Step 3.3: `JoyOrderRepository` 환불 대상 조회 추가**
 
@@ -208,17 +208,15 @@ Expected:
 추가할 인덱스:
 
 ```sql
-create index idx_joy_weekly_start_time_active
-    on joy_weekly_start_time (joy_id, day_of_week, effective_date);
-
 create index idx_joy_order_refund_schedule
-    on joy_order (joy_id, joy_payment_status, is_deleted, reservation);
+    on joy_order (joy_payment_status, joy_id, is_deleted, reservation);
 ```
 
 검토 기준:
 
-- `idx_joy_weekly_start_time_active`는 활성 스냅샷 조회의 equality 조건 뒤 range 조건을 지원한다.
-- `idx_joy_order_refund_schedule`는 환불 대상 조회의 equality 조건 뒤 `reservation` range 조건을 지원한다.
+- `joy_weekly_start_time`에는 새 인덱스를 추가하지 않는다. 기존 unique key `(joy_id, effective_date, day_of_week, start_time)`로 삭제 쿼리와 활성 스냅샷 조회를 처리한다.
+- `idx_joy_order_refund_schedule`는 체험 일정 변경 환불 대상 조회에서 `joy_payment_status`, `joy_id`, `is_deleted` equality 조건 뒤 `reservation` range 조건을 지원한다.
+- `idx_joy_order_refund_schedule`는 환불 스케줄러의 `joy_payment_status = REFUND_REQUESTED` 조회에도 선두 컬럼 prefix를 제공한다. 단, 스케줄러의 `createdAt ASC` 정렬까지 이 인덱스 하나로 최적화하지는 못하므로 스케줄러 정렬이 병목이면 별도 `(joy_payment_status, created_at)` 인덱스를 후속 검토한다.
 - 운영 DB에 이미 같은 목적의 인덱스가 있으면 중복 생성하지 않는다.
 
 - [ ] **Step 3.5: repository 테스트 실행**
@@ -436,7 +434,7 @@ BUILD SUCCESSFUL
 **Files:**
 - Review: `src/main/java/com/example/monghyang/domain/joy/repository/JoyWeeklyStartTimeRepository.java`
 - Review: `src/main/java/com/example/monghyang/domain/joy/repository/JoyOrderRepository.java`
-- Review: `src/main/resources/db/migration/V<timestamp>__add_indexes_for_joy_schedule_snapshot.sql`
+- Review: `src/main/resources/db/migration/V<timestamp>__add_index_for_joy_order_refund_schedule.sql`
 
 - [ ] **Step 7.1: 컬럼 함수 사용 여부 확인**
 
@@ -457,8 +455,9 @@ Expected:
 
 검토 기준:
 
-- `joy_weekly_start_time`: `joy_id`, `day_of_week` equality 후 `effective_date` range 또는 max 조회
-- `joy_order`: `joy_id`, `joy_payment_status`, `is_deleted` equality 후 `reservation` range
+- `joy_weekly_start_time`: 새 인덱스를 추가하지 않고 기존 unique key `(joy_id, effective_date, day_of_week, start_time)` 사용. `effective_date` range 이후 `day_of_week`가 완전한 탐색 조건이 아닐 수 있으나, 체험별 스냅샷 규모가 작다는 전제로 허용한다.
+- `joy_order`: `joy_payment_status`, `joy_id`, `is_deleted` equality 후 `reservation` range
+- 환불 스케줄러: 같은 `joy_order` 인덱스의 선두 `joy_payment_status` prefix를 사용할 수 있는지 확인. `created_at` 정렬 최적화가 필요한 경우 별도 인덱스 필요성을 보고한다.
 
 Expected:
 
@@ -543,7 +542,7 @@ BUILD SUCCESSFUL
 - 기존 계획의 컴파일 오류 가능성인 `joyInfoDto.joyId()` 사용을 제거하고, `verifyReservation`에 `joyId`를 별도 전달하는 방향으로 수정했다.
 - 기존 계획에 없던 `updateReservationByBrewery`의 체험 ID 사용 오류와 기존 슬롯 감소 기준 오류를 작업 범위에 포함했다. 이는 예약 변경 시 스냅샷 검증을 넣는 과정에서 같은 메서드를 수정해야 하므로 범위 내 결함 수정이다.
 - 환불 대상 조회는 `date(reservation)` 대신 `LocalDateTime` range 조건을 사용하도록 명시했다.
-- 데이터 누적 시 조회 효율을 위해 `joy_weekly_start_time`, `joy_order` 보조 인덱스 추가를 계획에 포함했다.
+- `joy_weekly_start_time`은 새 인덱스를 추가하지 않고 기존 unique key를 사용하도록 조정했다. `joy_order` 인덱스는 체험 일정 변경 환불 대상 조회와 환불 스케줄러의 상태 조회가 같은 선두 컬럼을 공유하도록 `(joy_payment_status, joy_id, is_deleted, reservation)` 순서로 유지한다.
 - `docs/context7-dependencies.yaml`와 `docs/junit-unit-test-guide.md` 부재를 실행 전 차단 조건으로 명시해 저장소 규칙 위반 없이 구현을 시작할 수 있도록 했다.
 
 ## 의존성 및 Context7 기록
