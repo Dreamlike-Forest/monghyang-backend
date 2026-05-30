@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -195,6 +196,53 @@ class JoyOrderServiceTest {
         verify(joyOrderBatchService).batchInsert(captor.capture());
         assertEquals(2, captor.getValue().size());
         assertEquals("체험 일정 변경", captor.getValue().getFirst().getReasonCode());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    @DisplayName("양조장 스케줄 변경은 기존 적용일 이후 환불 대상과 휴게시간 충돌 대상을 함께 환불 요청으로 전환한다")
+    void set_refund_requested_by_schedule_change_keeps_existing_targets_and_adds_break_time_overlap() {
+        Long breweryId = 20L;
+        LocalDate effectiveDate = LocalDate.of(2026, 6, 1);
+        Joy overlappedJoy = mock(Joy.class);
+        Joy unaffectedJoy = mock(Joy.class);
+        JoyOrder overlappedOrder = mock(JoyOrder.class);
+        JoyOrder unaffectedOrder = mock(JoyOrder.class);
+        given(overlappedJoy.getTimeUnit()).willReturn(60);
+        given(unaffectedJoy.getTimeUnit()).willReturn(60);
+        given(overlappedOrder.getId()).willReturn(1L);
+        given(overlappedOrder.getJoy()).willReturn(overlappedJoy);
+        given(overlappedOrder.getReservation()).willReturn(LocalDateTime.of(2026, 6, 1, 12, 0));
+        given(unaffectedOrder.getJoy()).willReturn(unaffectedJoy);
+        given(unaffectedOrder.getReservation()).willReturn(LocalDateTime.of(2026, 6, 1, 10, 0));
+        given(joyRepository.findIdByBreweryId(breweryId)).willReturn(List.of(10L, 20L));
+        given(joyOrderRepository.findIdByJoyIdListAndReservationOnOrAfterAndStatus(
+                List.of(10L, 20L),
+                effectiveDate,
+                JoyPaymentStatus.PAID
+        )).willReturn(List.of(1L, 2L));
+        given(joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+                breweryId,
+                effectiveDate.atStartOfDay(),
+                JoyPaymentStatus.PAID,
+                false
+        )).willReturn(List.of(overlappedOrder, unaffectedOrder));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(
+                breweryId,
+                LocalDate.of(2026, 6, 1),
+                DayOfWeek.Mon
+        )).willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+        joyOrderService.setRefundRequestedByScheduleChange(breweryId, effectiveDate);
+
+        verify(joyOrderRepository).updatePaymentStatusByJoyIdListAndStatus(
+                List.of(1L, 2L),
+                JoyPaymentStatus.REFUND_REQUESTED
+        );
+        ArgumentCaptor<List<JoyStatusHistoryBatchRow>> captor = ArgumentCaptor.forClass(List.class);
+        verify(joyOrderBatchService).batchInsert(captor.capture());
+        assertEquals(2, captor.getValue().size());
+        assertEquals(1L, captor.getValue().getFirst().getJoyOrderId());
     }
 
     private ReqUpdateJoyOrderDto updateDto(Long joyOrderId, LocalDate date, LocalTime time, Integer count) {

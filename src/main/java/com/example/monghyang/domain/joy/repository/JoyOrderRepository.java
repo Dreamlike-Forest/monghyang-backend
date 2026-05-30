@@ -132,4 +132,28 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
             @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
             @Param("isDeleted") Boolean isDeleted
     );
+
+    /**
+     * 양조장의 스케줄 적용일 이후 PAID 예약 후보를 조회합니다.
+     *
+     * @param breweryId        양조장 식별자
+     * @param reservationFrom  적용일 시작 시각
+     * @param joyPaymentStatus 결제 상태
+     * @param isDeleted        삭제 여부
+     * @return 휴게시간 영향 여부를 서비스에서 판정할 예약 후보 목록
+     */
+    @Query("""
+    select jo from JoyOrder jo
+    join fetch jo.joy j
+    where j.brewery.id = :breweryId
+    and jo.reservation >= :reservationFrom
+    and jo.joyPaymentStatus = :joyPaymentStatus
+    and jo.isDeleted = :isDeleted
+    """)
+    List<JoyOrder> findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+            @Param("breweryId") Long breweryId,
+            @Param("reservationFrom") LocalDateTime reservationFrom,
+            @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
+            @Param("isDeleted") Boolean isDeleted
+    );
 }

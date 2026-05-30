@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -398,37 +399,63 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     }
 
     /**
-     * 양조장 운영시간/휴게시간 스케줄 변경으로 인해, effective_date 이후 예약된
-     * 모든 해당 체험 예약을 REFUND_REQUESTED 상태로 일괄 변경합니다.
-     * <p>
-     * effective_date 당일 포함 이후에 예약된 PAID 상태의 체험 예약이 환불 처리 대상입니다.
+     * 양조장 스케줄 변경으로 기존 적용일 이후 환불 대상과 휴게시간 충돌 대상을 REFUND_REQUESTED 상태로 변경합니다.
      *
      * @param breweryId     양조장 식별자
-     * @param effectiveDate 스케줄 적용 시작일 (이 날짜 포함 이후의 예약이 환불 처리 대상)
+     * @param effectiveDate 스케줄 적용 시작일
      */
     @Transactional
     public void setRefundRequestedByScheduleChange(Long breweryId, LocalDate effectiveDate) {
-        // 해당 양조장의 체험 식별자 목록 조회
+        LinkedHashSet<Long> joyOrderIdSet = new LinkedHashSet<>();
         List<Long> joyIdList = joyRepository.findIdByBreweryId(breweryId);
-        if (joyIdList.isEmpty()) {
-            return;
+        if (!joyIdList.isEmpty()) {
+            joyOrderIdSet.addAll(joyOrderRepository.findIdByJoyIdListAndReservationOnOrAfterAndStatus(
+                    joyIdList,
+                    effectiveDate,
+                    JoyPaymentStatus.PAID
+            ));
         }
-        // effectiveDate 포함 이후 날짜에 예약된 PAID 상태의 체험 예약 식별자 목록 조회
-        List<Long> joyOrderIdList = joyOrderRepository.findIdByJoyIdListAndReservationOnOrAfterAndStatus(
-                joyIdList, effectiveDate, JoyPaymentStatus.PAID
+
+        List<JoyOrder> candidates = joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeleted(
+                breweryId,
+                effectiveDate.atStartOfDay(),
+                JoyPaymentStatus.PAID,
+                false
         );
+        candidates.stream()
+                .filter(order -> overlapsActiveBreakTime(breweryId, order))
+                .map(JoyOrder::getId)
+                .forEach(joyOrderIdSet::add);
+
+        List<Long> joyOrderIdList = List.copyOf(joyOrderIdSet);
         if (joyOrderIdList.isEmpty()) {
             return;
         }
-        // 조회된 예약 상태를 REFUND_REQUESTED로 일괄 갱신
+
         joyOrderRepository.updatePaymentStatusByJoyIdListAndStatus(joyOrderIdList, JoyPaymentStatus.REFUND_REQUESTED);
-        // 상태 변경 이력 batch insert
         int ret = joyOrderBatchService.batchInsert(
                 joyOrderIdList.stream()
-                        .map(id -> new JoyStatusHistoryBatchRow(id, JoyPaymentStatus.REFUND_REQUESTED, "양조장 운영시간 변경"))
+                        .map(id -> new JoyStatusHistoryBatchRow(id, JoyPaymentStatus.REFUND_REQUESTED, "양조장 휴게시간 변경"))
                         .toList()
         );
-        log.info("스케줄 변경으로 인한 JoyStatusHistory Batch Insert 건수: {}", ret);
+        log.info("양조장 스케줄 변경으로 인한 JoyStatusHistory Batch Insert 건수: {}", ret);
+    }
+
+    /**
+     * 예약 진행 시간이 예약일 기준 활성 양조장 휴게시간과 겹치는지 확인합니다.
+     *
+     * @param breweryId 양조장 식별자
+     * @param order     환불 후보 예약
+     * @return 휴게시간과 겹치면 true
+     */
+    private boolean overlapsActiveBreakTime(Long breweryId, JoyOrder order) {
+        LocalDate reservationDate = order.getReservation().toLocalDate();
+        DayOfWeek dayOfWeek = DayOfWeek.from(reservationDate.getDayOfWeek());
+        LocalTime reservationStart = order.getReservation().toLocalTime();
+        LocalTime reservationEnd = reservationStart.plusMinutes(order.getJoy().getTimeUnit());
+        return breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, dayOfWeek)
+                .stream()
+                .anyMatch(b -> reservationStart.isBefore(b.getBreakEnd()) && reservationEnd.isAfter(b.getBreakStart()));
     }
 
     /**
