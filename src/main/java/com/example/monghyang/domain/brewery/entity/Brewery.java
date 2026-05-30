@@ -40,10 +40,6 @@ public class Brewery {
     private String breweryAccountNumber;
     @Column(nullable = false)
     private String breweryBankName;
-    @Column(nullable = false)
-    private LocalTime startTime;
-    @Column(nullable = false)
-    private LocalTime endTime;
 
     @Column(columnDefinition = "TEXT")
     private String introduction;
@@ -81,9 +77,6 @@ public class Brewery {
         this.breweryWebsite = breweryWebsite;
         this.isRegularVisit = isRegularVisit;
         this.isAgreedBrewery = isAgreedBrewery;
-        // 운영시간은 '분' 단위까지만 취급
-        this.startTime = LocalTime.of(0, 0, 0);
-        this.endTime = LocalTime.of(23, 59, 59);
     }
 
     public void setVisitingBrewery() {
@@ -158,13 +151,5 @@ public class Brewery {
 
     public void updateRegularVisit(Boolean regularVisit) {
         isRegularVisit = regularVisit;
-    }
-
-    public void updateEndTime(LocalTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public void updateStartTime(LocalTime startTime) {
-        this.startTime = startTime;
     }
 }

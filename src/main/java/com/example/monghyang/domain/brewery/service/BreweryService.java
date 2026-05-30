@@ -145,20 +145,6 @@ public class BreweryService {
             brewery.updateRegularVisit(reqBreweryDto.getIs_regular_visit());
         }
 
-        // 운영 시간대 수정 사항 존재 시 반영
-        if(reqBreweryDto.getStart_time() != null){
-            LocalTime endTime = (reqBreweryDto.getEnd_time() == null) ? brewery.getEndTime() : reqBreweryDto.getEnd_time();
-            if(reqBreweryDto.getStart_time().isAfter(endTime)) {
-                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
-            }
-        }
-        if(reqBreweryDto.getEnd_time() != null){
-            LocalTime startTime = (reqBreweryDto.getStart_time() == null) ? brewery.getStartTime() : reqBreweryDto.getStart_time();
-            if(startTime.isAfter(reqBreweryDto.getEnd_time())) {
-                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
-            }
-        }
-
         if(!reqBreweryDto.getAdd_images().isEmpty() || !reqBreweryDto.getRemove_images().isEmpty() || !reqBreweryDto.getModify_images().isEmpty()) {
             // 이미지 관련 수정 사항이 존재하는 경우 아래의 로직 실행
             List<BreweryImage> imageList = breweryImageRepository.findByBrewery(brewery);
