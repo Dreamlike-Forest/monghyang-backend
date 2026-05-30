@@ -4,7 +4,10 @@ import com.example.monghyang.domain.batch.dto.JoyStatusHistoryBatchRow;
 import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.batch.service.JoyOrderRefundService;
 import com.example.monghyang.domain.brewery.dto.JoyInfoDto;
+import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -60,6 +63,8 @@ class JoyOrderServiceTest {
     JoyOrderRefundService joyOrderRefundService;
     @Mock
     JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
+    @Mock
+    BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     @InjectMocks
     JoyOrderService joyOrderService;
 
@@ -71,7 +76,9 @@ class JoyOrderServiceTest {
         LocalTime reservationTime = LocalTime.of(11, 0);
         JoyWeeklyStartTime activeStartTime = startTime(LocalTime.of(10, 0));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
-                .willReturn(Optional.of(new JoyInfoDto(LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+                .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of());
         given(joyWeeklyStartTimeRepository.findActiveStartTimesByJoyIdAndDate(joyId, reservationDate, DayOfWeek.Mon))
                 .willReturn(List.of(activeStartTime));
 
@@ -99,7 +106,9 @@ class JoyOrderServiceTest {
         given(joyOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 2).atTime(LocalTime.of(10, 0)));
         given(joyOrderRepository.findById(dto.getId())).willReturn(Optional.of(joyOrder));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
-                .willReturn(Optional.of(new JoyInfoDto(LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+                .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of());
         given(joyWeeklyStartTimeRepository.findActiveStartTimesByJoyIdAndDate(joyId, reservationDate, DayOfWeek.Mon))
                 .willReturn(List.of(activeStartTime));
 
@@ -129,7 +138,9 @@ class JoyOrderServiceTest {
         given(joyOrder.getCount()).willReturn(2);
         given(joyOrderRepository.findByIdAndBreweryUserId(joyOrderId, userId)).willReturn(Optional.of(joyOrder));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, newDate, DayOfWeek.Wed))
-                .willReturn(Optional.of(new JoyInfoDto(LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+                .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, newDate, DayOfWeek.Wed))
+                .willReturn(List.of());
         given(joyWeeklyStartTimeRepository.findActiveStartTimesByJoyIdAndDate(joyId, newDate, DayOfWeek.Wed))
                 .willReturn(List.of(activeStartTime));
 
@@ -137,6 +148,28 @@ class JoyOrderServiceTest {
 
         verify(joySlotService).reservationJoySlot(joyId, newDate, newTime, 3, 10);
         verify(joySlotService).decrementJoySlotCount(joyId, oldDate, oldTime, 2);
+    }
+
+    @Test
+    @DisplayName("예약 슬롯 증가는 양조장 휴게시간과 겹치는 시간대를 거부한다")
+    void reservation_joy_slot_count_rejects_break_time_overlap() {
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(12, 0);
+
+        given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
+                .willReturn(Optional.of(new JoyInfoDto(breweryId, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.reservationJoySlotCount(joyId, reservationDate, reservationTime, 2)
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -188,5 +221,15 @@ class JoyOrderServiceTest {
         given(joy.getId()).willReturn(joyId);
         given(joyOrder.getJoy()).willReturn(joy);
         return joyOrder;
+    }
+
+    private BreweryWeeklyBreakTime breakTime(LocalTime breakStart, LocalTime breakEnd) {
+        return BreweryWeeklyBreakTime.builder()
+                .brewery(mock(Brewery.class))
+                .dayOfWeek(DayOfWeek.Mon)
+                .breakStart(breakStart)
+                .breakEnd(breakEnd)
+                .effectiveDate(LocalDate.of(2026, 6, 1))
+                .build();
     }
 }

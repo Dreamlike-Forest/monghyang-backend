@@ -89,7 +89,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      */
     @Query("""
         select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(
-            wot.openTime, wot.closeTime, j.timeUnit, j.maxCount, j.minCount)
+            b.id, wot.openTime, wot.closeTime, j.timeUnit, j.maxCount, j.minCount)
         from Joy j
         join j.brewery b
         join BreweryWeeklyOpenTime wot on wot.brewery = b

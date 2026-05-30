@@ -4,30 +4,27 @@ import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.ClosedStatus;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
-import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.dto.slot.*;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoySlot;
 import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.entity.JoyClosedDate;
 import com.example.monghyang.domain.joy.entity.JoyClosedStartTime;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
 import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.joy.repository.*;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
 import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepository;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +40,7 @@ public class JoySlotService {
     private final JoyRepository joyRepository;
     private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
+    private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     private final BreweryClosedDateRepository breweryClosedDateRepository;
     private final JoyClosedDateRepository joyClosedDateRepository;
     private final JoyClosedStartTimeRepository joyClosedStartTimeRepository;
@@ -129,6 +127,44 @@ public class JoySlotService {
     }
 
     /**
+     * 특정 날짜와 요일에 해당하는 양조장 휴게시간 목록을 전체 스냅샷 이력 중에서 조회합니다.
+     *
+     * @param breakTimeList 양조장 휴게시간 스냅샷 리스트
+     * @param date          예약 대상 날짜
+     * @param dayOfWeek     예약 대상 요일
+     * @return 해당 날짜에 유효한 휴게시간 목록
+     */
+    private List<BreweryWeeklyBreakTime> findActiveBreakTimes(List<BreweryWeeklyBreakTime> breakTimeList, LocalDate date, DayOfWeek dayOfWeek) {
+        List<BreweryWeeklyBreakTime> candidates = breakTimeList.stream()
+                .filter(b -> b.getDayOfWeek() == dayOfWeek && !b.getEffectiveDate().isAfter(date))
+                .toList();
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+        LocalDate maxEffectiveDate = candidates.stream()
+                .map(BreweryWeeklyBreakTime::getEffectiveDate)
+                .max(LocalDate::compareTo)
+                .orElseThrow();
+        return candidates.stream()
+                .filter(b -> b.getEffectiveDate().equals(maxEffectiveDate))
+                .toList();
+    }
+
+    /**
+     * 체험 진행 시간이 양조장 휴게시간과 겹치는지 확인합니다.
+     *
+     * @param startTime  체험 시작 시간
+     * @param timeUnit   체험 진행 시간 단위
+     * @param breakTimes 해당 날짜의 유효 휴게시간 목록
+     * @return 휴게시간과 겹치면 true
+     */
+    private boolean overlapsBreakTime(LocalTime startTime, Integer timeUnit, List<BreweryWeeklyBreakTime> breakTimes) {
+        LocalTime endTime = startTime.plusMinutes(timeUnit);
+        return breakTimes.stream()
+                .anyMatch(b -> startTime.isBefore(b.getBreakEnd()) && endTime.isAfter(b.getBreakStart()));
+    }
+
+    /**
      * 특정 달의 예약 불가능한 날 조회
      * @param dto ReqFindJoySlotDateDto: joyId, year, month
      * @return 예약 불가 날짜 목록 DTO
@@ -146,6 +182,7 @@ public class JoySlotService {
         // [단계 3] 특정 월의 계산에 필요한 스냅샷 및 휴무일, 예약 슬롯 정보를 벌크 일괄 조회
         // 이때 스냅샷은 특정 월의 시작일 시점 유효한 것부터 종료일 이전 적용된 것까지 필터링하여 조회합니다.
         List<BreweryWeeklyOpenTime> wotList = breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, startDate, endDate);
+        List<BreweryWeeklyBreakTime> breakTimeList = breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(breweryId, startDate, endDate);
         List<JoyWeeklyStartTime> jwstList = joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(dto.getJoyId(), startDate, endDate);
         List<BreweryClosedDate> bcdList = breweryClosedDateRepository.findConfirmedByBreweryIdAndMonth(
                 breweryId, startDate, endDate, ClosedStatus.CONFIRMED);
@@ -153,7 +190,7 @@ public class JoySlotService {
                 dto.getJoyId(), startDate, endDate, ClosedStatus.CONFIRMED);
         List<JoyClosedStartTime> jcstList = joyClosedStartTimeRepository.findConfirmedByJoyIdAndMonth(
                 dto.getJoyId(), startDate, endDate, ClosedStatus.CONFIRMED);
-        List<UnavailableJoySlotTimeCountDto> dateInfoList = joySlotRepository.findUnavailableJoySlotTimeCountByJoyIdAndMonth(
+        List<FullJoySlotTimeInfoDto> unavailableSlotTimes = joySlotRepository.findUnavailableJoySlotTimesByJoyIdAndMonth(
                 dto.getJoyId(), startDate, endDate);
 
         // [단계 4] 자바 메모리 상에서 빠른 O(1) 조회를 위해 데이터를 Set 및 Map 구조로 캐싱
@@ -172,10 +209,10 @@ public class JoySlotService {
                         Collectors.mapping(JoyClosedStartTime::getClosedStartTime, Collectors.toSet())
                 ));
 
-        Map<LocalDate, Integer> fullSlotsCountMap = dateInfoList.stream()
-                .collect(Collectors.toMap(
-                        UnavailableJoySlotTimeCountDto::getReservationDate,
-                        UnavailableJoySlotTimeCountDto::getCount
+        Map<LocalDate, Set<LocalTime>> fullSlotTimesMap = unavailableSlotTimes.stream()
+                .collect(Collectors.groupingBy(
+                        FullJoySlotTimeInfoDto::getReservationDate,
+                        Collectors.mapping(FullJoySlotTimeInfoDto::getReservationTime, Collectors.toSet())
                 ));
 
         ResJoySlotDateDto result = new ResJoySlotDateDto();
@@ -213,9 +250,11 @@ public class JoySlotService {
             // [단계 5-5] 양조장 운영 시간 범위(openTime <= startTime < closeTime) 내에 위치한 활성 체험 슬롯만 추출 (교집합)
             LocalTime openTime = openTimeInfo.getOpenTime();
             LocalTime closeTime = openTimeInfo.getCloseTime();
+            List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(breakTimeList, date, dayOfWeek);
             List<LocalTime> activeSlots = startTimes.stream()
                     .map(JoyWeeklyStartTime::getStartTime)
-                    .filter(t -> !t.isBefore(openTime) && t.isBefore(closeTime))
+                    .filter(t -> !t.isBefore(openTime) && !t.plusMinutes(joy.getTimeUnit()).isAfter(closeTime))
+                    .filter(t -> !overlapsBreakTime(t, joy.getTimeUnit(), activeBreakTimes))
                     .toList();
 
             if (activeSlots.isEmpty()) {
@@ -234,11 +273,11 @@ public class JoySlotService {
                 continue;
             }
 
-            // [단계 5-7] 매진 여부 검증: 당일 예약이 꽉 찬 슬롯 개수가 총 유효 슬롯 수 이상이면 -> 예약 불가
-            int totalSlotsCount = validSlots.size();
-            int fullSlotsCount = fullSlotsCountMap.getOrDefault(date, 0);
+            // [단계 5-7] 매진 여부 검증: 모든 유효 슬롯이 예약 인원 한도에 도달하면 예약 불가
+            Set<LocalTime> fullSlotTimes = fullSlotTimesMap.getOrDefault(date, Set.of());
+            boolean allValidSlotsFull = validSlots.stream().allMatch(fullSlotTimes::contains);
 
-            if (fullSlotsCount >= totalSlotsCount) {
+            if (allValidSlotsFull) {
                 result.getJoy_unavailable_reservation_date().add(date);
             }
         }
@@ -262,6 +301,8 @@ public class JoySlotService {
         LocalDate limitDate = targetDate.plusDays(1);
         List<BreweryWeeklyOpenTime> wotList = breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(joy.getBrewery().getId(), targetDate, limitDate);
         BreweryWeeklyOpenTime openTimeInfo = findActiveOpenTime(wotList, targetDate, dayOfWeek);
+        List<BreweryWeeklyBreakTime> breakTimeList = breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(joy.getBrewery().getId(), targetDate, limitDate);
+        List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(breakTimeList, targetDate, dayOfWeek);
 
         // 2. 해당 일자의 체험 시작 시간대 스냅샷 조회
         List<JoyWeeklyStartTime> jwstList = joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, limitDate);
@@ -274,7 +315,8 @@ public class JoySlotService {
             // 3. 양조장 운영 시간 범위 내에 속하는 활성 체험 시작 시간대들을 정렬하여 응답 필드에 추가
             List<LocalTime> activeStartTimes = startTimes.stream()
                     .map(JoyWeeklyStartTime::getStartTime)
-                    .filter(t -> !t.isBefore(openTime) && t.isBefore(closeTime))
+                    .filter(t -> !t.isBefore(openTime) && !t.plusMinutes(joy.getTimeUnit()).isAfter(closeTime))
+                    .filter(t -> !overlapsBreakTime(t, joy.getTimeUnit(), activeBreakTimes))
                     .sorted()
                     .toList();
 
@@ -282,8 +324,12 @@ public class JoySlotService {
         }
 
         // 4. 시간대별 남아있는 자리 정보를 DTO 필드에 추가
+        Set<LocalTime> responseTimes = Set.copyOf(result.getTime_info());
         List<JoySlot> joySlotList = joySlotRepository.findByJoyIdAndDate(joyId, targetDate);
         for (JoySlot joySlot : joySlotList) {
+            if (!responseTimes.contains(joySlot.getReservationTime())) {
+                continue;
+            }
             result.getRemaining_count_list().add(JoySlotTimeCountDto.timeCountOf(
                     joySlot.getReservationTime(),
                     joy.getMaxCount() - joySlot.getCount()

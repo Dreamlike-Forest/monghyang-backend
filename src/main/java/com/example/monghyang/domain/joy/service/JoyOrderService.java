@@ -18,6 +18,7 @@ import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.dto.JoyInfoDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
@@ -58,6 +59,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final JoyOrderBatchService joyOrderBatchService;
     private final JoyOrderRefundService joyOrderRefundService;
     private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
+    private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
 
     /**
      * 체험 시간대 유효성 검증
@@ -87,12 +89,33 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
             throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
         }
 
-        // 예약일에 활성화된 체험 시작 시간 스냅샷 안에 요청 시간이 있는지 최종 검증한다.
         DayOfWeek dayOfWeek = DayOfWeek.from(reservationDate.getDayOfWeek());
+        verifyBreakTime(joyInfoDto.breweryId(), reservationDate, reservationTime, joyInfoDto.timeUnit(), dayOfWeek);
+
+        // 예약일에 활성화된 체험 시작 시간 스냅샷 안에 요청 시간이 있는지 최종 검증한다.
         boolean existsStartTime = joyWeeklyStartTimeRepository.findActiveStartTimesByJoyIdAndDate(joyId, reservationDate, dayOfWeek)
                 .stream()
                 .anyMatch(startTime -> startTime.getStartTime().equals(reservationTime));
         if(!existsStartTime) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
+        }
+    }
+
+    /**
+     * 체험 진행 시간이 양조장 휴게시간과 겹치면 예약 불가 예외를 발생시킵니다.
+     *
+     * @param breweryId       양조장 식별자
+     * @param reservationDate 예약 대상일
+     * @param reservationTime 예약 시작 시간
+     * @param timeUnit        체험 진행 시간 단위
+     * @param dayOfWeek       예약 대상일의 요일
+     */
+    private void verifyBreakTime(Long breweryId, LocalDate reservationDate, LocalTime reservationTime, Integer timeUnit, DayOfWeek dayOfWeek) {
+        LocalTime reservationEndTime = reservationTime.plusMinutes(timeUnit);
+        boolean overlapsBreakTime = breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, dayOfWeek)
+                .stream()
+                .anyMatch(b -> reservationTime.isBefore(b.getBreakEnd()) && reservationEndTime.isAfter(b.getBreakStart()));
+        if (overlapsBreakTime) {
             throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
         }
     }

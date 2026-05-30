@@ -289,7 +289,7 @@ public interface UnavailableJoySlotTimeDto {
 Add import:
 
 ```java
-import com.example.monghyang.domain.joy.dto.slot.UnavailableJoySlotTimeDto;
+import com.example.monghyang.domain.joy.dto.slot.FullJoySlotTimeInfoDto;
 ```
 
 Add method:
