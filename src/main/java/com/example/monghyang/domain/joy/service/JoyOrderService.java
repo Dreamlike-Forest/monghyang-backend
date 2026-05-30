@@ -4,6 +4,7 @@ import com.example.monghyang.domain.batch.dto.JoyStatusHistoryBatchRow;
 import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.batch.service.JoyOrderRefundService;
 import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
+import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.order.PaymentManager;
 import com.example.monghyang.domain.global.pg.PayDBInfoDto;
 import com.example.monghyang.domain.global.pg.Payment;
@@ -93,7 +94,9 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
      */
     @Transactional
     public void reservationJoySlotCount(Long joyId, LocalDate date, LocalTime time, Integer count) {
-        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyId).orElseThrow(() ->
+        // 예약 일자의 요일로 변환하여 해당 날짜 기준 운영시간 스냅샷 조회
+        DayOfWeek dayOfWeek = DayOfWeek.from(date.getDayOfWeek());
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyId, date, dayOfWeek).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         verifyReservation(joyInfoDto, date, time, count);
         // 체험 예약 슬롯 upsert(insert -> 중복 발생 시 조건부 update)
@@ -182,7 +185,9 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     public void updateReservation(Long userId, ReqUpdateJoyOrderDto dto) {
         JoyOrder joyOrder = joyOrderRepository.findById(dto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
-        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
+        // 변경하려는 예약 일자의 요일로 변환하여 해당 날짜 기준 운영시간 스냅샷 조회
+        DayOfWeek dayOfWeek = DayOfWeek.from(dto.getReservation_date().getDayOfWeek());
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId(), dto.getReservation_date(), dayOfWeek).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         verifyReservation(joyInfoDto, dto.getReservation_date(), dto.getReservation_time(), dto.getCount());
         if(!joyOrder.getUsers().getId().equals(userId)) {
@@ -212,7 +217,9 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     public void updateReservationByBrewery(Long userId, ReqUpdateJoyOrderDto dto) {
         JoyOrder joyOrder = joyOrderRepository.findByIdAndBreweryUserId(dto.getId(), userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
-        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
+        // 변경하려는 예약 일자의 요일로 변환하여 해당 날짜 기준 운영시간 스냅샷 조회
+        DayOfWeek dayOfWeek = DayOfWeek.from(dto.getReservation_date().getDayOfWeek());
+        JoyInfoDto joyInfoDto = breweryRepository.findJoyTimeInfoByJoyId(joyOrder.getJoy().getId(), dto.getReservation_date(), dayOfWeek).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         // 수정하려는 시간대의 유효성 검증
         int count = (dto.getCount() == null) ? joyOrder.getCount() : dto.getCount();

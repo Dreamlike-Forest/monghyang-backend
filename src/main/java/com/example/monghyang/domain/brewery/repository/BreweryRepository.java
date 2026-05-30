@@ -11,6 +11,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.monghyang.domain.global.DayOfWeek;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,10 +76,36 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     Optional<ResProductOwnerDto> findSimpleInfoByUserId(@Param("userId") Long userId);
 
     /**
-     * 양조장 운영 시작/종료 시간, 체험 시간 단위, 동시간대 최대 수용 가능 인원 정보 조회
-     * @param joyId
-     * @return
+     * 예약 일자와 요일에 해당하는 양조장 운영시간 스냅샷을 조회합니다.
+     * <p>
+     * effective_date &lt;= reservationDate 조건 중 MAX(effective_date) 스냅샷을 선택하고,
+     * 해당 스냅샷 내에서 dayOfWeek가 일치하는 레코드의 openTime/closeTime을 반환합니다.
+     * 조건에 맞는 스냅샷이 없으면 Optional.empty()를 반환합니다.
+     *
+     * @param joyId           체험 식별자
+     * @param reservationDate 예약 일자
+     * @param dayOfWeek       예약 일자의 요일
+     * @return 운영시간, 체험 단위, 최대/최소 인원 정보
      */
-    @Query("select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(b.startTime, b.endTime, j.timeUnit, j.maxCount, j.minCount) from Joy j join j.brewery b where j.id = :joyId")
-    Optional<JoyInfoDto> findJoyTimeInfoByJoyId(@Param("joyId") Long joyId);
+    @Query("""
+        select new com.example.monghyang.domain.brewery.dto.JoyInfoDto(
+            wot.openTime, wot.closeTime, j.timeUnit, j.maxCount, j.minCount)
+        from Joy j
+        join j.brewery b
+        join BreweryWeeklyOpenTime wot on wot.brewery = b
+        where j.id = :joyId
+          and wot.dayOfWeek = :dayOfWeek
+          and wot.effectiveDate = (
+              select max(wot2.effectiveDate)
+              from BreweryWeeklyOpenTime wot2
+              where wot2.brewery = b
+                and wot2.dayOfWeek = :dayOfWeek
+                and wot2.effectiveDate <= :reservationDate
+          )
+        """)
+    Optional<JoyInfoDto> findJoyTimeInfoByJoyId(
+            @Param("joyId") Long joyId,
+            @Param("reservationDate") LocalDate reservationDate,
+            @Param("dayOfWeek") DayOfWeek dayOfWeek
+    );
 }
