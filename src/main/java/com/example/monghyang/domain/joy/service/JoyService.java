@@ -9,7 +9,9 @@ import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -37,12 +39,14 @@ public class JoyService {
     private final StorageService storageService;
     private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     private final JoyOrderService joyOrderService;
+    private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
 
     // 체험 등록
     @Transactional
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), LocalDate.now(), reqJoyDto.getTime_unit());
         String imageKey = null;
         if(reqJoyDto.getImage() != null) {
             imageKey = storageService.upload(reqJoyDto.getImage(), ImageType.JOY_IMAGE);
@@ -81,6 +85,7 @@ public class JoyService {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
         validateScheduleDuplicates(dto.getSchedules());
+        validateNotOverlappingBreakTimes(brewery, dto.getSchedules(), dto.getEffective_date(), joy.getTimeUnit());
 
         // 같은 적용일 스냅샷은 한 번 삭제한 뒤 요청 전체를 다시 저장해 동일 기준으로 교체한다.
         joyWeeklyStartTimeRepository.deleteByJoyIdAndEffectiveDate(dto.getJoyId(), dto.getEffective_date());
@@ -203,6 +208,35 @@ public class JoyService {
             Set<LocalTime> startTimes = new HashSet<>();
             for(LocalTime startTime : schedule.getStart_times()) {
                 if(!startTimes.add(startTime)) {
+                    throw new ApplicationException(ApplicationError.INVALID_TIME);
+                }
+            }
+        }
+    }
+
+    /**
+     * 체험 시작 시간 요청이 적용일 기준 양조장 휴게시간과 겹치면 예외를 발생시킵니다.
+     *
+     * @param brewery       체험이 속한 양조장
+     * @param schedules     요청된 요일별 체험 시작 시간
+     * @param effectiveDate 체험 일정 적용 시작일
+     * @param timeUnit      체험 진행 시간 단위
+     */
+    private void validateNotOverlappingBreakTimes(Brewery brewery, List<JoyScheduleDto> schedules, LocalDate effectiveDate, Integer timeUnit) {
+        for (JoyScheduleDto schedule : schedules) {
+            // 요청 요일에 적용되는 양조장 휴게시간 스냅샷을 적용일 기준으로 조회한다.
+            List<BreweryWeeklyBreakTime> breakTimes = breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(
+                    brewery.getId(),
+                    effectiveDate,
+                    schedule.getDay_of_week()
+            );
+            for (LocalTime startTime : schedule.getStart_times()) {
+                // 체험 시작 시간과 진행 시간으로 실제 체험 종료 시간을 계산한다.
+                LocalTime endTime = startTime.plusMinutes(timeUnit);
+                // 체험 진행 구간이 휴게시간 구간과 하나라도 겹치면 저장할 수 없는 일정으로 판단한다.
+                boolean overlapsBreakTime = breakTimes.stream()
+                        .anyMatch(b -> startTime.isBefore(b.getBreakEnd()) && endTime.isAfter(b.getBreakStart()));
+                if (overlapsBreakTime) {
                     throw new ApplicationException(ApplicationError.INVALID_TIME);
                 }
             }

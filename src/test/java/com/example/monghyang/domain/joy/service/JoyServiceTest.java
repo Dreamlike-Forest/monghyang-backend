@@ -1,8 +1,10 @@
 package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -49,6 +51,8 @@ class JoyServiceTest {
     JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     @Mock
     JoyOrderService joyOrderService;
+    @Mock
+    BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     @InjectMocks
     JoyService joyService;
 
@@ -110,6 +114,50 @@ class JoyServiceTest {
         ));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy(brewery)));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.updateJoySchedule(userId, dto)
+        );
+
+        assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("체험 생성 시 양조장 휴게시간과 겹치는 시작 시간이 있으면 요청을 반려한다")
+    void create_joy_rejects_start_time_overlapping_break_time() {
+        Long userId = 1L;
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        ReqJoyDto dto = reqJoyDto();
+        dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, LocalDate.now(), DayOfWeek.Mon))
+                .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.createJoy(userId, dto)
+        );
+
+        assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("체험 일정 변경 시 양조장 휴게시간과 겹치는 시작 시간이 있으면 요청을 반려한다")
+    void update_joy_schedule_rejects_start_time_overlapping_break_time() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        Joy joy = joy(brewery);
+        ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+        dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, effectiveDate, DayOfWeek.Mon))
+                .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -190,6 +238,16 @@ class JoyServiceTest {
                 .timeUnit(60)
                 .maxCount(10)
                 .minCount(1)
+                .build();
+    }
+
+    private BreweryWeeklyBreakTime breakTime(LocalTime breakStart, LocalTime breakEnd) {
+        return BreweryWeeklyBreakTime.builder()
+                .brewery(brewery())
+                .dayOfWeek(DayOfWeek.Mon)
+                .breakStart(breakStart)
+                .breakEnd(breakEnd)
+                .effectiveDate(LocalDate.now())
                 .build();
     }
 }
