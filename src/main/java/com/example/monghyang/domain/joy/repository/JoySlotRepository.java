@@ -80,13 +80,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     """)
     void deleteJoySlot(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time);
 
-    /**
-     * 특정 체험이 하루에 몇 회 운영하는지 계산하기 위한 데이터 조회
-     * @param joyId
-     * @return 체험 시간 단위, 양조장 운영 시작 시간 및 종료 시간 정보
-     */
-    @Query("select j.timeUnit as timeUnit, b.startTime as startTime, b.endTime as endTime, j.maxCount as maxCount from Joy j join j.brewery b where j.id = :joyId")
-    Optional<JoyScheduleCountDto> findJoyScheduleCountByJoyId(@Param("joyId") Long joyId);
+
 
 
     /**
