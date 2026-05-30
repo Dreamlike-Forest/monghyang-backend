@@ -1,26 +1,32 @@
 package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.joy.dto.ReqJoyDto;
+import com.example.monghyang.domain.joy.dto.JoyScheduleDto;
+import com.example.monghyang.domain.joy.dto.ReqUpdateJoyScheduleDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyDto;
 import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
+import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.joy.repository.JoyWeeklyStartTimeRepository;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -29,6 +35,8 @@ public class JoyService {
     private final JoyRepository joyRepository;
     private final BreweryRepository breweryRepository;
     private final StorageService storageService;
+    private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
+    private final JoyOrderService joyOrderService;
 
     // 체험 등록
     @Transactional
@@ -43,9 +51,10 @@ public class JoyService {
                 .brewery(brewery).name(reqJoyDto.getName())
                 .place(reqJoyDto.getPlace()).detail(reqJoyDto.getDetail())
                 .originPrice(reqJoyDto.getOrigin_price()).timeUnit(reqJoyDto.getTime_unit())
-                .imageKey(imageKey).maxCount(reqJoyDto.getMax_count())
+                .imageKey(imageKey).maxCount(reqJoyDto.getMax_count()).minCount(1)
                 .build();
         joyRepository.save(joy);
+        saveWeeklyStartTimes(joy, reqJoyDto.getSchedules(), LocalDate.now());
         if(brewery.getJoyCount() == 0) {
             brewery.updateMinJoyPrice(joy.getFinalPrice());
         } else if(joy.getFinalPrice().compareTo(brewery.getMinJoyPrice()) < 0){
@@ -54,6 +63,29 @@ public class JoyService {
         }
 
         brewery.increaseJoyCount(); // 양조장의 체험 개수 카운트 1 증가
+    }
+
+    /**
+     * 체험 요일별 시작 시간 스냅샷을 새 적용일 기준으로 교체합니다.
+     *
+     * @param userId 요청한 양조장 회원 식별자
+     * @param dto 변경할 체험 일정과 적용일 요청
+     */
+    @Transactional
+    public void updateJoySchedule(Long userId, ReqUpdateJoyScheduleDto dto) {
+        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+                new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
+                new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        if(dto.getEffective_date().isBefore(LocalDate.now())) {
+            throw new ApplicationException(ApplicationError.INVALID_TIME);
+        }
+        validateScheduleDuplicates(dto.getSchedules());
+
+        // 같은 적용일 스냅샷은 한 번 삭제한 뒤 요청 전체를 다시 저장해 동일 기준으로 교체한다.
+        joyWeeklyStartTimeRepository.deleteByJoyIdAndEffectiveDate(dto.getJoyId(), dto.getEffective_date());
+        saveWeeklyStartTimes(joy, dto.getSchedules(), dto.getEffective_date());
+        joyOrderService.setRefundRequestedByJoyScheduleChange(dto.getJoyId(), dto.getEffective_date());
     }
 
     // 체험 삭제 처리
@@ -144,5 +176,36 @@ public class JoyService {
             throw new ApplicationException(ApplicationError.JOY_NOT_FOUND);
         }
         return joyList.stream().map(ResJoyDto::joyFrom).toList();
+    }
+
+    private void saveWeeklyStartTimes(Joy joy, List<JoyScheduleDto> schedules, LocalDate effectiveDate) {
+        validateScheduleDuplicates(schedules);
+        List<JoyWeeklyStartTime> weeklyStartTimes = new ArrayList<>();
+        for(JoyScheduleDto schedule : schedules) {
+            for(LocalTime startTime : schedule.getStart_times()) {
+                weeklyStartTimes.add(JoyWeeklyStartTime.joyDayOfWeekStartTimeEffectiveDateOf(
+                        joy,
+                        schedule.getDay_of_week(),
+                        startTime,
+                        effectiveDate
+                ));
+            }
+        }
+        joyWeeklyStartTimeRepository.saveAll(weeklyStartTimes);
+    }
+
+    private void validateScheduleDuplicates(List<JoyScheduleDto> schedules) {
+        Set<DayOfWeek> dayOfWeeks = new HashSet<>();
+        for(JoyScheduleDto schedule : schedules) {
+            if(!dayOfWeeks.add(schedule.getDay_of_week())) {
+                throw new ApplicationException(ApplicationError.INVALID_TIME);
+            }
+            Set<LocalTime> startTimes = new HashSet<>();
+            for(LocalTime startTime : schedule.getStart_times()) {
+                if(!startTimes.add(startTime)) {
+                    throw new ApplicationException(ApplicationError.INVALID_TIME);
+                }
+            }
+        }
     }
 }

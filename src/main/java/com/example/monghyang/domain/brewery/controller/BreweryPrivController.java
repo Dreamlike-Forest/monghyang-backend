@@ -86,6 +86,16 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("체험정보가 수정되었습니다."));
     }
 
+    @PostMapping("/joy/schedule")
+    @Operation(summary = "체험 요일별 시작 시간 일정 변경", description = "effective_date부터 적용될 체험 시작 시간 스냅샷을 등록합니다.")
+    public ResponseEntity<ResponseDataDto<Void>> updateJoySchedule(
+            @LoginUserId Long userId,
+            @Valid @ModelAttribute ReqUpdateJoyScheduleDto dto
+    ) {
+        joyService.updateJoySchedule(userId, dto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험 일정이 변경되었습니다."));
+    }
+
     @DeleteMapping("/joy/{joyId}")
     @Operation(summary = "체험 삭제 처리")
     public ResponseEntity<ResponseDataDto<Void>> deleteJoy(@LoginUserId Long userId, @PathVariable Long joyId) {

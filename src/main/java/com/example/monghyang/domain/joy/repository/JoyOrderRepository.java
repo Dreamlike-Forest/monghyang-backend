@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -108,5 +109,27 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
             @Param("effectiveDate") LocalDate effectiveDate,
             @Param("status") JoyPaymentStatus status
     );
-}
 
+    /**
+     * 특정 체험의 적용일 시작 시각 이후 환불 요청 대상 예약 식별자를 조회합니다.
+     *
+     * @param joyId               체험 식별자
+     * @param reservationFrom     환불 대상 예약 시작 시각
+     * @param joyPaymentStatus    환불 대상 결제 상태
+     * @param isDeleted           삭제 여부
+     * @return 환불 요청 대상 체험 예약 식별자 목록
+     */
+    @Query("""
+    select jo.id from JoyOrder jo
+    where jo.joy.id = :joyId
+    and jo.reservation >= :reservationFrom
+    and jo.joyPaymentStatus = :joyPaymentStatus
+    and jo.isDeleted = :isDeleted
+    """)
+    List<Long> findIdByJoyIdAndReservationFromAndPaymentStatusAndIsDeleted(
+            @Param("joyId") Long joyId,
+            @Param("reservationFrom") LocalDateTime reservationFrom,
+            @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
+            @Param("isDeleted") Boolean isDeleted
+    );
+}
