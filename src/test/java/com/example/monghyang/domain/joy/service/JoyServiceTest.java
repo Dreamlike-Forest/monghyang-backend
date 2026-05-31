@@ -2,9 +2,11 @@ package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -37,7 +39,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +58,8 @@ class JoyServiceTest {
     JoyOrderService joyOrderService;
     @Mock
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    @Mock
+    BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     @InjectMocks
     JoyService joyService;
 
@@ -128,8 +134,15 @@ class JoyServiceTest {
     void create_joy_saves_initial_weekly_start_time_snapshot() {
         Long userId = 1L;
         Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
         ReqJoyDto dto = reqJoyDto();
         given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
+        givenOpenTimes(
+                5L,
+                LocalDate.now(),
+                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0)),
+                openTime(DayOfWeek.Tue, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
 
         joyService.createJoy(userId, dto);
 
@@ -155,6 +168,11 @@ class JoyServiceTest {
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+        givenOpenTimes(
+                5L,
+                effectiveDate,
+                openTime(DayOfWeek.Mon, effectiveDate, LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
 
         joyService.updateJoySchedule(userId, dto);
 
@@ -178,6 +196,11 @@ class JoyServiceTest {
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+        givenOpenTimes(
+                5L,
+                effectiveDate,
+                openTime(DayOfWeek.Mon, effectiveDate, LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
 
         joyService.updateJoySchedule(userId, dto);
 
@@ -221,6 +244,11 @@ class JoyServiceTest {
         ReqJoyDto dto = reqJoyDto();
         dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
         given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
+        givenOpenTimes(
+                5L,
+                LocalDate.now(),
+                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, LocalDate.now(), DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 
@@ -245,6 +273,11 @@ class JoyServiceTest {
         dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+        givenOpenTimes(
+                5L,
+                effectiveDate,
+                openTime(DayOfWeek.Mon, effectiveDate, LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, effectiveDate, DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 
@@ -254,6 +287,87 @@ class JoyServiceTest {
         );
 
         assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("체험 생성 시 시작 시간이 양조장 운영시간 밖이면 요청을 반려한다")
+    void create_joy_rejects_start_time_outside_brewery_open_time() {
+        Long userId = 1L;
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        ReqJoyDto dto = reqJoyDto();
+        dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(18, 30))));
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
+        givenOpenTimes(
+                5L,
+                LocalDate.now(),
+                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.createJoy(userId, dto)
+        );
+
+        assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+        verify(joyRepository, never()).save(any(Joy.class));
+    }
+
+    @Test
+    @DisplayName("체험 일정 변경 시 시작 시간이 양조장 운영시간 밖이면 요청을 반려한다")
+    void update_joy_schedule_rejects_start_time_outside_brewery_open_time() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        Joy joy = joy(brewery);
+        ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+        dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(18, 30))));
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+        givenOpenTimes(
+                5L,
+                effectiveDate,
+                openTime(DayOfWeek.Mon, effectiveDate, LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.updateJoySchedule(userId, dto)
+        );
+
+        assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+        verify(joyWeeklyStartTimeRepository, never()).deleteByJoyIdAndEffectiveDate(joyId, effectiveDate);
+        verify(joyOrderService, never()).setRefundRequestedByJoyScheduleChange(joyId, effectiveDate);
+    }
+
+    @Test
+    @DisplayName("체험 일정 변경 시 최신 양조장 주간 버전에 없는 요일이면 요청을 반려한다")
+    void update_joy_schedule_rejects_day_missing_from_latest_brewery_open_time_version() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        Joy joy = joy(brewery);
+        ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+        dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(10, 0))));
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+        givenOpenTimes(
+                5L,
+                effectiveDate,
+                openTime(DayOfWeek.Tue, effectiveDate, LocalTime.of(9, 0), LocalTime.of(18, 0))
+        );
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.updateJoySchedule(userId, dto)
+        );
+
+        assertEquals(ApplicationError.INVALID_TIME, exception.getApplicationError());
+        verify(joyWeeklyStartTimeRepository, never()).deleteByJoyIdAndEffectiveDate(joyId, effectiveDate);
     }
 
     private ReqJoyDto reqJoyDto() {
@@ -327,6 +441,24 @@ class JoyServiceTest {
                 .timeUnit(60)
                 .maxCount(10)
                 .minCount(1)
+                .build();
+    }
+
+    private void givenOpenTimes(Long breweryId, LocalDate effectiveDate, BreweryWeeklyOpenTime... openTimes) {
+        given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(
+                breweryId,
+                effectiveDate,
+                effectiveDate.plusDays(1)
+        )).willReturn(List.of(openTimes));
+    }
+
+    private BreweryWeeklyOpenTime openTime(DayOfWeek dayOfWeek, LocalDate effectiveDate, LocalTime openTime, LocalTime closeTime) {
+        return BreweryWeeklyOpenTime.builder()
+                .brewery(brewery())
+                .dayOfWeek(dayOfWeek)
+                .openTime(openTime)
+                .closeTime(closeTime)
+                .effectiveDate(effectiveDate)
                 .build();
     }
 

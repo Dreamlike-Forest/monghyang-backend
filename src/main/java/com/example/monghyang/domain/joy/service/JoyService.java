@@ -10,8 +10,10 @@ import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.repository.BreweryRepository;
 import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRepository;
+import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
@@ -40,13 +42,16 @@ public class JoyService {
     private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     private final JoyOrderService joyOrderService;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
 
     // 체험 등록
     @Transactional
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
         Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), LocalDate.now(), reqJoyDto.getTime_unit());
+        LocalDate effectiveDate = LocalDate.now();
+        validateWithinOpenTimes(brewery, reqJoyDto.getSchedules(), effectiveDate, reqJoyDto.getTime_unit());
+        validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), effectiveDate, reqJoyDto.getTime_unit());
         String imageKey = null;
         if(reqJoyDto.getImage() != null) {
             imageKey = storageService.upload(reqJoyDto.getImage(), ImageType.JOY_IMAGE);
@@ -58,7 +63,7 @@ public class JoyService {
                 .imageKey(imageKey).maxCount(reqJoyDto.getMax_count()).minCount(1)
                 .build();
         joyRepository.save(joy);
-        saveWeeklyStartTimes(joy, reqJoyDto.getSchedules(), LocalDate.now());
+        saveWeeklyStartTimes(joy, reqJoyDto.getSchedules(), effectiveDate);
         if(brewery.getJoyCount() == 0) {
             brewery.updateMinJoyPrice(joy.getFinalPrice());
         } else if(joy.getFinalPrice().compareTo(brewery.getMinJoyPrice()) < 0){
@@ -85,6 +90,7 @@ public class JoyService {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
         validateScheduleDuplicates(dto.getSchedules());
+        validateWithinOpenTimes(brewery, dto.getSchedules(), dto.getEffective_date(), joy.getTimeUnit());
         validateNotOverlappingBreakTimes(brewery, dto.getSchedules(), dto.getEffective_date(), joy.getTimeUnit());
 
         // 같은 적용일 스냅샷은 한 번 삭제한 뒤 요청 전체를 다시 저장해 동일 기준으로 교체한다.
@@ -218,6 +224,61 @@ public class JoyService {
             Set<LocalTime> startTimes = new HashSet<>();
             for(LocalTime startTime : schedule.getStart_times()) {
                 if(!startTimes.add(startTime)) {
+                    throw new ApplicationException(ApplicationError.INVALID_TIME);
+                }
+            }
+        }
+    }
+
+    /**
+     * 적용일 기준 최신 양조장 주간 운영시간 버전 안에서 요청 요일의 운영시간을 찾습니다.
+     *
+     * @param openTimes     적용일 계산에 필요한 양조장 운영시간 스냅샷 목록
+     * @param effectiveDate 체험 일정 적용 시작일
+     * @param dayOfWeek     요청 요일
+     * @return 최신 주간 버전 안의 요청 요일 운영시간. 없으면 null
+     */
+    private BreweryWeeklyOpenTime findActiveOpenTime(List<BreweryWeeklyOpenTime> openTimes, LocalDate effectiveDate, DayOfWeek dayOfWeek) {
+        LocalDate latestEffectiveDate = openTimes.stream()
+                .filter(openTime -> !openTime.getEffectiveDate().isAfter(effectiveDate))
+                .map(BreweryWeeklyOpenTime::getEffectiveDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+        if (latestEffectiveDate == null) {
+            return null;
+        }
+        return openTimes.stream()
+                .filter(openTime -> openTime.getEffectiveDate().equals(latestEffectiveDate) && openTime.getDayOfWeek() == dayOfWeek)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * 체험 시작 시간 요청이 적용일 기준 양조장 운영시간 안에 들어오는지 검증합니다.
+     *
+     * @param brewery       체험이 속한 양조장
+     * @param schedules     요청된 요일별 체험 시작 시간
+     * @param effectiveDate 체험 일정 적용 시작일
+     * @param timeUnit      체험 진행 시간 단위
+     */
+    private void validateWithinOpenTimes(Brewery brewery, List<JoyScheduleDto> schedules, LocalDate effectiveDate, Integer timeUnit) {
+        List<BreweryWeeklyOpenTime> openTimes = breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(
+                brewery.getId(),
+                effectiveDate,
+                effectiveDate.plusDays(1)
+        );
+        for (JoyScheduleDto schedule : schedules) {
+            // 최신 주간 운영시간 버전에 요청 요일이 없으면 저장할 수 없는 시작 시간으로 판단한다.
+            BreweryWeeklyOpenTime activeOpenTime = findActiveOpenTime(openTimes, effectiveDate, schedule.getDay_of_week());
+            if (activeOpenTime == null) {
+                throw new ApplicationException(ApplicationError.INVALID_TIME);
+            }
+            for (LocalTime startTime : schedule.getStart_times()) {
+                // 체험 종료 시간이 운영 종료 시간보다 늦어지는지 함께 검증한다.
+                LocalTime endTime = startTime.plusMinutes(timeUnit);
+                boolean outsideOpenTime = startTime.isBefore(activeOpenTime.getOpenTime())
+                        || endTime.isAfter(activeOpenTime.getCloseTime());
+                if (outsideOpenTime) {
                     throw new ApplicationException(ApplicationError.INVALID_TIME);
                 }
             }
