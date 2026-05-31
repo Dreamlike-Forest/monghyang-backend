@@ -44,7 +44,7 @@ public class JoyService {
     // 체험 등록
     @Transactional
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), LocalDate.now(), reqJoyDto.getTime_unit());
         String imageKey = null;
@@ -79,7 +79,7 @@ public class JoyService {
     public void updateJoySchedule(Long userId, ReqUpdateJoyScheduleDto dto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         if(dto.getEffective_date().isBefore(LocalDate.now())) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
@@ -100,7 +100,7 @@ public class JoyService {
      * @param joyId  삭제할 체험 식별자
      */
     public void deleteJoy(Long userId, Long joyId) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
@@ -116,7 +116,7 @@ public class JoyService {
      * @param joyId  복구할 체험 식별자
      */
     public void restoreJoy(Long userId, Long joyId) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findDeletedByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
@@ -125,7 +125,7 @@ public class JoyService {
     }
 
     public void setSoldout(Long userId, Long joyId) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
@@ -134,7 +134,7 @@ public class JoyService {
     }
 
     public void unSetSoldout(Long userId, Long joyId) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
@@ -145,7 +145,7 @@ public class JoyService {
     // 체험 수정(가격 및 할인율, 기타 체험 정보, 매진 처리 등)
     @Transactional
     public void updateJoy(Long userId, ReqUpdateJoyDto reqUpdateJoyDto) {
-        Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
+        Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), reqUpdateJoyDto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));

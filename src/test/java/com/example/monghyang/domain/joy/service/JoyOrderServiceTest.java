@@ -71,6 +71,25 @@ class JoyOrderServiceTest {
     JoyOrderService joyOrderService;
 
     @Test
+    @DisplayName("예약 슬롯 증가는 탈퇴한 양조장 소속 체험이면 슬롯을 증가시키지 않는다")
+    void reservation_joy_slot_count_rejects_deleted_brewery_joy() {
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
+        given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
+                .willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.reservationJoySlotCount(joyId, reservationDate, reservationTime, 2)
+        );
+
+        assertEquals(ApplicationError.BREWERY_NOT_FOUND, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
     @DisplayName("예약 슬롯 증가는 삭제된 체험이면 슬롯을 증가시키지 않는다")
     void reservation_joy_slot_count_rejects_deleted_joy() {
         Long joyId = 10L;

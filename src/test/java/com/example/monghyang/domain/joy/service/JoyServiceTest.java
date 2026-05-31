@@ -78,7 +78,7 @@ class JoyServiceTest {
         Long joyId = 10L;
         Brewery brewery = brewery();
         ReflectionTestUtils.setField(brewery, "id", 5L);
-        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(
@@ -98,7 +98,7 @@ class JoyServiceTest {
         Joy joy = joy(brewery);
         joy.setDeleted();
         ReflectionTestUtils.setField(brewery, "id", 5L);
-        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         given(joyRepository.findDeletedByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
 
         joyService.restoreJoy(userId, joyId);
@@ -108,13 +108,28 @@ class JoyServiceTest {
     }
 
     @Test
+    @DisplayName("탈퇴한 양조장은 체험을 새로 등록할 수 없다")
+    void create_joy_rejects_deleted_brewery() {
+        Long userId = 1L;
+        ReqJoyDto dto = reqJoyDto();
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.createJoy(userId, dto)
+        );
+
+        assertEquals(ApplicationError.BREWERY_NOT_FOUND, exception.getApplicationError());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     @DisplayName("체험 생성 시 요청한 요일별 시작 시간을 오늘 적용 스냅샷으로 저장한다")
     void create_joy_saves_initial_weekly_start_time_snapshot() {
         Long userId = 1L;
         Brewery brewery = brewery();
         ReqJoyDto dto = reqJoyDto();
-        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
 
         joyService.createJoy(userId, dto);
 
@@ -129,6 +144,29 @@ class JoyServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    @DisplayName("탈퇴한 양조장 관리자도 체험 시작 시간 스냅샷을 변경할 수 있다")
+    void update_joy_schedule_allows_deleted_brewery_owner() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        Brewery brewery = brewery();
+        Joy joy = joy(brewery);
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
+
+        joyService.updateJoySchedule(userId, dto);
+
+        verify(joyWeeklyStartTimeRepository).deleteByJoyIdAndEffectiveDate(joyId, effectiveDate);
+        ArgumentCaptor<List<JoyWeeklyStartTime>> captor = ArgumentCaptor.forClass(List.class);
+        verify(joyWeeklyStartTimeRepository).saveAll(captor.capture());
+        assertEquals(2, captor.getValue().size());
+        verify(joyOrderService).setRefundRequestedByJoyScheduleChange(joyId, effectiveDate);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("체험 일정 변경 시 같은 적용일 스냅샷을 교체하고 환불 요청 처리를 호출한다")
     void update_joy_schedule_replaces_snapshot_and_requests_refund() {
         Long userId = 1L;
@@ -139,7 +177,7 @@ class JoyServiceTest {
         ReflectionTestUtils.setField(brewery, "id", 5L);
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
 
         joyService.updateJoySchedule(userId, dto);
 
@@ -164,7 +202,7 @@ class JoyServiceTest {
                 schedule(DayOfWeek.Mon, LocalTime.of(11, 0))
         ));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy(brewery)));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy(brewery)));
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -182,7 +220,7 @@ class JoyServiceTest {
         ReflectionTestUtils.setField(brewery, "id", 5L);
         ReqJoyDto dto = reqJoyDto();
         dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
-        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, LocalDate.now(), DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 
@@ -206,7 +244,7 @@ class JoyServiceTest {
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, effectiveDate, DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 

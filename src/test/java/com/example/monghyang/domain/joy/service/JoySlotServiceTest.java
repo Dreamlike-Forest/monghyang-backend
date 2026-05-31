@@ -64,8 +64,8 @@ class JoySlotServiceTest {
     JoySlotService joySlotService;
 
     @Test
-    @DisplayName("삭제된 체험의 예약 불가 날짜 조회는 JOY_NOT_FOUND로 거부한다")
-    void get_impossible_date_rejects_deleted_joy() {
+    @DisplayName("비활성 체험의 예약 불가 날짜 조회는 JOY_NOT_FOUND로 거부한다")
+    void get_impossible_date_rejects_inactive_joy() {
         Long joyId = 10L;
         ReqFindJoySlotDateDto dto = new ReqFindJoySlotDateDto();
         dto.setJoyId(joyId);

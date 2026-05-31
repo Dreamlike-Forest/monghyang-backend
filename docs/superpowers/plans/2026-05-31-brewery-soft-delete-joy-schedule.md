@@ -4,7 +4,7 @@
 
 **목표:** `Brewery.isDeleted = true`인 양조장 소속 체험이 스냅샷 일정 데이터가 남아 있더라도 신규 체험 관리, 예약 가능 조회, 예약 생성/변경 경로에 사용되지 않도록 차단한다.
 
-**아키텍처:** 하위 `Joy`와 `JoyWeeklyStartTime` 스냅샷은 물리 삭제하거나 일괄 소프트 딜리트하지 않고 보존한다. 대신 active 양조장 조건을 `BreweryRepository`, `JoyRepository`, 예약 운영시간 조회 쿼리의 경계에 강제해 삭제된 양조장의 하위 스케줄이 비즈니스 흐름으로 다시 진입하지 못하게 한다. 복구 가능성을 해치지 않기 위해 `breweryRestore`, 사용자 개인정보 조회, 기존 예약 이력 정리처럼 삭제 상태 자체를 보여 주거나 복구해야 하는 경로는 기존 무필터 조회를 유지한다.
+**아키텍처:** 하위 `Joy`와 `JoyWeeklyStartTime` 스냅샷은 물리 삭제하거나 일괄 소프트 딜리트하지 않고 보존한다. 대신 고객 예약/공개 조회 경계에는 active 양조장 조건을 강제해 삭제된 양조장의 하위 스케줄이 예약 흐름으로 다시 진입하지 못하게 한다. 양조장 관리자용 일정 정비 API(`BreweryService`의 휴무/운영시간 변경, `JoyService.updateJoySchedule`)는 탈퇴 상태에서도 자기 데이터 갱신을 허용하도록 무필터 owner 조회를 유지한다.
 
 **기술 스택:** Java 21, Spring Boot 3.5.3, Spring Data JPA 3.5.1, JUnit 5.12.2, Mockito Core 5.17.0, Mockito JUnit Jupiter 5.14.2. 정확한 버전은 `docs/context7-dependencies.yaml` 기준이다.
 
@@ -24,7 +24,8 @@
 - 이 문서는 계획이며, 사용자가 명시적으로 승인하기 전에는 프로덕션 코드와 테스트 코드를 수정하지 않는다.
 - 구현 승인 후에는 현재 작업 트리를 확인하고, 이번 계획 범위 파일만 수정한다.
 - 코드 변경 커밋은 별도 사용자 확인 전에는 만들지 않는다.
-- 양조장 탈퇴 시 기존 미래 예약을 자동 환불 요청으로 전환하는 정책은 이번 계획에 포함하지 않는다. 이 계획의 범위는 `[결함 3]` 보고서가 지적한 삭제 양조장 소속 체험의 신규 예약/조회/관리 진입 차단이다.
+- 양조장 탈퇴 시 기존 미래 예약을 자동 환불 요청으로 전환하는 정책은 이번 계획에 포함하지 않는다. 이 계획의 범위는 `[결함 3]` 보고서가 지적한 삭제 양조장 소속 체험의 신규 고객 예약/공개 조회 진입 차단이다.
+- 2026-05-31 사용자 승인 변경: 양조장 관리자용 일정 정비 API는 탈퇴 상태에서도 수행 가능해야 하므로, 해당 경로는 active 양조장 조회로 막지 않는다.
 - `JoyWeeklyStartTime` 스냅샷은 삭제하지 않는다. 양조장 복구 후 기존 스냅샷을 다시 사용할 수 있어야 하므로, 차단은 active 조회 조건으로 처리한다.
 
 ## 의존성 및 Context7 기준
@@ -41,17 +42,17 @@
 - 수정: `src/main/java/com/example/monghyang/domain/joy/repository/JoyRepository.java`
   - active/deleted 체험 조회 쿼리에 소속 양조장의 active 조건을 함께 적용한다.
 - 수정: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
-  - 체험 생성, 수정, 삭제, 복구, 매진 처리, 일정 변경에서 active 양조장만 대상으로 삼는다.
+  - 고객 예약/공개 조회에 영향을 주는 active 체험 조회는 active 양조장 조건을 유지하고, 체험 일정 변경은 탈퇴 양조장 관리자도 수행할 수 있도록 owner 조회를 사용한다.
 - 수정: `src/main/java/com/example/monghyang/domain/brewery/service/BreweryService.java`
-  - 별도 휴무일, 운영/휴게시간 스케줄 변경은 active 양조장만 대상으로 삼고, 탈퇴/복구 경로는 삭제 상태 판단을 위해 기존 무필터 조회를 유지한다.
+  - 별도 휴무일, 운영/휴게시간 스케줄 변경은 탈퇴 양조장 관리자도 수행할 수 있도록 기존 무필터 owner 조회를 유지한다.
 - 테스트 수정: `src/test/java/com/example/monghyang/domain/joy/service/JoyServiceTest.java`
-  - active 양조장 조회 메서드 사용을 검증하고, 탈퇴 양조장 소속 체험 생성/일정 변경이 차단되는지 검증한다.
+  - 탈퇴 양조장의 신규 체험 등록은 차단하고, 체험 일정 변경은 허용되는지 검증한다.
 - 테스트 수정: `src/test/java/com/example/monghyang/domain/joy/service/JoyOrderServiceTest.java`
   - 예약 운영시간 조회가 삭제 양조장을 거부할 때 슬롯 증가가 일어나지 않는지 검증한다.
 - 테스트 수정: `src/test/java/com/example/monghyang/domain/joy/service/JoySlotServiceTest.java`
   - 삭제 양조장 소속 체험이 active 체험 조회에서 제외된다는 서비스 계약을 명시한다.
 - 테스트 추가: `src/test/java/com/example/monghyang/domain/brewery/service/BreweryServiceTest.java`
-  - 탈퇴 양조장은 운영/휴게시간 스케줄 변경을 할 수 없음을 검증한다.
+  - 탈퇴 양조장 관리자가 운영/휴게시간 스케줄 변경을 할 수 있음을 검증한다.
 
 ---
 
@@ -152,25 +153,32 @@ void create_joy_rejects_deleted_brewery() {
 }
 ```
 
-- [ ] **단계 1.3: `JoyServiceTest`에 탈퇴 양조장 체험 일정 변경 차단 테스트 추가**
+- [ ] **단계 1.3: `JoyServiceTest`에 탈퇴 양조장 체험 일정 변경 허용 테스트 추가**
 
 다음 테스트를 `JoyServiceTest`에 추가한다.
 
 ```java
 @Test
-@DisplayName("탈퇴한 양조장은 체험 시작 시간 스냅샷을 변경할 수 없다")
-void update_joy_schedule_rejects_deleted_brewery() {
+@SuppressWarnings("unchecked")
+@DisplayName("탈퇴한 양조장 관리자도 체험 시작 시간 스냅샷을 변경할 수 있다")
+void update_joy_schedule_allows_deleted_brewery_owner() {
     Long userId = 1L;
     Long joyId = 10L;
-    ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, LocalDate.now().plusDays(1));
-    given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.empty());
+    LocalDate effectiveDate = LocalDate.now().plusDays(1);
+    Brewery brewery = brewery();
+    Joy joy = joy(brewery);
+    ReflectionTestUtils.setField(brewery, "id", 5L);
+    ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
+    given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+    given(joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(5L, joyId)).willReturn(Optional.of(joy));
 
-    ApplicationException exception = assertThrows(
-            ApplicationException.class,
-            () -> joyService.updateJoySchedule(userId, dto)
-    );
+    joyService.updateJoySchedule(userId, dto);
 
-    assertEquals(ApplicationError.BREWERY_NOT_FOUND, exception.getApplicationError());
+    verify(joyWeeklyStartTimeRepository).deleteByJoyIdAndEffectiveDate(joyId, effectiveDate);
+    ArgumentCaptor<List<JoyWeeklyStartTime>> captor = ArgumentCaptor.forClass(List.class);
+    verify(joyWeeklyStartTimeRepository).saveAll(captor.capture());
+    assertEquals(2, captor.getValue().size());
+    verify(joyOrderService).setRefundRequestedByJoyScheduleChange(joyId, effectiveDate);
 }
 ```
 
@@ -292,19 +300,20 @@ class BreweryServiceTest {
     @InjectMocks BreweryService breweryService;
 
     @Test
-    @DisplayName("탈퇴한 양조장은 운영 시간 스냅샷을 변경할 수 없다")
-    void update_brewery_schedule_rejects_deleted_brewery() {
+    @DisplayName("탈퇴한 양조장 관리자도 운영 시간 스냅샷을 변경할 수 있다")
+    void update_brewery_schedule_allows_deleted_brewery_owner() {
         Long userId = 1L;
+        Long breweryId = 5L;
         ReqUpdateBreweryScheduleDto dto = updateScheduleDto();
-        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.empty());
+        Brewery brewery = mock(Brewery.class);
+        given(brewery.getId()).willReturn(breweryId);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
 
-        ApplicationException exception = assertThrows(
-                ApplicationException.class,
-                () -> breweryService.updateBrewerySchedule(userId, dto)
-        );
+        breweryService.updateBrewerySchedule(userId, dto);
 
-        assertEquals(ApplicationError.BREWERY_NOT_FOUND, exception.getApplicationError());
-        verify(breweryWeeklyOpenTimeRepository, never()).deleteByBreweryIdAndEffectiveDate(any(), any());
+        verify(breweryWeeklyOpenTimeRepository).deleteByBreweryIdAndEffectiveDate(breweryId, dto.getEffective_date());
+        verify(breweryWeeklyOpenTimeRepository).save(any());
+        verify(joyOrderService).setRefundRequestedByScheduleChange(breweryId, dto.getEffective_date());
     }
 
     private ReqUpdateBreweryScheduleDto updateScheduleDto() {
@@ -480,7 +489,31 @@ Optional<Joy> findActiveByBreweryIdAndJoyId(@Param("breweryId") Long breweryId, 
 Optional<Joy> findDeletedByBreweryIdAndJoyId(@Param("breweryId") Long breweryId, @Param("joyId") Long joyId);
 ```
 
-- [ ] **단계 3.6: Javadocs 의미 보강**
+- [ ] **단계 3.6: 관리자용 체험 일정 변경 조회 메서드 추가**
+
+양조장 관리자용 체험 일정 변경은 탈퇴 상태에서도 허용해야 하므로, 소속 양조장 삭제 조건을 걸지 않는 owner-scoped 조회 메서드를 추가한다.
+
+```java
+/**
+ * 양조장 관리자용 기능에서 소속 양조장의 탈퇴 여부와 무관하게 삭제되지 않은 체험을 조회합니다.
+ *
+ * @param breweryId 양조장 식별자
+ * @param joyId     체험 식별자
+ * @return 삭제되지 않은 체험
+ */
+@Query("""
+    select j from Joy j
+    where j.id = :joyId
+      and j.brewery.id = :breweryId
+      and j.isDeleted = false
+""")
+Optional<Joy> findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(
+        @Param("breweryId") Long breweryId,
+        @Param("joyId") Long joyId
+);
+```
+
+- [ ] **단계 3.7: Javadocs 의미 보강**
 
 각 active 조회 Javadocs에 다음 의미를 반영한다.
 
@@ -492,43 +525,26 @@ Optional<Joy> findDeletedByBreweryIdAndJoyId(@Param("breweryId") Long breweryId,
 
 ---
 
-### 작업 4: 서비스 계층에서 active 양조장 조회 사용
+### 작업 4: 서비스 계층에서 고객 예약 경계와 관리자 일정 경계 분리
 
 **파일:**
 - 수정: `src/main/java/com/example/monghyang/domain/joy/service/JoyService.java`
 - 수정: `src/main/java/com/example/monghyang/domain/brewery/service/BreweryService.java`
 
-- [ ] **단계 4.1: `JoyService` 체험 관리 경로의 양조장 조회 교체**
+- [ ] **단계 4.1: `JoyService` 체험 일정 변경은 탈퇴 양조장 owner 조회 허용**
 
-다음 메서드의 첫 양조장 조회를 `findActiveByUserId`로 교체한다.
-
-```text
-createJoy
-updateJoySchedule
-deleteJoy
-restoreJoy
-setSoldout
-unSetSoldout
-updateJoy
-```
-
-변경 전:
+`updateJoySchedule`은 양조장 관리자용 일정 정비 API이므로 `findByUserId`와 `findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery`를 사용한다.
 
 ```java
 Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
         new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+Joy joy = joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
+        new ApplicationException(ApplicationError.JOY_NOT_FOUND));
 ```
 
-변경 후:
+- [ ] **단계 4.2: `BreweryService` 일정 정비 작업은 탈퇴 양조장 owner 조회 허용**
 
-```java
-Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
-        new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-```
-
-- [ ] **단계 4.2: `BreweryService` active 상태가 필요한 owner 작업의 조회 교체**
-
-다음 메서드는 탈퇴한 양조장에 대해 수행되면 안 되므로 active 조회로 교체한다.
+다음 메서드는 양조장 관리자용 일정 정비 API이므로 `findByUserId`를 유지한다.
 
 ```text
 deleteClosedDate
@@ -537,10 +553,10 @@ addClosedDateConfirmed
 updateBrewerySchedule
 ```
 
-변경 후 공통 형태:
+유지할 공통 형태:
 
 ```java
-Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
+Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
         new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
 ```
 
@@ -623,8 +639,9 @@ rg -n "findByUserId\\(userId\\)|findByUserId\\(users.getId\\(\\)\\)|findActiveBy
 예상:
 
 ```text
-JoyService의 체험 관리 메서드는 findActiveByUserId를 사용한다.
-BreweryService의 휴무일, 스케줄 변경 메서드는 findActiveByUserId를 사용한다.
+JoyService의 고객 예약/공개 조회 대상 active 체험 조회는 active 양조장 조건을 사용한다.
+JoyService.updateJoySchedule은 findByUserId와 findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery를 사용한다.
+BreweryService의 휴무일, 스케줄 변경 메서드는 findByUserId를 사용한다.
 breweryQuit, breweryRestore, UsersService의 개인정보 조회/회원 탈퇴 경로는 findByUserId를 유지한다.
 findJoyTimeInfoByJoyId 쿼리에는 j.isDeleted = false와 b.isDeleted = false가 모두 존재한다.
 ```

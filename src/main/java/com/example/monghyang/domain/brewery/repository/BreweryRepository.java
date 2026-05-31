@@ -21,6 +21,15 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
     @Query("select b from Brewery b where b.user.id = :userId")
     Optional<Brewery> findByUserId(@Param("userId") Long userId);
 
+    /**
+     * 탈퇴하지 않은 양조장을 회원 식별자로 조회합니다.
+     *
+     * @param userId 회원 식별자
+     * @return 탈퇴하지 않은 양조장
+     */
+    @Query("select b from Brewery b where b.user.id = :userId and b.isDeleted = false")
+    Optional<Brewery> findActiveByUserId(@Param("userId") Long userId);
+
     @Query("select b from Brewery b join fetch b.regionType join fetch b.user where b.id = :breweryId and b.isDeleted = false")
     Optional<Brewery> findActiveById(@Param("breweryId") Long breweryId);
 
@@ -81,6 +90,7 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
      * effective_date &lt;= reservationDate 조건 중 MAX(effective_date) 스냅샷을 선택하고,
      * 해당 스냅샷 내에서 dayOfWeek가 일치하는 레코드의 openTime/closeTime을 반환합니다.
      * 조건에 맞는 스냅샷이 없으면 Optional.empty()를 반환합니다.
+     * 체험 또는 소속 양조장이 삭제 상태이면 Optional.empty()를 반환합니다.
      *
      * @param joyId           체험 식별자
      * @param reservationDate 예약 일자
@@ -94,6 +104,8 @@ public interface BreweryRepository extends JpaRepository<Brewery, Long> {
         join j.brewery b
         join BreweryWeeklyOpenTime wot on wot.brewery = b
         where j.id = :joyId
+          and j.isDeleted = false
+          and b.isDeleted = false
           and wot.dayOfWeek = :dayOfWeek
           and wot.effectiveDate = (
               select max(wot2.effectiveDate)
