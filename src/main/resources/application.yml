@@ -36,16 +36,12 @@ spring:
     active: local # 기본 프로파일: local (로컬 테스트 개발용: local, FE팀 로컬 테스트용: dev, 운영용: prod)
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
       timeout: 6s
       lettuce:
         pool:
           max-active: 10 # 최대 redis 커넥션 개수
           max-idle: 5 # 유휴 커넥션 최대 개수
           min-idle: 1 # 유휴 커넥션 최소 개수
-      username: ${REDIS_USERNAME} # redis 유저네임
-      password: ${REDIS_PASSWORD} # redis 유저 비밀번호
   flyway:
     enabled: true
     locations: classpath:db/migration

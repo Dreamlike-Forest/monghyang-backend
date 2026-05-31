@@ -1,0 +1,66 @@
+# Docker 이미지 빌드 및 Docker Hub 푸시를 위한 GitHub Actions 워크플로우 정의
+name: "Docker Image Build"
+
+# 워크플로우 실행 트리거 조건 설정
+on:
+  push:
+    branches:
+      - dev  # dev 브랜치에 push가 발생할 때 실행
+      - main # main 브랜치에 push가 발생할 때 실행
+
+# 리포지토리 콘텐츠에 대한 읽기 권한만 부여하여 보안 강화
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest # 최신 Ubuntu 러너 환경에서 실행
+
+    steps:
+      # 1. GitHub 리포지토리의 소스 코드를 러너로 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # 2. 빌드 환경에 JDK 설정 (Java 21, Temurin 배포판, Gradle 캐시 활성화)
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle # 빌드 속도 향상을 위해 Gradle 의존성 캐싱
+
+      # 3. Gradle을 사용하여 프로젝트 빌드 (데몬 프로세스를 띄우지 않고 실행)
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-daemon
+
+      # 4. Docker 이미지 빌드 시 중복 또는 불필요한 plain jar 파일 제거 (실행 가능한 jar 파일만 남김)
+      - name: Prepare Docker build artifact
+        run: rm -f build/libs/*-plain.jar
+
+      # 5. 서울 시간(KST) 기준으로 생성일자 형식(yymmddHHMM)의 고유한 이미지 태그 생성 및 출력 설정
+      - name: Set Docker image tag
+        id: image_tag
+        run: |
+          echo "tag=$(TZ=Asia/Seoul date +'%y%m%d%H%M')" >> "$GITHUB_OUTPUT"
+
+      # 6. Docker Hub에 로그인 (GitHub Secrets에 등록된 자격 증명 사용)
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 7. 멀티 아키텍처 빌드 등을 지원하는 Docker Buildx 환경 설정
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # 8. Dockerfile을 기반으로 이미지를 빌드하고 Docker Hub에 push
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: . # 빌드 컨텍스트 경로
+          file: ./Dockerfile # 사용할 Dockerfile 경로
+          push: true # 빌드 성공 후 레지스트리에 푸시 여부
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/monghyang:${{ steps.image_tag.outputs.tag }} # 생성된 태그 지정
+
