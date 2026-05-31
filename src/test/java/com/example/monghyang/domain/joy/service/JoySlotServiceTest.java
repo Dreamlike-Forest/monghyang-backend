@@ -8,6 +8,8 @@ import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRep
 import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepository;
 import com.example.monghyang.domain.global.ClosedStatus;
 import com.example.monghyang.domain.global.DayOfWeek;
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotDateDto;
 import com.example.monghyang.domain.joy.dto.slot.ResJoySlotDateDto;
 import com.example.monghyang.domain.joy.dto.slot.ResJoySlotTimeDto;
@@ -32,9 +34,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class JoySlotServiceTest {
@@ -58,6 +64,41 @@ class JoySlotServiceTest {
     JoySlotService joySlotService;
 
     @Test
+    @DisplayName("삭제된 체험의 예약 불가 날짜 조회는 JOY_NOT_FOUND로 거부한다")
+    void get_impossible_date_rejects_deleted_joy() {
+        Long joyId = 10L;
+        ReqFindJoySlotDateDto dto = new ReqFindJoySlotDateDto();
+        dto.setJoyId(joyId);
+        dto.setYear(2026);
+        dto.setMonth(6);
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joySlotService.getImpossibleDate(dto)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(breweryWeeklyOpenTimeRepository, never()).findActiveAndFutureOpenTimesInMonth(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("삭제된 체험의 남은 자리 조회는 JOY_NOT_FOUND로 거부한다")
+    void get_remaining_count_list_rejects_deleted_joy() {
+        Long joyId = 10L;
+        LocalDate targetDate = LocalDate.of(2026, 6, 1);
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joySlotService.getRemainingCountList(joyId, targetDate)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(joyWeeklyStartTimeRepository, never()).findActiveAndFutureStartTimesInMonth(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("예약 가능 날짜 조회는 휴게시간과 겹치는 시작 시간을 유효 슬롯에서 제외한다")
     void get_impossible_date_excludes_break_time_slots() {
         Long joyId = 10L;
@@ -70,7 +111,7 @@ class JoySlotServiceTest {
         dto.setMonth(6);
         Joy joy = joy(breweryId, 60);
 
-        given(joyRepository.findById(joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(joy));
         given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, startDate, endDate))
                 .willReturn(List.of(openTime(LocalTime.of(9, 0), LocalTime.of(18, 0))));
         given(joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, startDate, endDate))
@@ -100,7 +141,7 @@ class JoySlotServiceTest {
         Joy joy = joy(breweryId, 60);
         given(joy.getMaxCount()).willReturn(10);
 
-        given(joyRepository.findById(joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(joy));
         given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
                 .willReturn(List.of(openTime(LocalTime.of(9, 0), LocalTime.of(18, 0))));
         given(joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, targetDate.plusDays(1)))

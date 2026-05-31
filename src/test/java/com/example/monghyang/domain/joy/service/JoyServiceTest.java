@@ -12,6 +12,7 @@ import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.joy.dto.JoyScheduleDto;
 import com.example.monghyang.domain.joy.dto.ReqJoyDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyScheduleDto;
+import com.example.monghyang.domain.joy.dto.ResJoyDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
@@ -57,6 +58,56 @@ class JoyServiceTest {
     JoyService joyService;
 
     @Test
+    @DisplayName("내 체험 목록 조회는 삭제되지 않은 체험만 반환한다")
+    void get_my_joy_list_returns_active_joys_only() {
+        Long userId = 1L;
+        Brewery brewery = brewery();
+        Joy joy = joy(brewery);
+        given(joyRepository.findActiveByUserId(userId)).willReturn(List.of(joy));
+
+        List<ResJoyDto> result = joyService.getMyJoyList(userId);
+
+        assertEquals(1, result.size());
+        verify(joyRepository).findActiveByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 체험은 다시 삭제할 수 없다")
+    void delete_joy_rejects_already_deleted_joy() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        Brewery brewery = brewery();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyService.deleteJoy(userId, joyId)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("삭제된 체험 복구는 삭제 상태 체험만 대상으로 한다")
+    void restore_joy_uses_deleted_joy_lookup() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        Brewery brewery = brewery();
+        Joy joy = joy(brewery);
+        joy.setDeleted();
+        ReflectionTestUtils.setField(brewery, "id", 5L);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findDeletedByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+
+        joyService.restoreJoy(userId, joyId);
+
+        assertEquals(false, joy.getIsDeleted());
+        verify(joyRepository).save(joy);
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     @DisplayName("체험 생성 시 요청한 요일별 시작 시간을 오늘 적용 스냅샷으로 저장한다")
     void create_joy_saves_initial_weekly_start_time_snapshot() {
@@ -88,7 +139,7 @@ class JoyServiceTest {
         ReflectionTestUtils.setField(brewery, "id", 5L);
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
 
         joyService.updateJoySchedule(userId, dto);
 
@@ -113,7 +164,7 @@ class JoyServiceTest {
                 schedule(DayOfWeek.Mon, LocalTime.of(11, 0))
         ));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy(brewery)));
+        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy(brewery)));
 
         ApplicationException exception = assertThrows(
                 ApplicationException.class,
@@ -155,7 +206,7 @@ class JoyServiceTest {
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
         dto.setSchedules(List.of(schedule(DayOfWeek.Mon, LocalTime.of(12, 0))));
         given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
-        given(joyRepository.findByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
+        given(joyRepository.findActiveByBreweryIdAndJoyId(5L, joyId)).willReturn(Optional.of(joy));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, effectiveDate, DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 

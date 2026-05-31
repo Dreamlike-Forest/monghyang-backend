@@ -165,13 +165,13 @@ public class JoySlotService {
     }
 
     /**
-     * 특정 달의 예약 불가능한 날 조회
+     * 특정 달의 예약 불가능한 날 조회. 삭제된 체험은 조회 대상에서 제외합니다.
      * @param dto ReqFindJoySlotDateDto: joyId, year, month
      * @return 예약 불가 날짜 목록 DTO
      */
     public ResJoySlotDateDto getImpossibleDate(ReqFindJoySlotDateDto dto) {
         // [단계 1] 대상 체험 및 연관된 양조장 조회
-        Joy joy = joyRepository.findById(dto.getJoyId()).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveById(dto.getJoyId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         Long breweryId = joy.getBrewery().getId();
 
@@ -285,14 +285,14 @@ public class JoySlotService {
     }
 
     /**
-     * 특정 날의 각 시간대의 '남아있는 자릿수' 리스트를 반환
+     * 특정 날의 각 시간대의 '남아있는 자릿수' 리스트를 반환합니다. 삭제된 체험은 조회 대상에서 제외합니다.
      * @param joyId Long
      * @param targetDate 특정 날 LocalDate
      * @return 남아있는 자릿수가 0이라면 예약 불가를 의미
      */
     public ResJoySlotTimeDto getRemainingCountList(Long joyId, LocalDate targetDate) {
         ResJoySlotTimeDto result = new ResJoySlotTimeDto();
-        Joy joy = joyRepository.findById(joyId).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveById(joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
 
         DayOfWeek dayOfWeek = DayOfWeek.from(targetDate.getDayOfWeek());

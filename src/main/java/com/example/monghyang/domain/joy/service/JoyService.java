@@ -79,7 +79,7 @@ public class JoyService {
     public void updateJoySchedule(Long userId, ReqUpdateJoyScheduleDto dto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         if(dto.getEffective_date().isBefore(LocalDate.now())) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
@@ -93,22 +93,32 @@ public class JoyService {
         joyOrderService.setRefundRequestedByJoyScheduleChange(dto.getJoyId(), dto.getEffective_date());
     }
 
-    // 체험 삭제 처리
+    /**
+     * 삭제되지 않은 체험만 삭제 처리합니다.
+     *
+     * @param userId 체험을 관리하는 양조장 회원 식별자
+     * @param joyId  삭제할 체험 식별자
+     */
     public void deleteJoy(Long userId, Long joyId) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         joy.setDeleted();
         joyRepository.save(joy);
         brewery.decreaseJoyCount(); // 양조장의 체험 개수 카운트 1 감소
     }
 
-    // 체험 삭제 복구
+    /**
+     * 삭제된 체험만 복구 대상으로 조회해 삭제 상태를 해제합니다.
+     *
+     * @param userId 체험을 관리하는 양조장 회원 식별자
+     * @param joyId  복구할 체험 식별자
+     */
     public void restoreJoy(Long userId, Long joyId) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+        Joy joy = joyRepository.findDeletedByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         joy.unSetDeleted();
         joyRepository.save(joy);
@@ -117,7 +127,7 @@ public class JoyService {
     public void setSoldout(Long userId, Long joyId) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         joy.setIsSoldout();
         joyRepository.save(joy);
@@ -126,7 +136,7 @@ public class JoyService {
     public void unSetSoldout(Long userId, Long joyId) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         joy.unSetIsSoldout();
         joyRepository.save(joy);
@@ -137,7 +147,7 @@ public class JoyService {
     public void updateJoy(Long userId, ReqUpdateJoyDto reqUpdateJoyDto) {
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        Joy joy = joyRepository.findByBreweryIdAndJoyId(brewery.getId(), reqUpdateJoyDto.getId()).orElseThrow(() ->
+        Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), reqUpdateJoyDto.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
         if(reqUpdateJoyDto.getImage() != null) {
             storageService.remove(joy.getImageKey());
@@ -171,12 +181,12 @@ public class JoyService {
     }
 
     /**
-     * 자신이 관리하는 체험 전체 조회
+     * 자신이 관리하는 삭제되지 않은 체험 전체 조회
      * @param userId 자신의 유저 식별자
-     * @return
+     * @return 삭제되지 않은 체험 응답 목록
      */
     public List<ResJoyDto> getMyJoyList(Long userId) {
-        List<Joy> joyList = joyRepository.findByUserId(userId);
+        List<Joy> joyList = joyRepository.findActiveByUserId(userId);
         if(joyList.isEmpty()) {
             throw new ApplicationException(ApplicationError.JOY_NOT_FOUND);
         }

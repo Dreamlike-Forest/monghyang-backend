@@ -11,6 +11,7 @@ import com.example.monghyang.domain.brewery.repository.BreweryWeeklyBreakTimeRep
 import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.joy.dto.ReqJoyPreOrderDto;
 import com.example.monghyang.domain.joy.dto.ReqUpdateJoyOrderDto;
 import com.example.monghyang.domain.joy.entity.Joy;
 import com.example.monghyang.domain.joy.entity.JoyOrder;
@@ -70,12 +71,98 @@ class JoyOrderServiceTest {
     JoyOrderService joyOrderService;
 
     @Test
+    @DisplayName("예약 슬롯 증가는 삭제된 체험이면 슬롯을 증가시키지 않는다")
+    void reservation_joy_slot_count_rejects_deleted_joy() {
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.reservationJoySlotCount(joyId, reservationDate, reservationTime, 2)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(breweryRepository, never()).findJoyTimeInfoByJoyId(any(), any(), any());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("예약 사전등록은 삭제된 체험이면 주문을 생성하지 않고 예약 슬롯을 롤백한다")
+    void prepare_order_rejects_deleted_joy_and_rolls_back_slot() {
+        Long userId = 1L;
+        ReqJoyPreOrderDto dto = preOrderDto(10L);
+        given(usersRepository.findById(userId)).willReturn(Optional.of(mock(Users.class)));
+        given(joyRepository.findActiveById(dto.getId())).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.prepareOrder(userId, dto)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(joyOrderRepository, never()).save(any());
+        verify(joySlotService).decrementJoySlotCount(
+                dto.getId(),
+                dto.getReservation_date(),
+                dto.getReservation_time(),
+                dto.getCount()
+        );
+    }
+
+    @Test
+    @DisplayName("사용자 예약 변경은 삭제된 체험이면 새 슬롯을 증가시키지 않는다")
+    void update_reservation_rejects_deleted_joy() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        ReqUpdateJoyOrderDto dto = updateDto(99L, reservationDate, LocalTime.of(11, 0), 2);
+        JoyOrder joyOrder = joyOrder(joyId);
+        Users users = mock(Users.class);
+        given(users.getId()).willReturn(userId);
+        given(joyOrder.getUsers()).willReturn(users);
+        given(joyOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 2).atTime(LocalTime.of(10, 0)));
+        given(joyOrderRepository.findById(dto.getId())).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.updateReservation(userId, dto)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("양조장 예약 변경은 삭제된 체험이면 새 슬롯을 증가시키지 않는다")
+    void update_reservation_by_brewery_rejects_deleted_joy() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        ReqUpdateJoyOrderDto dto = updateDto(99L, LocalDate.of(2026, 6, 1), LocalTime.of(11, 0), 2);
+        JoyOrder joyOrder = joyOrder(joyId);
+        given(joyOrderRepository.findByIdAndBreweryUserId(dto.getId(), userId)).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.empty());
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.updateReservationByBrewery(userId, dto)
+        );
+
+        assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(breweryRepository, never()).findJoyTimeInfoByJoyId(any(), any(), any());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
     @DisplayName("예약 슬롯 증가 시 활성 체험 시작 시간 스냅샷에 없는 시간은 거부한다")
     void reservation_joy_slot_count_rejects_time_not_in_active_snapshot() {
         Long joyId = 10L;
         LocalDate reservationDate = LocalDate.of(2026, 6, 1);
         LocalTime reservationTime = LocalTime.of(11, 0);
         JoyWeeklyStartTime activeStartTime = startTime(LocalTime.of(10, 0));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
                 .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, reservationDate, DayOfWeek.Mon))
@@ -106,6 +193,7 @@ class JoyOrderServiceTest {
         given(joyOrder.getUsers()).willReturn(users);
         given(joyOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 2).atTime(LocalTime.of(10, 0)));
         given(joyOrderRepository.findById(dto.getId())).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
                 .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, reservationDate, DayOfWeek.Mon))
@@ -138,6 +226,7 @@ class JoyOrderServiceTest {
         given(joyOrder.getReservation()).willReturn(oldDate.atTime(oldTime));
         given(joyOrder.getCount()).willReturn(2);
         given(joyOrderRepository.findByIdAndBreweryUserId(joyOrderId, userId)).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, newDate, DayOfWeek.Wed))
                 .willReturn(Optional.of(new JoyInfoDto(20L, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(20L, newDate, DayOfWeek.Wed))
@@ -152,6 +241,28 @@ class JoyOrderServiceTest {
     }
 
     @Test
+    @DisplayName("양조장 예약 취소는 예약자가 아닌 양조장 관리자 기준으로 예약을 조회한다")
+    void cancel_by_brewery_uses_brewery_owner_lookup() {
+        Long breweryUserId = 1L;
+        Long joyOrderId = 99L;
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        JoyOrder joyOrder = joyOrder(joyId);
+        given(joyOrder.getReservation()).willReturn(reservationDate.atTime(reservationTime));
+        given(joyOrder.getCount()).willReturn(2);
+        given(joyOrderRepository.findByIdAndBreweryUserId(joyOrderId, breweryUserId)).willReturn(Optional.of(joyOrder));
+
+        joyOrderService.cancelByBrewery(breweryUserId, joyOrderId);
+
+        verify(joyOrderRepository).findByIdAndBreweryUserId(joyOrderId, breweryUserId);
+        verify(joyOrderRepository, never()).findByIdAndUserId(joyOrderId, breweryUserId);
+        verify(joyOrder).setCanceled();
+        verify(joyStatusHistoryRepository).save(any());
+        verify(joySlotService).decrementJoySlotCount(joyId, reservationDate, reservationTime, 2);
+    }
+
+    @Test
     @DisplayName("예약 슬롯 증가는 양조장 휴게시간과 겹치는 시간대를 거부한다")
     void reservation_joy_slot_count_rejects_break_time_overlap() {
         Long joyId = 10L;
@@ -159,6 +270,7 @@ class JoyOrderServiceTest {
         LocalDate reservationDate = LocalDate.of(2026, 6, 1);
         LocalTime reservationTime = LocalTime.of(12, 0);
 
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
         given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
                 .willReturn(Optional.of(new JoyInfoDto(breweryId, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
         given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, DayOfWeek.Mon))
@@ -251,6 +363,17 @@ class JoyOrderServiceTest {
         dto.setReservation_date(date);
         dto.setReservation_time(time);
         dto.setCount(count);
+        return dto;
+    }
+
+    private ReqJoyPreOrderDto preOrderDto(Long joyId) {
+        ReqJoyPreOrderDto dto = new ReqJoyPreOrderDto();
+        dto.setId(joyId);
+        dto.setCount(2);
+        dto.setPayer_name("예약자");
+        dto.setPayer_phone("01012345678");
+        dto.setReservation_date(LocalDate.of(2026, 6, 1));
+        dto.setReservation_time(LocalTime.of(10, 0));
         return dto;
     }
 
