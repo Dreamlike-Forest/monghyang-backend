@@ -58,7 +58,7 @@ public class JoyOrderController {
     @Operation(summary = "PG사로 전송할 'orderId' 값을 발급하기 위한 API", description = "프론트엔드에서 PG사로 결제 요청하기 전에 수행해주세요.")
     public ResponseEntity<ResponseDataDto<UUID>> prepareOrderRequest(@LoginUserId Long userId, @ModelAttribute @Valid ReqJoyPreOrderDto dto) {
         // 1. 예약 슬롯 확보
-        joyOrderService.incrementJoySlotCount(dto.getId(), dto.getReservation_date(), dto.getReservation_time(), dto.getCount());
+        joyOrderService.reservationJoySlotCount(dto.getId(), dto.getReservation_date(), dto.getReservation_time(), dto.getCount());
         // 2. pgOrderId 발급
         UUID pgOrderId = joyOrderService.prepareOrder(userId, dto);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(pgOrderId));

@@ -73,6 +73,13 @@ public class JoyOrder {
         this.reservation = reservation.withSecond(0).withNano(0);
     }
 
+    public void updateCount(Integer count) {
+        if(count < 0) {
+            count = 0;
+        }
+        this.count = count;
+    }
+
     public void setPgPaymentKey(String pgPaymentKey) {
         if(this.pgPaymentKey == null) {
             // 딱 한번만 수정 가능
@@ -86,5 +93,14 @@ public class JoyOrder {
 
     public void setFailed() {
         this.joyPaymentStatus = JoyPaymentStatus.FAILED;
+    }
+    public void setRefundProcessing() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUND_PROCESSING;
+    }
+    public void setRefunded() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUNDED;
+    }
+    public void setRefundFailed() {
+        this.joyPaymentStatus = JoyPaymentStatus.REFUND_FAILED;
     }
 }

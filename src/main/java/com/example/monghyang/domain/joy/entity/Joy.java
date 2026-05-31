@@ -37,6 +37,9 @@ public class Joy { // 양조장 체험
     @Min(1)
     private Integer maxCount;
     @Column(nullable = false)
+    @Min(1)
+    private Integer minCount;
+    @Column(nullable = false)
     private Integer salesVolume;
     private String imageKey;
     @Column(nullable = false, columnDefinition = "TINYINT(1)")
@@ -45,7 +48,7 @@ public class Joy { // 양조장 체험
     private Boolean isDeleted = Boolean.FALSE;
 
     @Builder(builderMethodName = "joyBuilder")
-    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, @NonNull Integer timeUnit, @NonNull Integer maxCount, String imageKey) {
+    public Joy(@NonNull Brewery brewery, @NonNull String name, @NonNull String place, @NonNull String detail, @NonNull BigDecimal originPrice, @NonNull Integer timeUnit, @NonNull Integer maxCount, @NonNull Integer minCount, String imageKey) {
         this.brewery = brewery;
         this.name = name;
         this.place = place;
@@ -56,6 +59,7 @@ public class Joy { // 양조장 체험
         this.salesVolume = 0; // 초기 판매(예약)량: 0
         this.timeUnit = timeUnit;
         this.maxCount = maxCount;
+        this.minCount = minCount;
         this.imageKey = imageKey;
     }
 

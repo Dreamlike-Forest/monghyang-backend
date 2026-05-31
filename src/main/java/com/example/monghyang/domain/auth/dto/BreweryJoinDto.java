@@ -2,8 +2,10 @@ package com.example.monghyang.domain.auth.dto;
 
 import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBlankString;
 import com.example.monghyang.domain.image.dto.AddImageDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,11 +29,12 @@ public class BreweryJoinDto extends JoinDto {
     private String introduction;
     @AllowNullNotBlankString
     private String brewery_website;
-    @NotNull(message = "운영 시작 시간을 입력해주세요.")
-    private LocalTime start_time;
-    @NotNull(message = "운영 종료 시간을 입력해주세요.")
-    private LocalTime end_time;
+    @Valid
+    @NotNull
+    @Size(min = 1, message = "양조장 운영 시간대 정보는 최소 1개 이상 입력해야합니다.")
+    private List<BreweryScheduleDto> schedules; // 요일 별 운영/휴게시간 정보. 최소 1개 이상 있어야 한다.
 
+    @Size(max = 5, message = "이미지는 최대 5개까지 추가할 수 있습니다.")
     private List<AddImageDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 
     @NotNull(message = "region_type_id 값이 공백일 수 없습니다.")

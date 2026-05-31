@@ -1,6 +1,8 @@
 package com.example.monghyang.domain.brewery.controller;
 
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
+import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
+import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryScheduleDto;
 import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
@@ -14,7 +16,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +86,16 @@ public class BreweryPrivController {
         return ResponseEntity.ok().body(ResponseDataDto.success("체험정보가 수정되었습니다."));
     }
 
+    @PostMapping("/joy/schedule")
+    @Operation(summary = "체험 요일별 시작 시간 일정 변경", description = "effective_date부터 적용될 체험 시작 시간 스냅샷을 등록합니다.")
+    public ResponseEntity<ResponseDataDto<Void>> updateJoySchedule(
+            @LoginUserId Long userId,
+            @Valid @ModelAttribute ReqUpdateJoyScheduleDto dto
+    ) {
+        joyService.updateJoySchedule(userId, dto);
+        return ResponseEntity.ok().body(ResponseDataDto.success("체험 일정이 변경되었습니다."));
+    }
+
     @DeleteMapping("/joy/{joyId}")
     @Operation(summary = "체험 삭제 처리")
     public ResponseEntity<ResponseDataDto<Void>> deleteJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
@@ -138,4 +149,44 @@ public class BreweryPrivController {
     public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBreweryByDate(@LoginUserId Long userId, @PathVariable Integer startOffset, @PathVariable LocalDate date) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBreweryByDate(userId, startOffset, date)));
     }
+
+    @PostMapping("/brewery-close-try")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 시도", description = "휴무일 지정으로 인해 취소되는 체험 예약의 리스트를 반환합니다.")
+    public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        // 해당 날짜를 휴무일 후보로 저장하고, 'PENDING' 상태로 둔다.
+        // 신규 예약 차단과 기존 예약 환불 요청은 휴무일이 'CONFIRMED'로 확정된 뒤 수행한다.
+        breweryService.addClosedDateTry(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 설정되었습니다."));
+    }
+
+    @PostMapping("/brewery-close-confirmed")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 확정", description = "양조장 측이 '환불 영향'을 모두 확인한 뒤 '휴무일 지정'을 확정하기 위해 사용하는 API")
+    public ResponseEntity<ResponseDataDto<Void>> confirmedBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
+        // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
+        breweryService.addClosedDateConfirmed(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 확정되었습니다."));
+    }
+
+    @DeleteMapping("/brewery-close")
+    @Operation(summary = "자신의 양조장의 '별도 휴무일' 해제")
+    public ResponseEntity<ResponseDataDto<Void>> deleteBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+        breweryService.deleteClosedDate(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 해제되었습니다."));
+    }
+
+    @PostMapping("/schedule")
+    @Operation(
+            summary = "양조장 운영시간/휴게시간 일정 변경",
+            description = "effective_date(적용 시작일)부터 적용될 요일별 운영시간/휴게시간 스냅샷을 등록합니다. "
+                    + "effective_date 이후에 예약된 PAID 상태의 체험 예약은 자동으로 환불 처리됩니다."
+    )
+    public ResponseEntity<ResponseDataDto<Void>> updateBrewerySchedule(
+            @LoginUserId Long userId,
+            @Valid @ModelAttribute ReqUpdateBreweryScheduleDto dto
+    ) {
+        breweryService.updateBrewerySchedule(userId, dto);
+        return ResponseEntity.ok(ResponseDataDto.success("양조장 일정이 변경되었습니다."));
+    }
+
 }

@@ -1,6 +1,6 @@
 package com.example.monghyang.domain.joy.repository;
 
-import com.example.monghyang.domain.joy.dto.JoyScheduleCountDto;
+import com.example.monghyang.domain.joy.dto.slot.FullJoySlotTimeInfoDto;
 import com.example.monghyang.domain.joy.dto.slot.UnavailableJoySlotTimeCountDto;
 import com.example.monghyang.domain.joy.entity.JoySlot;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,23 +11,28 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     /**
-     * 예약 슬롯 새로 생성
-     * @param joyId
-     * @param date
-     * @param time
-     * @param count
-     * @return
+     * 예약 슬롯 upsert (native query)
      */
     @Modifying
     @Query(value = """
         insert into joy_slot(joy_id, reservation_date, reservation_time, count)
-        values(:joyId, :date, :time, :count);
+        values(:joyId, :date, :time, :incCount)
+        on duplicate key update
+            `count` = if(
+                `count` + :incCount <= :maxCount,
+                `count` + :incCount,
+                `count`
+            );
     """, nativeQuery = true)
-    int insertJoySlot(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time, @Param("count") Integer count);
+    int upsertJoySlot(@Param("joyId") Long joyId,
+                      @Param("date") LocalDate date,
+                      @Param("time") LocalTime time,
+                      @Param("incCount") Integer incCount,
+                      @Param("maxCount") Integer maxCount
+    );
 
     /**
      * 기존 예약 슬롯의 카운트 증가
@@ -57,7 +62,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     @Query("""
     update JoySlot js set js.count = js.count - :count
     where js.joy.id = :joyId and js.reservationDate = :date and js.reservationTime = :time
-    and js.count - :count > 0
+    and js.count - :count >= 0
     """)
     int decrementJoySlotCount(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time, @Param("count") Integer count);
 
@@ -74,13 +79,7 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     """)
     void deleteJoySlot(@Param("joyId") Long joyId, @Param("date") LocalDate date, @Param("time") LocalTime time);
 
-    /**
-     * 특정 체험이 하루에 몇 회 운영하는지 계산하기 위한 데이터 조회
-     * @param joyId
-     * @return 체험 시간 단위, 양조장 운영 시작 시간 및 종료 시간 정보
-     */
-    @Query("select j.timeUnit as timeUnit, b.startTime as startTime, b.endTime as endTime, j.maxCount as maxCount from Joy j join j.brewery b where j.id = :joyId")
-    Optional<JoyScheduleCountDto> findJoyScheduleCountByJoyId(@Param("joyId") Long joyId);
+
 
 
     /**
@@ -97,6 +96,20 @@ public interface JoySlotRepository extends JpaRepository<JoySlot, Integer> {
     group by js.reservationDate
     """)
     List<UnavailableJoySlotTimeCountDto> findUnavailableJoySlotTimeCountByJoyIdAndMonth(@Param("joyId") Long joyId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    /**
+     * 한 달 동안 예약 인원이 꽉 찬 시간대를 날짜와 시간 단위로 조회합니다.
+     * @param joyId 체험 식별자
+     * @param startDate 조회 기준 월의 첫날
+     * @param endDate 다음 달 첫날
+     * @return 매진된 날짜와 시작 시간 목록
+     */
+    @Query("""
+    select js.reservationDate reservationDate, js.reservationTime reservationTime from JoySlot js
+    where js.joy.id = :joyId and js.reservationDate >= :startDate and js.reservationDate < :endDate
+    and js.count >= (select j.maxCount from Joy j where j.id = :joyId)
+    """)
+    List<FullJoySlotTimeInfoDto> findUnavailableJoySlotTimesByJoyIdAndMonth(@Param("joyId") Long joyId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("select js from JoySlot js where js.joy.id = :joyId and js.reservationDate = :date")
     List<JoySlot> findByJoyIdAndDate(@Param("joyId") Long joyId, @Param("date") LocalDate date);

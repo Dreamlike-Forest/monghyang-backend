@@ -4,6 +4,7 @@ import com.example.monghyang.domain.global.annotation.validation.AllowNullNotBla
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,5 +28,6 @@ public class SellerJoinDto extends JoinDto {
     @NotNull(message = "is_agreed_seller 필드가 공백일 수 없습니다.")
     private Boolean is_agreed_seller;
 
+    @Size(max = 5, message = "이미지는 최대 5개까지 추가할 수 있습니다.")
     private List<AddImageDto> images; // 새로 추가할 이미지 파일 + 순서 정보 쌍의 리스트
 }

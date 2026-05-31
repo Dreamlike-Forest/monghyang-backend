@@ -1,13 +1,9 @@
 package com.example.monghyang.domain.auth.service;
 
-import com.example.monghyang.domain.auth.dto.BreweryJoinDto;
-import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
-import com.example.monghyang.domain.brewery.entity.Brewery;
-import com.example.monghyang.domain.brewery.entity.BreweryImage;
-import com.example.monghyang.domain.brewery.entity.RegionType;
-import com.example.monghyang.domain.brewery.repository.BreweryImageRepository;
-import com.example.monghyang.domain.brewery.repository.BreweryRepository;
-import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
+import com.example.monghyang.domain.auth.dto.*;
+import com.example.monghyang.domain.brewery.entity.*;
+import com.example.monghyang.domain.brewery.repository.*;
+import com.example.monghyang.domain.global.DayOfWeek;
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
@@ -15,12 +11,9 @@ import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
-import com.example.monghyang.domain.auth.dto.JoinDto;
-import com.example.monghyang.domain.auth.dto.SellerJoinDto;
 import com.example.monghyang.domain.seller.entity.SellerImage;
 import com.example.monghyang.domain.seller.repository.SellerImageRepository;
 import com.example.monghyang.domain.seller.repository.SellerRepository;
-import com.example.monghyang.domain.auth.dto.ReqResetPwDto;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
@@ -39,6 +32,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -56,6 +53,8 @@ public class AuthService {
     private final StorageService storageService;
     private final BreweryImageRepository breweryImageRepository;
     private final SellerImageRepository sellerImageRepository;
+    private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
+    private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
 
 
     public void resetPassword(ReqResetPwDto dto) {
@@ -128,6 +127,9 @@ public class AuthService {
 
     @Transactional
     public void sellerJoin(SellerJoinDto sellerJoinDto) {
+        if(!sellerJoinDto.getIs_agreed() || !sellerJoinDto.getIs_agreed_seller()) {
+            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
+        }
         // 판매자 회원 플랫폼 회원가입
         Users users = createUser(sellerJoinDto, RoleType.ROLE_SELLER);
         usersRepository.save(users);
@@ -165,10 +167,26 @@ public class AuthService {
 
     @Transactional
     public void breweryJoin(BreweryJoinDto breweryJoinDto) {
-        if(breweryJoinDto.getStart_time().isAfter(breweryJoinDto.getEnd_time())) {
-            // 양조장 운영 종료 시간대가 운영 시작 시간대보다 더 크지 않다면 예외 발생
-            throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+        if(!breweryJoinDto.getIs_agreed_brewery() || !breweryJoinDto.getIs_agreed()) {
+            // 약관에 모두 동의하지 않으면 가입 불가
+            throw new ApplicationException(ApplicationError.TERMS_AND_CONDITIONS_NOT_AGREED);
         }
+        Set<DayOfWeek> dayOfWeekSet = new HashSet<>(); // 요일 별로 하나의 스케줄 정보만 입력받기 위한 검증용 set
+        // 양조장 엔티티 생성 전 검증하는 이유: 무결성 검증으로 인한 DB 롤백을 최소화하기 위함
+        for(BreweryScheduleDto schedule : breweryJoinDto.getSchedules()) {
+            if(dayOfWeekSet.contains(schedule.getDay_of_week())) {
+                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
+            if(schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
+                if(schedule.getBreak_start().isBefore(schedule.getOpen_time()) || schedule.getBreak_end().isAfter(schedule.getClose_time())) {
+                    // 휴게 시간 범위가 양조장 운영 시간 범위를 벗어나는 경우 예외 발생
+                    throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+                }
+            }
+            // 요일 당 1번의 운영/휴게시간 정보 입력만 허용하기 위해 set을 통해 검증
+            dayOfWeekSet.add(schedule.getDay_of_week());
+        }
+
         // 양조장 회원 플랫폼 회원가입
         Users users = createUser(breweryJoinDto, RoleType.ROLE_BREWERY);
         usersRepository.save(users);
@@ -183,9 +201,30 @@ public class AuthService {
                 .breweryDepositor(breweryJoinDto.getBrewery_depositor()).breweryAccountNumber(breweryJoinDto.getBrewery_account_number())
                 .breweryBankName(breweryJoinDto.getBrewery_bank_name()).introduction(breweryJoinDto.getIntroduction())
                 .breweryWebsite(breweryJoinDto.getBrewery_website()).isRegularVisit(breweryJoinDto.getIs_regular_visit()).isAgreedBrewery(breweryJoinDto.getIs_agreed_brewery())
-                .startTime(breweryJoinDto.getStart_time()).endTime(breweryJoinDto.getEnd_time())
                 .build();
         breweryRepository.save(brewery);
+
+        for(BreweryScheduleDto schedule : breweryJoinDto.getSchedules()) {
+            // 적용 일자: 가입 일자
+            // 요일별 양조장 운영시간 insert
+            breweryWeeklyOpenTimeRepository.save(BreweryWeeklyOpenTime.builder()
+                    .brewery(brewery)
+                    .dayOfWeek(schedule.getDay_of_week())
+                    .openTime(schedule.getOpen_time())
+                    .closeTime(schedule.getClose_time())
+                    .effectiveDate(LocalDate.now())
+                    .build());
+            // 요일별 양조장 휴게시간 insert
+            if(schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
+                breweryWeeklyBreakTimeRepository.save(BreweryWeeklyBreakTime.builder()
+                        .brewery(brewery)
+                        .dayOfWeek(schedule.getDay_of_week())
+                        .breakStart(schedule.getBreak_start())
+                        .breakEnd(schedule.getBreak_end())
+                        .effectiveDate(LocalDate.now())
+                        .build());
+            }
+        }
 
         // 양조장 이미지 추가 로직
         if(breweryJoinDto.getImages() != null) {

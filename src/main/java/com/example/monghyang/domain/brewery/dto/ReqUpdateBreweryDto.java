@@ -33,8 +33,6 @@ public class ReqUpdateBreweryDto {
     @AllowNullNotBlankString
     private String brewery_website;
     private Boolean is_regular_visit;
-    private LocalTime start_time;
-    private LocalTime end_time;
 
     private List<AddImageDto> add_images = new ArrayList<>(); // 새로 추가할 이미지 리스트
     private List<ModifySeqImageDto> modify_images = new ArrayList<>(); // 위치 변경할 이미지 리스트

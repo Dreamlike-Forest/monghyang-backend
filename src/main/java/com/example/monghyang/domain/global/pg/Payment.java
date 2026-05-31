@@ -34,7 +34,7 @@ public class Payment { // 결제 정보를 담는 객체
     private Boolean cultureExpense; // 문화비(도서, 공연 티켓, 박물관 혹은 미술관 입장 등) 지출 여부
     private Integer taxFreeAmount; // 면세 금액. 일반 상점인 경우 이 값이 0이다.
     private Integer taxExemptionAmount; // 과제 제외한 결제 금액
-    private Cancel cancels; // 결제 취소 이력
+    private List<Cancel> cancels; // 결제 취소 이력
     private Boolean isPartialCancelable; // 부분 취소 가능 여부: 이 값이 false면 전액 환불만 가능
     private Card card; // 카드 결제 시 제공되는 정보
     private VirtualAccount virtualAccount; // 가상계좌 결제 시 제공되는 정보
@@ -51,4 +51,5 @@ public class Payment { // 결제 정보를 담는 객체
     private CashReceipt cashReceipt; // 현금영수증 정보
     private List<CashReceiptHistory> cashReceipts; // 현금영수증 발행 및 취소 이력이 담기는 배열
     private Discount discount; // 카드사 및 퀵계좌이체의 즉시 할인 프로모션 정보
+    private PayDBInfoDto payDBInfoDto; // 환불 대상 db 레코드의 핵심 정보(본 서버 비즈니스 로직에 사용되는 필드)
 }
