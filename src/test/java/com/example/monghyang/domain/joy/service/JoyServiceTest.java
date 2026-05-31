@@ -33,6 +33,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +41,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -93,6 +96,27 @@ class JoyServiceTest {
         );
 
         assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
+        verify(joyOrderService, never()).setRefundRequestedByJoyDeletion(eq(joyId), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("체험 삭제는 삭제 시점 이후 PAID 예약 환불 요청 처리를 호출한다")
+    void delete_joy_requests_refund_for_future_paid_orders() {
+        Long userId = 1L;
+        Long breweryId = 5L;
+        Long joyId = 10L;
+        Brewery brewery = mock(Brewery.class);
+        Joy joy = mock(Joy.class);
+        given(brewery.getId()).willReturn(breweryId);
+        given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
+        given(joyRepository.findActiveByBreweryIdAndJoyId(breweryId, joyId)).willReturn(Optional.of(joy));
+
+        joyService.deleteJoy(userId, joyId);
+
+        verify(joy).setDeleted();
+        verify(joyRepository).save(joy);
+        verify(brewery).decreaseJoyCount();
+        verify(joyOrderService).setRefundRequestedByJoyDeletion(eq(joyId), any(LocalDateTime.class));
     }
 
     @Test

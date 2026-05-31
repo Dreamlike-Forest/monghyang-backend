@@ -156,4 +156,53 @@ public interface JoyOrderRepository extends JpaRepository<JoyOrder, Long> {
             @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
             @Param("isDeleted") Boolean isDeleted
     );
+
+    /**
+     * 체험 삭제 시 삭제 시점 이후 PAID 예약을 잠금 조회합니다.
+     *
+     * @param joyId            체험 식별자
+     * @param reservationFrom  삭제 시점
+     * @param joyPaymentStatus 환불 대상 결제 상태
+     * @param isDeleted        예약 내역 삭제 여부
+     * @return 환불 요청 대상 체험 예약 목록
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    select jo from JoyOrder jo
+    where jo.joy.id = :joyId
+    and jo.reservation >= :reservationFrom
+    and jo.joyPaymentStatus = :joyPaymentStatus
+    and jo.isDeleted = :isDeleted
+    """)
+    List<JoyOrder> findByJoyIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+            @Param("joyId") Long joyId,
+            @Param("reservationFrom") LocalDateTime reservationFrom,
+            @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
+            @Param("isDeleted") Boolean isDeleted
+    );
+
+    /**
+     * 양조장 삭제 시 삭제 시점 이후 PAID 예약을 잠금 조회합니다.
+     *
+     * @param breweryId        양조장 식별자
+     * @param reservationFrom  삭제 시점
+     * @param joyPaymentStatus 환불 대상 결제 상태
+     * @param isDeleted        예약 내역 삭제 여부
+     * @return 환불 요청 대상 체험 예약 목록
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    select jo from JoyOrder jo
+    join jo.joy j
+    where j.brewery.id = :breweryId
+    and jo.reservation >= :reservationFrom
+    and jo.joyPaymentStatus = :joyPaymentStatus
+    and jo.isDeleted = :isDeleted
+    """)
+    List<JoyOrder> findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+            @Param("breweryId") Long breweryId,
+            @Param("reservationFrom") LocalDateTime reservationFrom,
+            @Param("joyPaymentStatus") JoyPaymentStatus joyPaymentStatus,
+            @Param("isDeleted") Boolean isDeleted
+    );
 }

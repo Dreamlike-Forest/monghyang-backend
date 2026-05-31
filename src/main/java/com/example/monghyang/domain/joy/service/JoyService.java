@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -100,19 +101,22 @@ public class JoyService {
     }
 
     /**
-     * 삭제되지 않은 체험만 삭제 처리합니다.
+     * 삭제되지 않은 체험을 삭제 처리하고 삭제 시점 이후 PAID 예약을 환불 요청 대상으로 전환합니다.
      *
      * @param userId 체험을 관리하는 양조장 회원 식별자
      * @param joyId  삭제할 체험 식별자
      */
+    @Transactional
     public void deleteJoy(Long userId, Long joyId) {
         Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
+        LocalDateTime deletedAt = LocalDateTime.now();
         joy.setDeleted();
         joyRepository.save(joy);
         brewery.decreaseJoyCount(); // 양조장의 체험 개수 카운트 1 감소
+        joyOrderService.setRefundRequestedByJoyDeletion(joyId, deletedAt);
     }
 
     /**

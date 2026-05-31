@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.brewery.service;
 
 import com.example.monghyang.domain.auth.dto.BreweryScheduleDto;
+import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.batch.service.JoyOrderBatchService;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryScheduleDto;
 import com.example.monghyang.domain.brewery.entity.Brewery;
@@ -20,6 +21,7 @@ import com.example.monghyang.domain.joy.repository.JoyRepository;
 import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.product.service.ProductService;
+import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +40,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -78,6 +82,28 @@ class BreweryServiceTest {
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     @InjectMocks
     BreweryService breweryService;
+
+    @Test
+    @DisplayName("양조장 탈퇴는 삭제 시점 이후 PAID 체험 예약 환불 요청 처리를 호출한다")
+    void brewery_quit_requests_refund_for_future_paid_orders() {
+        Long userId = 1L;
+        Long breweryId = 5L;
+        VerifyAuthDto dto = new VerifyAuthDto();
+        dto.setPassword("plain-password");
+        Users users = mock(Users.class);
+        Brewery brewery = mock(Brewery.class);
+        given(users.getId()).willReturn(userId);
+        given(users.getPassword()).willReturn("encoded-password");
+        given(brewery.getId()).willReturn(breweryId);
+        given(usersRepository.findById(userId)).willReturn(Optional.of(users));
+        given(bCryptPasswordEncoder.matches(dto.getPassword(), "encoded-password")).willReturn(true);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+
+        breweryService.breweryQuit(userId, dto);
+
+        verify(brewery).setDeleted();
+        verify(joyOrderService).setRefundRequestedByBreweryDeletion(eq(breweryId), any(LocalDateTime.class));
+    }
 
     @Test
     @DisplayName("탈퇴한 양조장 관리자도 운영 시간 스냅샷을 변경할 수 있다")
