@@ -422,6 +422,94 @@ class JoyOrderServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    @DisplayName("체험 삭제 환불 처리는 삭제 시점 이후 PAID 예약을 환불 요청 상태로 전환하고 이력을 저장한다")
+    void set_refund_requested_by_joy_deletion_updates_future_paid_orders_and_inserts_histories() {
+        Long joyId = 10L;
+        LocalDateTime deletedAt = LocalDateTime.of(2026, 6, 1, 10, 0);
+        JoyOrder firstOrder = mock(JoyOrder.class);
+        JoyOrder secondOrder = mock(JoyOrder.class);
+        given(firstOrder.getId()).willReturn(1L);
+        given(secondOrder.getId()).willReturn(2L);
+        given(joyOrderRepository.findByJoyIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                joyId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        )).willReturn(List.of(firstOrder, secondOrder));
+
+        joyOrderService.setRefundRequestedByJoyDeletion(joyId, deletedAt);
+
+        verify(joyOrderRepository).findByJoyIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                joyId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        );
+        verify(joyOrderRepository).updatePaymentStatusByJoyIdListAndStatus(
+                List.of(1L, 2L),
+                JoyPaymentStatus.REFUND_REQUESTED
+        );
+        ArgumentCaptor<List<JoyStatusHistoryBatchRow>> captor = ArgumentCaptor.forClass(List.class);
+        verify(joyOrderBatchService).batchInsert(captor.capture());
+        assertEquals(2, captor.getValue().size());
+        assertEquals("체험 삭제", captor.getValue().getFirst().getReasonCode());
+    }
+
+    @Test
+    @DisplayName("체험 삭제 환불 처리는 대상 예약이 없으면 상태 변경과 이력 저장을 하지 않는다")
+    void set_refund_requested_by_joy_deletion_returns_when_no_target_orders() {
+        Long joyId = 10L;
+        LocalDateTime deletedAt = LocalDateTime.of(2026, 6, 1, 10, 0);
+        given(joyOrderRepository.findByJoyIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                joyId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        )).willReturn(List.of());
+
+        joyOrderService.setRefundRequestedByJoyDeletion(joyId, deletedAt);
+
+        verify(joyOrderRepository, never()).updatePaymentStatusByJoyIdListAndStatus(any(), any());
+        verify(joyOrderBatchService, never()).batchInsert(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    @DisplayName("양조장 삭제 환불 처리는 삭제 시점 이후 PAID 예약을 환불 요청 상태로 전환하고 이력을 저장한다")
+    void set_refund_requested_by_brewery_deletion_updates_future_paid_orders_and_inserts_histories() {
+        Long breweryId = 20L;
+        LocalDateTime deletedAt = LocalDateTime.of(2026, 6, 1, 10, 0);
+        JoyOrder firstOrder = mock(JoyOrder.class);
+        JoyOrder secondOrder = mock(JoyOrder.class);
+        given(firstOrder.getId()).willReturn(3L);
+        given(secondOrder.getId()).willReturn(4L);
+        given(joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                breweryId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        )).willReturn(List.of(firstOrder, secondOrder));
+
+        joyOrderService.setRefundRequestedByBreweryDeletion(breweryId, deletedAt);
+
+        verify(joyOrderRepository).findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                breweryId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        );
+        verify(joyOrderRepository).updatePaymentStatusByJoyIdListAndStatus(
+                List.of(3L, 4L),
+                JoyPaymentStatus.REFUND_REQUESTED
+        );
+        ArgumentCaptor<List<JoyStatusHistoryBatchRow>> captor = ArgumentCaptor.forClass(List.class);
+        verify(joyOrderBatchService).batchInsert(captor.capture());
+        assertEquals(2, captor.getValue().size());
+        assertEquals("양조장 삭제", captor.getValue().getFirst().getReasonCode());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("양조장 스케줄 변경은 기존 적용일 이후 환불 대상과 휴게시간 충돌 대상을 함께 환불 요청으로 전환한다")
     void set_refund_requested_by_schedule_change_keeps_existing_targets_and_adds_break_time_overlap() {
         Long breweryId = 20L;

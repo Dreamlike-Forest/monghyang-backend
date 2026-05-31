@@ -51,6 +51,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -210,7 +211,12 @@ public class BreweryService {
     }
 
 
-    // 양조장 탈퇴(비활성화)
+    /**
+     * 비밀번호 검증 후 양조장을 탈퇴 처리하고 삭제 시점 이후 PAID 체험 예약을 환불 요청 대상으로 전환합니다.
+     *
+     * @param userId         양조장 회원 식별자
+     * @param quitRequestDto 비밀번호 검증 요청
+     */
     @Transactional
     public void breweryQuit(Long userId, VerifyAuthDto quitRequestDto) {
         Users users = usersRepository.findById(userId).orElseThrow(() ->
@@ -220,7 +226,9 @@ public class BreweryService {
         }
         Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
+        LocalDateTime deletedAt = LocalDateTime.now();
         brewery.setDeleted();
+        joyOrderService.setRefundRequestedByBreweryDeletion(brewery.getId(), deletedAt);
     }
 
     @Transactional

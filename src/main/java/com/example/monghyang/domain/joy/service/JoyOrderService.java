@@ -512,6 +512,58 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     }
 
     /**
+     * 체험 삭제로 운영할 수 없어진 미래 PAID 예약을 환불 요청 상태로 전환합니다.
+     *
+     * @param joyId     삭제된 체험 식별자
+     * @param deletedAt 삭제 처리 시각
+     */
+    @Transactional
+    public void setRefundRequestedByJoyDeletion(Long joyId, LocalDateTime deletedAt) {
+        List<JoyOrder> joyOrderList = joyOrderRepository.findByJoyIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                joyId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        );
+        setRefundRequestedForDeletedOwner(joyOrderList, "체험 삭제", "체험 삭제");
+    }
+
+    /**
+     * 양조장 삭제로 운영할 수 없어진 미래 PAID 예약을 환불 요청 상태로 전환합니다.
+     *
+     * @param breweryId 삭제된 양조장 식별자
+     * @param deletedAt 삭제 처리 시각
+     */
+    @Transactional
+    public void setRefundRequestedByBreweryDeletion(Long breweryId, LocalDateTime deletedAt) {
+        List<JoyOrder> joyOrderList = joyOrderRepository.findByBreweryIdAndReservationFromAndPaymentStatusAndIsDeletedForUpdate(
+                breweryId,
+                deletedAt,
+                JoyPaymentStatus.PAID,
+                false
+        );
+        setRefundRequestedForDeletedOwner(joyOrderList, "양조장 삭제", "양조장 삭제");
+    }
+
+    private void setRefundRequestedForDeletedOwner(List<JoyOrder> joyOrderList, String reasonCode, String logPrefix) {
+        if (joyOrderList.isEmpty()) {
+            return;
+        }
+
+        // 환불 대상 예약 상태와 상태 이력을 같은 식별자 목록 기준으로 갱신한다.
+        List<Long> joyOrderIdList = joyOrderList.stream()
+                .map(JoyOrder::getId)
+                .toList();
+        joyOrderRepository.updatePaymentStatusByJoyIdListAndStatus(joyOrderIdList, JoyPaymentStatus.REFUND_REQUESTED);
+        int ret = joyOrderBatchService.batchInsert(
+                joyOrderIdList.stream()
+                        .map(id -> new JoyStatusHistoryBatchRow(id, JoyPaymentStatus.REFUND_REQUESTED, reasonCode))
+                        .toList()
+        );
+        log.info("{}로 인한 JoyStatusHistory Batch Insert 건수: {}", logPrefix, ret);
+    }
+
+    /**
      * 체험 예약 환불 처리 스케줄러
      */
     @Scheduled(cron = "0 */5 * * * *")
