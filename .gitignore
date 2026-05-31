@@ -6,6 +6,7 @@ build/
 !**/src/test/**/build/
 /src/test/com/example/monghyang/devtest/**
 logs/
+.worktrees/
 
 docs/plan
 
