@@ -61,6 +61,7 @@ jobs:
         with:
           context: . # 빌드 컨텍스트 경로
           file: ./Dockerfile # 사용할 Dockerfile 경로
+          platforms: linux/amd64,linux/arm64 # 멀티플랫폼 빌드
           push: true # 빌드 성공 후 레지스트리에 푸시 여부
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/monghyang:${{ steps.image_tag.outputs.tag }} # 생성된 태그 지정
 
