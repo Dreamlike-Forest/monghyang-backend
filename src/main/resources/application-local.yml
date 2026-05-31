@@ -1,9 +1,9 @@
 # 로컬 데이터베이스에서 개발 시 사용(datasource의 요소를 자신의 로컬 환경에 맞게 수정하세요.)
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:13306/monghyang?useUnicode=true&characterEncoding=utf8&logger=Slf4JLogger&rewriteBatchedStatements=true
-    username: monghyang
-    password: 1234
+    url: ${LOCAL_DB_PATH}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
   # 커넥션 풀 개수 설정
   hikari:
@@ -22,8 +22,8 @@ spring:
     baseline-on-migrate: false  # DB 스키마가 존재하지 않는다면 V1부터 적용
   data:
     redis:
-      host: localhost
-      port: 16379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       username: default # redis 유저네임
       password: Qwerty1234! # redis 유저 비밀번호
 app:
