@@ -21,7 +21,7 @@ public class JoyScheduleDto {
     @NotNull(message = "체험 시작 시간의 요일을 입력해주세요.")
     private DayOfWeek day_of_week;
 
-    /** 해당 요일에 예약 가능한 체험 시작 시간 목록입니다. */
+    /** 해당 운영 요일에 예약 가능한 체험 시작 시간 목록입니다. 미운영 요일은 이 DTO를 보내지 않습니다. */
     @NotEmpty(message = "체험 시작 시간 목록을 입력해주세요.")
     private List<@NotNull(message = "체험 시작 시간은 null일 수 없습니다.") LocalTime> start_times;
 }

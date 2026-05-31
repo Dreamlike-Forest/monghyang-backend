@@ -161,6 +161,83 @@ class JoySlotServiceTest {
         assertEquals(LocalTime.of(10, 0), result.getRemaining_count_list().getFirst().getJoy_slot_reservation_time());
     }
 
+    @Test
+    @DisplayName("최신 양조장 주간 버전에 없는 요일은 과거 운영요일로 되살리지 않는다")
+    void get_remaining_count_list_uses_latest_brewery_weekly_version_for_open_time() {
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate targetDate = LocalDate.of(2026, 7, 6);
+        Joy joy = joyWithBreweryOnly(breweryId);
+
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(joy));
+        given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(
+                        openTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0)),
+                        openTime(DayOfWeek.Tue, LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(18, 0))
+                ));
+        given(breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of());
+        given(joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(startTime(DayOfWeek.Mon, LocalDate.of(2026, 7, 1), LocalTime.of(10, 0))));
+        given(joySlotRepository.findByJoyIdAndDate(joyId, targetDate)).willReturn(List.of());
+
+        ResJoySlotTimeDto result = joySlotService.getRemainingCountList(joyId, targetDate);
+
+        assertTrue(result.getTime_info().isEmpty());
+        assertTrue(result.getRemaining_count_list().isEmpty());
+    }
+
+    @Test
+    @DisplayName("최신 양조장 주간 버전에 없는 휴게시간은 과거 휴게시간으로 되살리지 않는다")
+    void get_remaining_count_list_uses_latest_brewery_weekly_version_for_break_time() {
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate targetDate = LocalDate.of(2026, 7, 6);
+        Joy joy = joy(breweryId, 60);
+
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(joy));
+        given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(
+                        openTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0)),
+                        openTime(DayOfWeek.Mon, LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(18, 0))
+                ));
+        given(breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(breakTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), LocalTime.of(12, 0), LocalTime.of(13, 0))));
+        given(joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(startTime(DayOfWeek.Mon, LocalDate.of(2026, 7, 1), LocalTime.of(12, 0))));
+        given(joySlotRepository.findByJoyIdAndDate(joyId, targetDate)).willReturn(List.of());
+
+        ResJoySlotTimeDto result = joySlotService.getRemainingCountList(joyId, targetDate);
+
+        assertEquals(List.of(LocalTime.of(12, 0)), result.getTime_info());
+    }
+
+    @Test
+    @DisplayName("최신 체험 주간 버전에 없는 요일은 과거 시작시간으로 되살리지 않는다")
+    void get_remaining_count_list_uses_latest_joy_weekly_version_for_start_time() {
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate targetDate = LocalDate.of(2026, 7, 6);
+        Joy joy = joyWithBreweryOnly(breweryId);
+
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(joy));
+        given(breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(openTime(DayOfWeek.Mon, LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(18, 0))));
+        given(breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(breweryId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of());
+        given(joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, targetDate.plusDays(1)))
+                .willReturn(List.of(
+                        startTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), LocalTime.of(10, 0)),
+                        startTime(DayOfWeek.Tue, LocalDate.of(2026, 7, 1), LocalTime.of(11, 0))
+                ));
+        given(joySlotRepository.findByJoyIdAndDate(joyId, targetDate)).willReturn(List.of());
+
+        ResJoySlotTimeDto result = joySlotService.getRemainingCountList(joyId, targetDate);
+
+        assertTrue(result.getTime_info().isEmpty());
+        assertTrue(result.getRemaining_count_list().isEmpty());
+    }
+
     private Joy joy(Long breweryId, Integer timeUnit) {
         Brewery brewery = mock(Brewery.class);
         Joy joy = mock(Joy.class);
@@ -170,32 +247,52 @@ class JoySlotServiceTest {
         return joy;
     }
 
+    private Joy joyWithBreweryOnly(Long breweryId) {
+        Brewery brewery = mock(Brewery.class);
+        Joy joy = mock(Joy.class);
+        given(brewery.getId()).willReturn(breweryId);
+        given(joy.getBrewery()).willReturn(brewery);
+        return joy;
+    }
+
     private BreweryWeeklyOpenTime openTime(LocalTime openTime, LocalTime closeTime) {
+        return openTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), openTime, closeTime);
+    }
+
+    private BreweryWeeklyOpenTime openTime(DayOfWeek dayOfWeek, LocalDate effectiveDate, LocalTime openTime, LocalTime closeTime) {
         return BreweryWeeklyOpenTime.builder()
                 .brewery(mock(Brewery.class))
-                .dayOfWeek(DayOfWeek.Mon)
+                .dayOfWeek(dayOfWeek)
                 .openTime(openTime)
                 .closeTime(closeTime)
-                .effectiveDate(LocalDate.of(2026, 6, 1))
+                .effectiveDate(effectiveDate)
                 .build();
     }
 
     private JoyWeeklyStartTime startTime(LocalTime startTime) {
+        return startTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), startTime);
+    }
+
+    private JoyWeeklyStartTime startTime(DayOfWeek dayOfWeek, LocalDate effectiveDate, LocalTime startTime) {
         return JoyWeeklyStartTime.joyDayOfWeekStartTimeEffectiveDateOf(
                 mock(Joy.class),
-                DayOfWeek.Mon,
+                dayOfWeek,
                 startTime,
-                LocalDate.of(2026, 6, 1)
+                effectiveDate
         );
     }
 
     private BreweryWeeklyBreakTime breakTime(LocalTime breakStart, LocalTime breakEnd) {
+        return breakTime(DayOfWeek.Mon, LocalDate.of(2026, 6, 1), breakStart, breakEnd);
+    }
+
+    private BreweryWeeklyBreakTime breakTime(DayOfWeek dayOfWeek, LocalDate effectiveDate, LocalTime breakStart, LocalTime breakEnd) {
         return BreweryWeeklyBreakTime.builder()
                 .brewery(mock(Brewery.class))
-                .dayOfWeek(DayOfWeek.Mon)
+                .dayOfWeek(dayOfWeek)
                 .breakStart(breakStart)
                 .breakEnd(breakEnd)
-                .effectiveDate(LocalDate.of(2026, 6, 1))
+                .effectiveDate(effectiveDate)
                 .build();
     }
 }

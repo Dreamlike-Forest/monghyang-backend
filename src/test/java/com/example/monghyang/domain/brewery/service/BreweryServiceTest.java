@@ -12,6 +12,8 @@ import com.example.monghyang.domain.brewery.repository.BreweryWeeklyOpenTimeRepo
 import com.example.monghyang.domain.brewery.repository.RegionTypeRepository;
 import com.example.monghyang.domain.brewery.tag.BreweryTagRepository;
 import com.example.monghyang.domain.global.DayOfWeek;
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.service.StorageService;
 import com.example.monghyang.domain.joy.repository.JoyOrderRepository;
 import com.example.monghyang.domain.joy.repository.JoyRepository;
@@ -32,9 +34,12 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,6 +94,41 @@ class BreweryServiceTest {
         verify(breweryWeeklyOpenTimeRepository).deleteByBreweryIdAndEffectiveDate(breweryId, dto.getEffective_date());
         verify(breweryWeeklyOpenTimeRepository).save(any());
         verify(joyOrderService).setRefundRequestedByScheduleChange(breweryId, dto.getEffective_date());
+    }
+
+    @Test
+    @DisplayName("양조장 일정 변경에서 휴게시간이 비어 있으면 새 버전에 휴게시간 row를 저장하지 않는다")
+    void update_brewery_schedule_does_not_save_break_time_when_break_fields_are_empty() {
+        Long userId = 1L;
+        Long breweryId = 5L;
+        ReqUpdateBreweryScheduleDto dto = updateScheduleDto();
+        Brewery brewery = mock(Brewery.class);
+        given(brewery.getId()).willReturn(breweryId);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+
+        breweryService.updateBrewerySchedule(userId, dto);
+
+        verify(breweryWeeklyBreakTimeRepository).deleteByBreweryIdAndEffectiveDate(breweryId, dto.getEffective_date());
+        verify(breweryWeeklyBreakTimeRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("양조장 일정 변경은 휴게 시작과 종료 중 하나만 입력되면 거부한다")
+    void update_brewery_schedule_rejects_partial_break_time() {
+        Long userId = 1L;
+        ReqUpdateBreweryScheduleDto dto = updateScheduleDto();
+        dto.getSchedules().getFirst().setBreak_start(LocalTime.of(12, 0));
+        Brewery brewery = mock(Brewery.class);
+        given(breweryRepository.findByUserId(userId)).willReturn(Optional.of(brewery));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> breweryService.updateBrewerySchedule(userId, dto)
+        );
+
+        assertEquals(ApplicationError.BREWERY_OPENING_TIME_INVALID, exception.getApplicationError());
+        verify(breweryWeeklyOpenTimeRepository, never()).save(any());
+        verify(breweryWeeklyBreakTimeRepository, never()).save(any());
     }
 
     private ReqUpdateBreweryScheduleDto updateScheduleDto() {

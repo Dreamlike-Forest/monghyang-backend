@@ -27,7 +27,7 @@ public class ReqUpdateJoyScheduleDto {
     @FutureOrPresent(message = "체험 일정 적용일은 오늘 또는 미래 날짜여야 합니다.")
     private LocalDate effective_date;
 
-    /** 적용일에 저장할 요일별 체험 시작 시간 목록입니다. */
+    /** 새 적용일부터 저장할 전체 요일별 체험 시작 시간 목록입니다. 목록에 없는 요일은 체험 미운영으로 해석합니다. */
     @Valid
     @NotEmpty(message = "체험 일정 목록을 입력해주세요.")
     private List<JoyScheduleDto> schedules;

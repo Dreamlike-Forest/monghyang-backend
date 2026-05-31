@@ -13,7 +13,8 @@ import java.util.List;
 public interface BreweryWeeklyBreakTimeRepository extends JpaRepository<BreweryWeeklyBreakTime, Long> {
 
     /**
-     * 예약일 기준으로 활성화된 특정 요일의 양조장 휴게시간을 조회합니다.
+     * 예약일 기준 최신 양조장 주간 운영시간 스냅샷 버전을 먼저 선택한 뒤, 그 버전 안의 휴게시간을 조회합니다.
+     * 최신 버전에 해당 요일 휴게시간 row가 없으면 과거 휴게시간을 되살리지 않고 빈 결과를 반환합니다.
      *
      * @param breweryId  양조장 식별자
      * @param targetDate 예약 대상일
@@ -25,11 +26,10 @@ public interface BreweryWeeklyBreakTimeRepository extends JpaRepository<BreweryW
         where bbt.brewery.id = :breweryId
           and bbt.dayOfWeek = :dayOfWeek
           and bbt.effectiveDate = (
-              select max(bbt2.effectiveDate)
-              from BreweryWeeklyBreakTime bbt2
-              where bbt2.brewery.id = :breweryId
-                and bbt2.dayOfWeek = :dayOfWeek
-                and bbt2.effectiveDate <= :targetDate
+              select max(wot.effectiveDate)
+              from BreweryWeeklyOpenTime wot
+              where wot.brewery.id = :breweryId
+                and wot.effectiveDate <= :targetDate
           )
     """)
     List<BreweryWeeklyBreakTime> findActiveBreakTimesByBreweryIdAndDate(

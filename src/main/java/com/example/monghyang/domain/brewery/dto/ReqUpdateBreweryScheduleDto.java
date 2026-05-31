@@ -28,8 +28,8 @@ public class ReqUpdateBreweryScheduleDto {
     private LocalDate effective_date;
 
     /**
-     * 요일별 운영/휴게시간 목록.
-     * 최소 1개 이상 입력해야 하며, 요일 중복 입력은 허용되지 않습니다.
+     * 새 적용일부터 사용할 전체 요일별 운영/휴게시간 목록.
+     * 목록에 없는 요일은 미운영으로 해석하고, 포함된 요일에서 휴게 시작/종료가 둘 다 없으면 휴게시간 없음으로 해석합니다.
      */
     @Valid
     @NotNull(message = "운영 시간대 정보 목록을 입력해주세요.")

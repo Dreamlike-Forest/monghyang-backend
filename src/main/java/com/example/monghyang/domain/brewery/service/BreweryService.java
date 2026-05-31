@@ -387,9 +387,15 @@ public class BreweryService {
             if (dayOfWeekSet.contains(schedule.getDay_of_week())) {
                 throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
             }
-            if (schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
+            boolean hasBreakStart = schedule.getBreak_start() != null;
+            boolean hasBreakEnd = schedule.getBreak_end() != null;
+            if (hasBreakStart != hasBreakEnd) {
+                throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
+            }
+            if (hasBreakStart) {
                 if (schedule.getBreak_start().isBefore(schedule.getOpen_time())
-                        || schedule.getBreak_end().isAfter(schedule.getClose_time())) {
+                        || schedule.getBreak_end().isAfter(schedule.getClose_time())
+                        || !schedule.getBreak_start().isBefore(schedule.getBreak_end())) {
                     throw new ApplicationException(ApplicationError.BREWERY_OPENING_TIME_INVALID);
                 }
             }

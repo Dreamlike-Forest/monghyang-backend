@@ -32,7 +32,8 @@ public interface JoyWeeklyStartTimeRepository extends JpaRepository<JoyWeeklySta
     );
 
     /**
-     * 예약일 기준으로 활성화된 특정 요일의 체험 시작 시간 목록을 조회합니다.
+     * 예약일 기준 최신 체험 주간 스냅샷 버전을 먼저 선택한 뒤, 그 버전 안의 특정 요일 시작 시간 목록을 조회합니다.
+     * 최신 버전에 해당 요일 row가 없으면 과거 시작 시간을 되살리지 않고 빈 결과를 반환합니다.
      *
      * @param joyId      체험 식별자
      * @param targetDate 예약 대상일
@@ -47,7 +48,6 @@ public interface JoyWeeklyStartTimeRepository extends JpaRepository<JoyWeeklySta
               select max(jwst2.effectiveDate)
               from JoyWeeklyStartTime jwst2
               where jwst2.joy.id = :joyId
-                and jwst2.dayOfWeek = :dayOfWeek
                 and jwst2.effectiveDate <= :targetDate
           )
     """)

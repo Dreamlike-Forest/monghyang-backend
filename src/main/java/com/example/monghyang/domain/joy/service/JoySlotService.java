@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +86,7 @@ public class JoySlotService {
 
     /**
      * 특정 날짜와 요일에 해당하는 양조장의 운영 시간 정보(BreweryWeeklyOpenTime)를 전체 스냅샷 이력 중에서 조회합니다.
-     * 해당 날짜와 같거나 이전인 effectiveDate를 가진 스냅샷 중 가장 최근의 설정을 반환합니다.
+     * 해당 날짜와 같거나 이전인 최신 주간 스냅샷 버전을 먼저 선택한 뒤, 그 버전 안의 요일 설정만 반환합니다.
      *
      * @param wotList   양조장의 전체 운영 시간대 스냅샷 리스트
      * @param date      예약 대상 날짜
@@ -95,15 +94,23 @@ public class JoySlotService {
      * @return 유효한 양조장 운영 시간대 정보 (존재하지 않을 시 null)
      */
     private BreweryWeeklyOpenTime findActiveOpenTime(List<BreweryWeeklyOpenTime> wotList, LocalDate date, DayOfWeek dayOfWeek) {
+        LocalDate latestEffectiveDate = wotList.stream()
+                .filter(w -> !w.getEffectiveDate().isAfter(date))
+                .map(BreweryWeeklyOpenTime::getEffectiveDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+        if (latestEffectiveDate == null) {
+            return null;
+        }
         return wotList.stream()
-                .filter(w -> w.getDayOfWeek() == dayOfWeek && !w.getEffectiveDate().isAfter(date))
-                .max(Comparator.comparing(BreweryWeeklyOpenTime::getEffectiveDate))
+                .filter(w -> w.getEffectiveDate().equals(latestEffectiveDate) && w.getDayOfWeek() == dayOfWeek)
+                .findFirst()
                 .orElse(null);
     }
 
     /**
      * 특정 날짜와 요일에 해당하는 체험 시작 시간대 목록(JoyWeeklyStartTime)을 전체 스냅샷 이력 중에서 조회합니다.
-     * 해당 날짜와 같거나 이전인 effectiveDate를 가진 스냅샷 중 가장 최근의 버전 그룹을 반환합니다.
+     * 해당 날짜와 같거나 이전인 최신 주간 스냅샷 버전을 먼저 선택한 뒤, 그 버전 안의 요일 시작 시간만 반환합니다.
      *
      * @param jwstList  체험의 전체 일정 시작 시간대 스냅샷 리스트
      * @param date      예약 대상 날짜
@@ -111,42 +118,34 @@ public class JoySlotService {
      * @return 유효한 체험 시작 시간대 리스트
      */
     private List<JoyWeeklyStartTime> findActiveStartTimes(List<JoyWeeklyStartTime> jwstList, LocalDate date, DayOfWeek dayOfWeek) {
-        List<JoyWeeklyStartTime> candidates = jwstList.stream()
-                .filter(jw -> jw.getDayOfWeek() == dayOfWeek && !jw.getEffectiveDate().isAfter(date))
-                .toList();
-        if (candidates.isEmpty()) {
-            return List.of();
-        }
-        LocalDate maxEffectiveDate = candidates.stream()
+        LocalDate latestEffectiveDate = jwstList.stream()
+                .filter(jw -> !jw.getEffectiveDate().isAfter(date))
                 .map(JoyWeeklyStartTime::getEffectiveDate)
                 .max(LocalDate::compareTo)
-                .orElseThrow();
-        return candidates.stream()
-                .filter(jw -> jw.getEffectiveDate().equals(maxEffectiveDate))
+                .orElse(null);
+        if (latestEffectiveDate == null) {
+            return List.of();
+        }
+        return jwstList.stream()
+                .filter(jw -> jw.getEffectiveDate().equals(latestEffectiveDate) && jw.getDayOfWeek() == dayOfWeek)
                 .toList();
     }
 
     /**
-     * 특정 날짜와 요일에 해당하는 양조장 휴게시간 목록을 전체 스냅샷 이력 중에서 조회합니다.
+     * 양조장 최신 주간 운영시간 버전에 속한 특정 요일 휴게시간 목록을 조회합니다.
      *
-     * @param breakTimeList 양조장 휴게시간 스냅샷 리스트
-     * @param date          예약 대상 날짜
-     * @param dayOfWeek     예약 대상 요일
-     * @return 해당 날짜에 유효한 휴게시간 목록
+     * @param breakTimeList      양조장 휴게시간 스냅샷 리스트
+     * @param dayOfWeek          예약 대상 요일
+     * @param weeklyEffectiveDate 양조장 주간 운영시간 스냅샷 적용일
+     * @return 해당 주간 버전에 유효한 휴게시간 목록
      */
-    private List<BreweryWeeklyBreakTime> findActiveBreakTimes(List<BreweryWeeklyBreakTime> breakTimeList, LocalDate date, DayOfWeek dayOfWeek) {
-        List<BreweryWeeklyBreakTime> candidates = breakTimeList.stream()
-                .filter(b -> b.getDayOfWeek() == dayOfWeek && !b.getEffectiveDate().isAfter(date))
-                .toList();
-        if (candidates.isEmpty()) {
-            return List.of();
-        }
-        LocalDate maxEffectiveDate = candidates.stream()
-                .map(BreweryWeeklyBreakTime::getEffectiveDate)
-                .max(LocalDate::compareTo)
-                .orElseThrow();
-        return candidates.stream()
-                .filter(b -> b.getEffectiveDate().equals(maxEffectiveDate))
+    private List<BreweryWeeklyBreakTime> findActiveBreakTimes(
+            List<BreweryWeeklyBreakTime> breakTimeList,
+            DayOfWeek dayOfWeek,
+            LocalDate weeklyEffectiveDate
+    ) {
+        return breakTimeList.stream()
+                .filter(b -> b.getEffectiveDate().equals(weeklyEffectiveDate) && b.getDayOfWeek() == dayOfWeek)
                 .toList();
     }
 
@@ -250,7 +249,11 @@ public class JoySlotService {
             // [단계 5-5] 양조장 운영 시간 범위(openTime <= startTime < closeTime) 내에 위치한 활성 체험 슬롯만 추출 (교집합)
             LocalTime openTime = openTimeInfo.getOpenTime();
             LocalTime closeTime = openTimeInfo.getCloseTime();
-            List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(breakTimeList, date, dayOfWeek);
+            List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(
+                    breakTimeList,
+                    dayOfWeek,
+                    openTimeInfo.getEffectiveDate()
+            );
             List<LocalTime> activeSlots = startTimes.stream()
                     .map(JoyWeeklyStartTime::getStartTime)
                     .filter(t -> !t.isBefore(openTime) && !t.plusMinutes(joy.getTimeUnit()).isAfter(closeTime))
@@ -302,7 +305,6 @@ public class JoySlotService {
         List<BreweryWeeklyOpenTime> wotList = breweryWeeklyOpenTimeRepository.findActiveAndFutureOpenTimesInMonth(joy.getBrewery().getId(), targetDate, limitDate);
         BreweryWeeklyOpenTime openTimeInfo = findActiveOpenTime(wotList, targetDate, dayOfWeek);
         List<BreweryWeeklyBreakTime> breakTimeList = breweryWeeklyBreakTimeRepository.findActiveAndFutureBreakTimesInMonth(joy.getBrewery().getId(), targetDate, limitDate);
-        List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(breakTimeList, targetDate, dayOfWeek);
 
         // 2. 해당 일자의 체험 시작 시간대 스냅샷 조회
         List<JoyWeeklyStartTime> jwstList = joyWeeklyStartTimeRepository.findActiveAndFutureStartTimesInMonth(joyId, targetDate, limitDate);
@@ -311,6 +313,11 @@ public class JoySlotService {
         if (openTimeInfo != null && openTimeInfo.getOpenTime() != null && openTimeInfo.getCloseTime() != null) {
             LocalTime openTime = openTimeInfo.getOpenTime();
             LocalTime closeTime = openTimeInfo.getCloseTime();
+            List<BreweryWeeklyBreakTime> activeBreakTimes = findActiveBreakTimes(
+                    breakTimeList,
+                    dayOfWeek,
+                    openTimeInfo.getEffectiveDate()
+            );
 
             // 3. 양조장 운영 시간 범위 내에 속하는 활성 체험 시작 시간대들을 정렬하여 응답 필드에 추가
             List<LocalTime> activeStartTimes = startTimes.stream()
