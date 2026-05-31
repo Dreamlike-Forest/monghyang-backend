@@ -164,6 +164,61 @@ public class JoySlotService {
     }
 
     /**
+     * 예약 대상 일시가 확정된 별도 휴무일이나 휴무 시간대에 포함되는지 검증합니다.
+     * 양조장 휴무일, 체험 전일 휴무일, 체험 시간대별 휴무는 모두 CONFIRMED 상태만 예약 차단 기준으로 사용합니다.
+     *
+     * @param breweryId       양조장 식별자
+     * @param joyId           체험 식별자
+     * @param reservationDate 예약 대상일
+     * @param reservationTime 예약 시작 시간
+     */
+    public void verifyReservableByConfirmedClosedSchedule(
+            Long breweryId,
+            Long joyId,
+            LocalDate reservationDate,
+            LocalTime reservationTime
+    ) {
+        LocalDate endDate = reservationDate.plusDays(1);
+
+        // 1. 확정된 양조장 전일 휴무일이면 해당 양조장의 모든 체험 예약을 차단한다.
+        boolean breweryClosed = !breweryClosedDateRepository.findConfirmedByBreweryIdAndMonth(
+                breweryId,
+                reservationDate,
+                endDate,
+                ClosedStatus.CONFIRMED
+        ).isEmpty();
+        if (breweryClosed) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
+        }
+
+        // 2. 확정된 체험 전일 휴무일이면 해당 체험의 모든 시간대 예약을 차단한다.
+        boolean joyAllDayClosed = joyClosedDateRepository.findConfirmedByJoyIdAndMonth(
+                        joyId,
+                        reservationDate,
+                        endDate,
+                        ClosedStatus.CONFIRMED
+                )
+                .stream()
+                .anyMatch(JoyClosedDate::getIsAllDay);
+        if (joyAllDayClosed) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
+        }
+
+        // 3. 확정된 체험 시간대별 휴무이면 해당 시작 시간 예약만 차단한다.
+        boolean joyStartTimeClosed = joyClosedStartTimeRepository.findConfirmedByJoyIdAndMonth(
+                        joyId,
+                        reservationDate,
+                        endDate,
+                        ClosedStatus.CONFIRMED
+                )
+                .stream()
+                .anyMatch(jcst -> jcst.getClosedStartTime().equals(reservationTime));
+        if (joyStartTimeClosed) {
+            throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID);
+        }
+    }
+
+    /**
      * 특정 달의 예약 불가능한 날 조회. 삭제된 체험은 조회 대상에서 제외합니다.
      * @param dto ReqFindJoySlotDateDto: joyId, year, month
      * @return 예약 불가 날짜 목록 DTO

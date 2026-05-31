@@ -1,6 +1,7 @@
 package com.example.monghyang.domain.joy.service;
 
 import com.example.monghyang.domain.brewery.entity.Brewery;
+import com.example.monghyang.domain.brewery.entity.BreweryClosedDate;
 import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
 import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.repository.BreweryClosedDateRepository;
@@ -14,6 +15,8 @@ import com.example.monghyang.domain.joy.dto.slot.ReqFindJoySlotDateDto;
 import com.example.monghyang.domain.joy.dto.slot.ResJoySlotDateDto;
 import com.example.monghyang.domain.joy.dto.slot.ResJoySlotTimeDto;
 import com.example.monghyang.domain.joy.entity.Joy;
+import com.example.monghyang.domain.joy.entity.JoyClosedDate;
+import com.example.monghyang.domain.joy.entity.JoyClosedStartTime;
 import com.example.monghyang.domain.joy.entity.JoySlot;
 import com.example.monghyang.domain.joy.entity.JoyWeeklyStartTime;
 import com.example.monghyang.domain.joy.repository.JoyClosedDateRepository;
@@ -96,6 +99,112 @@ class JoySlotServiceTest {
 
         assertEquals(ApplicationError.JOY_NOT_FOUND, exception.getApplicationError());
         verify(joyWeeklyStartTimeRepository, never()).findActiveAndFutureStartTimesInMonth(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("확정 양조장 휴무일은 예약 검증에서 거부한다")
+    void verify_reservable_by_confirmed_closed_schedule_rejects_brewery_closed_date() {
+        Long breweryId = 20L;
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+
+        given(breweryClosedDateRepository.findConfirmedByBreweryIdAndMonth(
+                breweryId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of(mock(BreweryClosedDate.class)));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joySlotService.verifyReservableByConfirmedClosedSchedule(
+                        breweryId,
+                        joyId,
+                        reservationDate,
+                        reservationTime
+                )
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("확정 체험 전일 휴무일은 예약 검증에서 거부한다")
+    void verify_reservable_by_confirmed_closed_schedule_rejects_joy_all_day_closed_date() {
+        Long breweryId = 20L;
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        JoyClosedDate joyClosedDate = mock(JoyClosedDate.class);
+
+        given(joyClosedDate.getIsAllDay()).willReturn(true);
+        given(breweryClosedDateRepository.findConfirmedByBreweryIdAndMonth(
+                breweryId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of());
+        given(joyClosedDateRepository.findConfirmedByJoyIdAndMonth(
+                joyId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of(joyClosedDate));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joySlotService.verifyReservableByConfirmedClosedSchedule(
+                        breweryId,
+                        joyId,
+                        reservationDate,
+                        reservationTime
+                )
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+    }
+
+    @Test
+    @DisplayName("확정 체험 휴무 시간대는 예약 검증에서 거부한다")
+    void verify_reservable_by_confirmed_closed_schedule_rejects_joy_closed_start_time() {
+        Long breweryId = 20L;
+        Long joyId = 10L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        JoyClosedStartTime closedStartTime = mock(JoyClosedStartTime.class);
+
+        given(closedStartTime.getClosedStartTime()).willReturn(reservationTime);
+        given(breweryClosedDateRepository.findConfirmedByBreweryIdAndMonth(
+                breweryId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of());
+        given(joyClosedDateRepository.findConfirmedByJoyIdAndMonth(
+                joyId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of());
+        given(joyClosedStartTimeRepository.findConfirmedByJoyIdAndMonth(
+                joyId,
+                reservationDate,
+                reservationDate.plusDays(1),
+                ClosedStatus.CONFIRMED
+        )).willReturn(List.of(closedStartTime));
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joySlotService.verifyReservableByConfirmedClosedSchedule(
+                        breweryId,
+                        joyId,
+                        reservationDate,
+                        reservationTime
+                )
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
     }
 
     @Test

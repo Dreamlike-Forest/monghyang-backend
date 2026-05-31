@@ -81,8 +81,11 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         // 검증 과정
         // 1. 예약 일시가 현재보다 이전인지
         // 2. 예약 시간대가 영업 시작 시간보다 이전인지
-        // 3. 예약의 체험 종료 시간이 영업 종료 시간대와 같거나 이후인지
-        // 4. 체험 시작 시간이 양조장의 '체험 시간 단위' 간격에 일치하는지 검증
+        // 3. 예약의 체험 종료 시간이 영업 종료 시간대보다 이후인지
+        // 4. 체험 시작 시간이 양조장의 '체험 시간 단위' 간격에 일치하는지
+        // 5. 체험 진행 시간이 양조장 휴게시간과 겹치는지
+        // 6. 예약 일시가 확정된 별도 휴무일/휴무 시간대에 포함되는지
+        // 7. 예약일에 활성화된 체험 시작 시간 스냅샷에 요청 시간이 존재하는지 검증
         if(LocalDateTime.of(reservationDate, reservationTime).isBefore(LocalDateTime.now())
                 || reservationTime.isBefore(joyInfoDto.breweryStartTime())
                 || reservationTime.plusMinutes(joyInfoDto.timeUnit()).isAfter(joyInfoDto.breweryEndTime())
@@ -92,6 +95,14 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
 
         DayOfWeek dayOfWeek = DayOfWeek.from(reservationDate.getDayOfWeek());
         verifyBreakTime(joyInfoDto.breweryId(), reservationDate, reservationTime, joyInfoDto.timeUnit(), dayOfWeek);
+
+        // 확정된 별도 휴무일과 휴무 시간대는 캘린더와 동일한 기준으로 예약을 차단한다.
+        joySlotService.verifyReservableByConfirmedClosedSchedule(
+                joyInfoDto.breweryId(),
+                joyId,
+                reservationDate,
+                reservationTime
+        );
 
         // 예약일에 활성화된 체험 시작 시간 스냅샷 안에 요청 시간이 있는지 최종 검증한다.
         boolean existsStartTime = joyWeeklyStartTimeRepository.findActiveStartTimesByJoyIdAndDate(joyId, reservationDate, dayOfWeek)

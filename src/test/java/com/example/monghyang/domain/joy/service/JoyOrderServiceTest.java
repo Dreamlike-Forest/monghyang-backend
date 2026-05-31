@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -199,6 +200,32 @@ class JoyOrderServiceTest {
     }
 
     @Test
+    @DisplayName("예약 슬롯 증가는 확정 별도 휴무이면 새 슬롯을 증가시키지 않는다")
+    void reservation_joy_slot_count_rejects_confirmed_closed_schedule() {
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
+        given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
+                .willReturn(Optional.of(new JoyInfoDto(breweryId, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of());
+        willThrow(new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID))
+                .given(joySlotService)
+                .verifyReservableByConfirmedClosedSchedule(breweryId, joyId, reservationDate, reservationTime);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.reservationJoySlotCount(joyId, reservationDate, reservationTime, 2)
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
     @DisplayName("사용자 예약 변경 시 활성 체험 시작 시간 스냅샷에 없는 시간은 거부한다")
     void update_reservation_rejects_time_not_in_active_snapshot() {
         Long userId = 1L;
@@ -227,6 +254,70 @@ class JoyOrderServiceTest {
 
         assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
         verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("사용자 예약 변경은 확정 별도 휴무이면 새 슬롯을 증가시키지 않는다")
+    void update_reservation_rejects_confirmed_closed_schedule() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        ReqUpdateJoyOrderDto dto = updateDto(99L, reservationDate, reservationTime, 2);
+        JoyOrder joyOrder = joyOrder(joyId);
+        Users users = mock(Users.class);
+        given(users.getId()).willReturn(userId);
+        given(joyOrder.getUsers()).willReturn(users);
+        given(joyOrder.getReservation()).willReturn(LocalDate.of(2026, 6, 2).atTime(LocalTime.of(10, 0)));
+        given(joyOrderRepository.findById(dto.getId())).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
+        given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
+                .willReturn(Optional.of(new JoyInfoDto(breweryId, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of());
+        willThrow(new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID))
+                .given(joySlotService)
+                .verifyReservableByConfirmedClosedSchedule(breweryId, joyId, reservationDate, reservationTime);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.updateReservation(userId, dto)
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+        verify(joySlotService, never()).decrementJoySlotCount(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("양조장 예약 변경은 확정 별도 휴무이면 새 슬롯을 증가시키지 않는다")
+    void update_reservation_by_brewery_rejects_confirmed_closed_schedule() {
+        Long userId = 1L;
+        Long joyId = 10L;
+        Long breweryId = 20L;
+        LocalDate reservationDate = LocalDate.of(2026, 6, 1);
+        LocalTime reservationTime = LocalTime.of(10, 0);
+        ReqUpdateJoyOrderDto dto = updateDto(99L, reservationDate, reservationTime, 2);
+        JoyOrder joyOrder = joyOrder(joyId);
+        given(joyOrderRepository.findByIdAndBreweryUserId(dto.getId(), userId)).willReturn(Optional.of(joyOrder));
+        given(joyRepository.findActiveById(joyId)).willReturn(Optional.of(mock(Joy.class)));
+        given(breweryRepository.findJoyTimeInfoByJoyId(joyId, reservationDate, DayOfWeek.Mon))
+                .willReturn(Optional.of(new JoyInfoDto(breweryId, LocalTime.of(9, 0), LocalTime.of(18, 0), 60, 10, 1)));
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(breweryId, reservationDate, DayOfWeek.Mon))
+                .willReturn(List.of());
+        willThrow(new ApplicationException(ApplicationError.JOY_ORDER_TIME_INVALID))
+                .given(joySlotService)
+                .verifyReservableByConfirmedClosedSchedule(breweryId, joyId, reservationDate, reservationTime);
+
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> joyOrderService.updateReservationByBrewery(userId, dto)
+        );
+
+        assertEquals(ApplicationError.JOY_ORDER_TIME_INVALID, exception.getApplicationError());
+        verify(joySlotService, never()).reservationJoySlot(any(), any(), any(), any(), any());
+        verify(joySlotService, never()).decrementJoySlotCount(any(), any(), any(), any());
     }
 
     @Test

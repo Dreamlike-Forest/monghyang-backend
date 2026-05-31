@@ -153,8 +153,8 @@ public class BreweryPrivController {
     @PostMapping("/brewery-close-try")
     @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 시도", description = "휴무일 지정으로 인해 취소되는 체험 예약의 리스트를 반환합니다.")
     public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
-        // 해당 날짜를 휴무일로 지정하고, 'PENDING' 상태로 설정
-        // 이때는 신규 예약만 차단하고, 아직 환불 절차는 수행하지 않는 단계
+        // 해당 날짜를 휴무일 후보로 저장하고, 'PENDING' 상태로 둔다.
+        // 신규 예약 차단과 기존 예약 환불 요청은 휴무일이 'CONFIRMED'로 확정된 뒤 수행한다.
         breweryService.addClosedDateTry(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 설정되었습니다."));
     }
