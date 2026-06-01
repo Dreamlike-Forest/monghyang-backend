@@ -65,3 +65,113 @@ jobs:
           push: true # 빌드 성공 후 레지스트리에 푸시 여부
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/monghyang:${{ steps.image_tag.outputs.tag }}, ${{ secrets.DOCKERHUB_USERNAME }}/monghyang:latest # 생성된 태그 지정
 
+  cleanup-old-tags:
+    name: Cleanup old Docker Hub tags
+    needs: build-and-push
+    runs-on: ubuntu-latest # 이미지 푸시가 성공한 뒤 오래된 Docker Hub 태그를 정리
+
+    steps:
+      # 1. Docker Hub API를 사용하여 latest와 최신 10개 태그를 제외한 오래된 태그 삭제
+      - name: Cleanup old Docker Hub tags
+        id: cleanup
+        continue-on-error: true
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_REPOSITORY: monghyang
+          KEEP_TAG_COUNT: "10"
+        run: |
+          set -euo pipefail
+
+          token_response="$(
+            jq -cn \
+              --arg username "${DOCKERHUB_USERNAME}" \
+              --arg password "${DOCKERHUB_TOKEN}" \
+              '{username: $username, password: $password}' \
+              | curl -fsS \
+                  -X POST \
+                  -H "Content-Type: application/json" \
+                  -d @- \
+                  "https://hub.docker.com/v2/users/login"
+          )"
+          dockerhub_api_token="$(echo "${token_response}" | jq -r '.token // empty')"
+
+          if [ -z "${dockerhub_api_token}" ]; then
+            echo "Docker Hub API 토큰을 발급받지 못했습니다."
+            exit 1
+          fi
+
+          tag_pages_file="$(mktemp)"
+          next_url="https://hub.docker.com/v2/namespaces/${DOCKERHUB_USERNAME}/repositories/${DOCKERHUB_REPOSITORY}/tags?page_size=100"
+
+          while [ -n "${next_url}" ]; do
+            response="$(
+              curl -fsS \
+                -H "Authorization: Bearer ${dockerhub_api_token}" \
+                "${next_url}"
+            )"
+            echo "${response}" >> "${tag_pages_file}"
+            next_url="$(echo "${response}" | jq -r '.next // empty')"
+          done
+
+          tags_to_delete="$(
+            jq -s -r \
+              --argjson keep_count "${KEEP_TAG_COUNT}" \
+              '
+              [
+                .[].results[]
+                | {
+                    name,
+                    pushed_at: (.tag_last_pushed // .last_updated // "")
+                  }
+              ]
+              | sort_by(.pushed_at)
+              | reverse
+              | map(select(.name != "latest"))
+              | .[$keep_count:][]
+              | .name
+              ' \
+              "${tag_pages_file}"
+          )"
+
+          if [ -z "${tags_to_delete}" ]; then
+            echo "삭제할 오래된 Docker Hub 태그가 없습니다."
+            exit 0
+          fi
+
+          while IFS= read -r tag; do
+            if [ -z "${tag}" ]; then
+              continue
+            fi
+
+            echo "오래된 Docker Hub 태그 삭제: ${tag}"
+            curl -fsS \
+              -X DELETE \
+              -H "Authorization: Bearer ${dockerhub_api_token}" \
+              "https://hub.docker.com/v2/namespaces/${DOCKERHUB_USERNAME}/repositories/${DOCKERHUB_REPOSITORY}/tags/${tag}"
+          done <<< "${tags_to_delete}"
+
+      # 2. 정리 실패 시 Discord로 알림만 전송하고 workflow는 성공 처리
+      - name: Notify Discord on cleanup failure
+        if: steps.cleanup.outcome == 'failure'
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            echo "DISCORD_WEBHOOK_URL secret이 없어 Discord 알림을 건너뜁니다."
+            exit 0
+          fi
+
+          payload="$(
+            jq -cn \
+              --arg content "Docker Hub 오래된 이미지 태그 정리에 실패했습니다.\nworkflow: ${GITHUB_WORKFLOW}\nrun: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+              '{content: $content}'
+          )"
+
+          curl -fsS \
+            -H "Content-Type: application/json" \
+            -d "${payload}" \
+            "${DISCORD_WEBHOOK_URL}"
