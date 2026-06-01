@@ -77,7 +77,7 @@ public class SecurityConfig {
                 .securityMatcher("/actuator/**")
                 .authorizeHttpRequests(auth ->
                         auth
-                                .requestMatchers("/actuator/health").permitAll()
+                                .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                                 .anyRequest().hasRole("ADMIN"));
         return http.build();
     }
