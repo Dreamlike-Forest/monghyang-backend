@@ -6,9 +6,16 @@ import com.example.monghyang.domain.brewery.dto.ResBreweryDto;
 import com.example.monghyang.domain.brewery.dto.ResBreweryListDto;
 import com.example.monghyang.domain.brewery.service.BreweryService;
 import com.example.monghyang.domain.brewery.tag.BreweryTagService;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.tag.dto.ResTagListDto;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +56,54 @@ public class BreweryController {
     }
 
     @GetMapping("/{breweryId}")
-    @Operation(summary = "양조장 식별자로 양조장 검색", description = "제공 정보: 양조장에 대한 정보, 태그, 이미지 key 및 순서, 체험 정보")
-    public ResponseEntity<ResponseDataDto<ResBreweryDto>> getBreweryById(@PathVariable Long breweryId) {
+    @Operation(
+            summary = "양조장 상세 조회",
+            description = "삭제 처리되지 않은 양조장 상세 정보를 조회합니다. 응답에는 양조장 기본 정보, 이미지 목록, 태그 이름 목록, 활성 체험 목록, 온라인 판매 상품 0페이지가 포함됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 상세 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "status": 200,
+                                      "content": {
+                                        "brewery_id": 1,
+                                        "users_id": 10,
+                                        "users_email": "brewery@example.com",
+                                        "users_phone": "010-1234-5678",
+                                        "region_type_name": "서울",
+                                        "brewery_name": "몽향양조장",
+                                        "brewery_address": "서울시 중구",
+                                        "brewery_address_detail": "101호",
+                                        "brewery_introduction": "전통주 체험을 운영하는 양조장입니다.",
+                                        "brewery_website": "https://example.com",
+                                        "brewery_registered_at": "2026-06-01",
+                                        "brewery_is_regular_visit": true,
+                                        "brewery_is_visiting_brewery": true,
+                                        "brewery_image_image_key": [
+                                          {
+                                            "brewery_image_id": 1,
+                                            "brewery_image_image_key": "brewery/1/main.jpg",
+                                            "brewery_image_seq": 1
+                                          }
+                                        ],
+                                        "tags_name": ["탁주"],
+                                        "joy": [],
+                                        "product_list": {
+                                          "content": [],
+                                          "number": 0,
+                                          "size": 12
+                                        }
+                                      }
+                                    }
+                                    """))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<ResBreweryDto>> getBreweryById(
+            @Parameter(description = "조회할 양조장 식별자", example = "1", required = true)
+            @PathVariable Long breweryId
+    ) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getBreweryById(breweryId)));
     }
 

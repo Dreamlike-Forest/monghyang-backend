@@ -3,6 +3,7 @@ package com.example.monghyang.domain.brewery.controller;
 import com.example.monghyang.domain.auth.dto.VerifyAuthDto;
 import com.example.monghyang.domain.brewery.dto.ReqClosedDateTimeDto;
 import com.example.monghyang.domain.brewery.dto.ReqUpdateBreweryScheduleDto;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.joy.dto.*;
 import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.joy.service.JoyService;
@@ -13,9 +14,17 @@ import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.brewery.service.BreweryService;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/brewery-priv") // 양조장용 api
 @Tag(name = "양조장 관리자용 API", description = "양조장 권한을 가진 회원만 접근할 수 있습니다.")
+@SecurityRequirement(name = "SessionID")
 @RequiredArgsConstructor
 public class BreweryPrivController {
     private final BreweryService breweryService;
@@ -37,8 +47,32 @@ public class BreweryPrivController {
 
     // 양조장 수정 로직(이미지 추가/삭제 또한 한번에 가능하도록)
     @PostMapping("/update")
-    @Operation(summary = "양조장 정보 수정(첫번째 이미지: 대표 이미지")
-    public ResponseEntity<ResponseDataDto<Void>> updateImageList(@LoginUserId Long userId, @Valid @ModelAttribute ReqUpdateBreweryDto reqBreweryDto) {
+    @Operation(
+            summary = "양조장 정보 수정",
+            description = "로그인한 양조장 회원의 양조장 기본 정보와 이미지 목록을 부분 수정합니다. null로 전달된 필드는 변경하지 않으며, 이미지 순서 seq=1이 대표 이미지입니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 정보 수정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"양조장 정보를 업데이트했습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "이미지 개수, 이미지 순서, 입력값 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "자신의 이미지가 아닌 이미지 수정 또는 삭제 요청",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 이미지 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> updateImageList(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "수정할 양조장 정보입니다. 이미지 추가/순서변경/삭제 필드는 multipart/form-data로 전달합니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqUpdateBreweryDto.class))
+            )
+            @Valid @ModelAttribute ReqUpdateBreweryDto reqBreweryDto
+    ) {
         breweryService.breweryUpdate(userId, reqBreweryDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보를 업데이트했습니다."));
     }
@@ -73,8 +107,30 @@ public class BreweryPrivController {
     }
 
     @PostMapping("/joy-add")
-    @Operation(summary = "체험 추가")
-    public ResponseEntity<ResponseDataDto<Void>> createJoy(@LoginUserId Long userId, @Valid @ModelAttribute ReqJoyDto reqJoyDto) {
+    @Operation(
+            summary = "체험 추가",
+            description = "로그인한 양조장 회원이 새 체험을 등록합니다. 체험 생성 시 최초 요일별 시작 시간 스냅샷도 함께 저장합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 추가 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"체험이 추가되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "가격, 인원, 일정, 이미지 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> createJoy(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "등록할 체험 정보입니다. image는 선택 파일이며, schedules는 요일별 예약 가능 시작 시간 목록입니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqJoyDto.class))
+            )
+            @Valid @ModelAttribute ReqJoyDto reqJoyDto
+    ) {
         joyService.createJoy(userId, reqJoyDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 추가되었습니다."));
     }
@@ -87,9 +143,28 @@ public class BreweryPrivController {
     }
 
     @PostMapping("/joy/schedule")
-    @Operation(summary = "체험 요일별 시작 시간 일정 변경", description = "effective_date부터 적용될 체험 시작 시간 스냅샷을 등록합니다.")
+    @Operation(
+            summary = "체험 요일별 시작 시간 일정 변경",
+            description = "effective_date부터 적용될 체험 시작 시간 스냅샷을 등록합니다. 같은 적용일의 기존 스냅샷은 요청 내용으로 교체되며, 목록에 없는 요일은 체험 미운영으로 해석합니다. 적용일 이후 PAID 상태 예약은 환불 요청 대상으로 전환됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 일정 변경 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"체험 일정이 변경되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "effective_date가 과거이거나, 중복 요일/시간 또는 운영시간 밖 시작 시간이 포함됨",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> updateJoySchedule(
-            @LoginUserId Long userId,
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "변경할 체험 식별자, 적용 시작일, 요일별 시작 시간 목록입니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqUpdateJoyScheduleDto.class))
+            )
             @Valid @ModelAttribute ReqUpdateJoyScheduleDto dto
     ) {
         joyService.updateJoySchedule(userId, dto);
@@ -151,8 +226,32 @@ public class BreweryPrivController {
     }
 
     @PostMapping("/brewery-close-try")
-    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 시도", description = "휴무일 지정으로 인해 취소되는 체험 예약의 리스트를 반환합니다.")
-    public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+    @Operation(
+            summary = "자신의 양조장의 '별도 휴무일' 지정 시도",
+            description = "별도 휴무일을 PENDING 상태로 저장합니다. 이 API는 예약 목록을 반환하지 않으며, 신규 예약 차단과 기존 예약 환불 요청은 확정 API 호출 후 수행됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "별도 휴무일 PENDING 저장 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"별도 휴무일이 설정되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "closed_date가 과거이거나 날짜 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "이미 휴무 처리된 날짜",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> tryBreweryClosedDate(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "PENDING 상태로 저장할 별도 휴무일 정보입니다. 현재 구현은 closed_date와 reason을 사용합니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqClosedDateTimeDto.class))
+            )
+            @Valid @ModelAttribute ReqClosedDateTimeDto dto
+    ) {
         // 해당 날짜를 휴무일 후보로 저장하고, 'PENDING' 상태로 둔다.
         // 신규 예약 차단과 기존 예약 환불 요청은 휴무일이 'CONFIRMED'로 확정된 뒤 수행한다.
         breweryService.addClosedDateTry(userId, dto);
@@ -160,8 +259,30 @@ public class BreweryPrivController {
     }
 
     @PostMapping("/brewery-close-confirmed")
-    @Operation(summary = "자신의 양조장의 '별도 휴무일' 지정 확정", description = "양조장 측이 '환불 영향'을 모두 확인한 뒤 '휴무일 지정'을 확정하기 위해 사용하는 API")
-    public ResponseEntity<ResponseDataDto<Void>> confirmedBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+    @Operation(
+            summary = "자신의 양조장의 '별도 휴무일' 지정 확정",
+            description = "PENDING 상태로 저장된 별도 휴무일을 CONFIRMED 상태로 변경합니다. 확정 시 해당 날짜의 PAID 체험 예약은 REFUND_REQUESTED 상태로 전환됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "별도 휴무일 확정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"별도 휴무일이 확정되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "closed_date가 과거이거나 PENDING 휴무일이 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> confirmedBreweryClosedDate(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확정할 별도 휴무일 정보입니다. 현재 구현은 closed_date로 PENDING 휴무일을 찾습니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqClosedDateTimeDto.class))
+            )
+            @Valid @ModelAttribute ReqClosedDateTimeDto dto
+    ) {
         // API 요청을 받으면 체험 예약 일괄 취소만 수행('REFUND_REQUESTED' 상태로 일괄 변경)
         // 이후의 실제 환불절차는 '스케줄러'를 통해 주기적으로 수행(트랜잭션이 적용되지 않은 스케줄링 메서드에서 여러 개의 트랜잭션 메서드 호출)
         breweryService.addClosedDateConfirmed(userId, dto);
@@ -169,8 +290,27 @@ public class BreweryPrivController {
     }
 
     @DeleteMapping("/brewery-close")
-    @Operation(summary = "자신의 양조장의 '별도 휴무일' 해제")
-    public ResponseEntity<ResponseDataDto<Void>> deleteBreweryClosedDate(@LoginUserId Long userId, @Valid @ModelAttribute ReqClosedDateTimeDto dto) {
+    @Operation(
+            summary = "자신의 양조장의 '별도 휴무일' 해제",
+            description = "closed_date에 해당하는 별도 휴무일을 삭제합니다. 현재 구현은 closed_time과 reason을 삭제 조건으로 사용하지 않습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "별도 휴무일 해제 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"별도 휴무일이 해제되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "closed_date가 과거이거나 날짜 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "휴무일이 아닌 날짜",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> deleteBreweryClosedDate(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @ParameterObject @Valid @ModelAttribute ReqClosedDateTimeDto dto
+    ) {
         breweryService.deleteClosedDate(userId, dto);
         return ResponseEntity.ok(ResponseDataDto.success("별도 휴무일이 해제되었습니다."));
     }
@@ -181,8 +321,24 @@ public class BreweryPrivController {
             description = "effective_date(적용 시작일)부터 적용될 요일별 운영시간/휴게시간 스냅샷을 등록합니다. "
                     + "effective_date 이후에 예약된 PAID 상태의 체험 예약은 자동으로 환불 처리됩니다."
     )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 일정 변경 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"양조장 일정이 변경되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "effective_date가 과거이거나, 중복 요일 또는 운영/휴게시간 범위가 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> updateBrewerySchedule(
-            @LoginUserId Long userId,
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "적용 시작일과 요일별 운영/휴게시간 전체 스냅샷입니다. 목록에 없는 요일은 미운영으로 해석합니다.",
+                    required = true,
+                    content = @Content(mediaType = "multipart/form-data", schema = @Schema(implementation = ReqUpdateBreweryScheduleDto.class))
+            )
             @Valid @ModelAttribute ReqUpdateBreweryScheduleDto dto
     ) {
         breweryService.updateBrewerySchedule(userId, dto);

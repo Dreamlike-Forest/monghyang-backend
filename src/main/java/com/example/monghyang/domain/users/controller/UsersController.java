@@ -2,6 +2,7 @@ package com.example.monghyang.domain.users.controller;
 
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserRole;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
@@ -9,6 +10,13 @@ import com.example.monghyang.domain.users.dto.ResUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersPrivateInfoDto;
 import com.example.monghyang.domain.users.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,8 +54,46 @@ public class UsersController {
     }
 
     @GetMapping("/my")
-    @Operation(summary = "자기 자신의 정보를 조회합니다.")
-    public ResponseEntity<ResponseDataDto<ResUsersPrivateInfoDto>> getMyUserInfo(@LoginUserId Long userId) {
+    @Operation(
+            summary = "내 정보 조회",
+            description = "현재 로그인한 회원의 기본 정보와 역할별 추가 정보를 조회합니다. 양조장 회원은 brewery 필드, 판매자 회원은 seller 필드가 포함되며, 해당하지 않는 필드는 응답에서 제외됩니다.",
+            security = @SecurityRequirement(name = "SessionID")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내 정보 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "status": 200,
+                                      "content": {
+                                        "users_id": 10,
+                                        "role_name": "ROLE_BREWERY",
+                                        "users_email": "brewery@example.com",
+                                        "users_nickname": "몽향양조장",
+                                        "users_name": "홍길동",
+                                        "users_phone": "010-1234-5678",
+                                        "users_birth": "1995-05-20",
+                                        "users_gender": "man",
+                                        "users_address": "서울시 중구",
+                                        "users_address_detail": "101호",
+                                        "brewery": {
+                                          "brewery_id": 1,
+                                          "region_type_id": 1,
+                                          "region_type_name": "서울",
+                                          "brewery_name": "몽향양조장",
+                                          "brewery_images": []
+                                        }
+                                      }
+                                    }
+                                    """))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원, 양조장 또는 판매자 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<ResUsersPrivateInfoDto>> getMyUserInfo(
+            @Parameter(hidden = true) @LoginUserId Long userId
+    ) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(usersService.getMyUserInfo(userId)));
     }
 
