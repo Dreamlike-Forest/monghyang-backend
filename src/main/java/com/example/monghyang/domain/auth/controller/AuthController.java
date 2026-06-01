@@ -1,10 +1,16 @@
 package com.example.monghyang.domain.auth.controller;
 
 import com.example.monghyang.domain.auth.dto.*;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -65,8 +71,29 @@ public class AuthController {
     }
 
     @PostMapping(value = "/brewery-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "양조장 회원의 회원가입(첫번째 이미지: 대표 이미지)", description = "nickname: 양조장 상호명, name: 양조장 대표자명")
-    public ResponseEntity<ResponseDataDto<Void>> breweryJoin(@Valid @ModelAttribute BreweryJoinDto breweryJoinDto) {
+    @Operation(
+            summary = "양조장 회원의 회원가입",
+            description = "양조장 회원 계정과 양조장 정보를 함께 생성합니다. nickname은 양조장 상호명, name은 대표자명으로 저장되며, 이미지 순서 seq=1이 대표 이미지입니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 회원가입 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class),
+                            examples = @ExampleObject(value = "{\"status\":200,\"message\":\"양조장 회원가입이 완료되었습니다.\"}"))),
+            @ApiResponse(responseCode = "400", description = "필수 입력값, 운영/휴게시간, 이미지 형식 또는 이미지 순서가 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "역할 또는 지역 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "이메일 중복, 약관 미동의, 이미지 순서 중복 등으로 가입할 수 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> breweryJoin(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "양조장 회원가입 요청입니다. 파일이 포함될 수 있으므로 multipart/form-data로 전송합니다.",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = BreweryJoinDto.class))
+            )
+            @Valid @ModelAttribute BreweryJoinDto breweryJoinDto
+    ) {
         authService.breweryJoin(breweryJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 회원가입이 완료되었습니다."));
     }
