@@ -42,6 +42,12 @@ public class UsersController {
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Email로 회원을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "이메일 기준 회원 목록 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<List<ResUsersDto>>> getUsersByEmail(@PathVariable String email) {
         List<ResUsersDto> resUsersDto = usersService.getUsersByEmail(email);
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(resUsersDto));
@@ -49,6 +55,12 @@ public class UsersController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "유저 식별자로 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "회원 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<ResUsersDto>> getUsersByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(usersService.getUsersById(userId)));
     }
@@ -99,9 +111,24 @@ public class UsersController {
 
     // 회원 정보 수정 api
     @PostMapping("/update")
-    @Operation(summary = "회원 수정 api", description = "비밀번호 변경 시 '기존 비밀번호'와 '새 비밀번호'를 각각의 필드에 입력하여 전송해주셔야 합니다. 수정 성공 시 해당 유저의 모든 로그인 상태 정보가 서버에서 제거됩니다.")
+    @Operation(
+            summary = "회원 수정 api",
+            description = "비밀번호 변경 시 '기존 비밀번호'와 '새 비밀번호'를 각각의 필드에 입력하여 전송해야 합니다. null인 필드는 변경하지 않습니다. 수정 성공 시 해당 유저의 모든 로그인 상태 정보가 서버에서 제거됩니다.",
+            security = @SecurityRequirement(name = "SessionID")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "회원 수정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "수정 입력값이 올바르지 않거나 기존 비밀번호가 일치하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> updateUsers(
-            @LoginUserId Long userId, @LoginUserRole String userRole,
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @Parameter(hidden = true) @LoginUserRole String userRole,
             @Valid @ModelAttribute ReqUsersDto reqUsersDto,
             HttpServletRequest request, HttpServletResponse response) {
         usersService.updateUsers(userId, reqUsersDto, userRole);
@@ -120,9 +147,22 @@ public class UsersController {
 
     // 회원 탈퇴 api
     @DeleteMapping
-    @Operation(summary = "회원 탈퇴 API")
+    @Operation(
+            summary = "회원 탈퇴 API",
+            description = "현재 로그인한 회원을 탈퇴 처리하고 모든 세션 정보를 제거합니다.",
+            security = @SecurityRequirement(name = "SessionID")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> deleteUsers(
-            @LoginUserId Long userId, @LoginUserRole String userRole,
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @Parameter(hidden = true) @LoginUserRole String userRole,
             HttpServletRequest request,
             HttpServletResponse response) {
 

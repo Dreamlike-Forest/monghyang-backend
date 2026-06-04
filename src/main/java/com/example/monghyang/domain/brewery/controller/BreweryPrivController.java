@@ -80,14 +80,40 @@ public class BreweryPrivController {
     // 양조장 삭제 처리
     @DeleteMapping
     @Operation(summary = "양조장 삭제 처리", description = "해당 회원의 기존 비밀번호를 입력받고, 일치하는지 검사합니다.")
-    public ResponseEntity<ResponseDataDto<Void>> breweryQuit(@Valid @ModelAttribute VerifyAuthDto quitRequestDto, @LoginUserId Long userId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 삭제 처리 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "비밀번호 입력값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없거나 비밀번호가 일치하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> breweryQuit(
+            @Valid @ModelAttribute VerifyAuthDto quitRequestDto,
+            @Parameter(hidden = true) @LoginUserId Long userId
+    ) {
         breweryService.breweryQuit(userId, quitRequestDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보가 삭제되었습니다."));
     }
 
     @PostMapping("/restore")
     @Operation(summary = "양조장 복구", description = "해당 회원의 기존 비밀번호를 입력받고, 일치하는지 검사합니다.")
-    public ResponseEntity<ResponseDataDto<Void>> breweryRestore(@Valid @ModelAttribute VerifyAuthDto restoreRequestDto, @LoginUserId Long userId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 복구 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "비밀번호 입력값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없거나 비밀번호가 일치하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> breweryRestore(
+            @Valid @ModelAttribute VerifyAuthDto restoreRequestDto,
+            @Parameter(hidden = true) @LoginUserId Long userId
+    ) {
         breweryService.breweryRestore(userId, restoreRequestDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("양조장 정보가 복구되었습니다."));
     }
@@ -95,14 +121,37 @@ public class BreweryPrivController {
     // 태그 추가 및 삭제
     @PostMapping("/tag")
     @Operation(summary = "양조장에 태그를 추가하거나 기존의 태그를 삭제합니다.", description = "추가 대상 태그 식별자 리스트와 삭제 대상 태그 식별자 리스트를 json으로 보내주세요.")
-    public ResponseEntity<ResponseDataDto<Void>> updateTag(@LoginUserId Long userId, @RequestBody ReqTagDto reqBreweryTagDto) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 태그 수정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "태그 수정 요청값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 태그 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> updateTag(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @RequestBody ReqTagDto reqBreweryTagDto
+    ) {
         breweryTagService.updateTag(userId, reqBreweryTagDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("태그 수정사항이 반영되었습니다."));
     }
 
     @GetMapping("/joy")
     @Operation(summary = "자신이 제공하는 체험 정보 조회")
-    public ResponseEntity<ResponseDataDto<List<ResJoyDto>>> getMyJoyList(@LoginUserId Long userId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내 양조장 체험 목록 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<List<ResJoyDto>>> getMyJoyList(
+            @Parameter(hidden = true) @LoginUserId Long userId
+    ) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyService.getMyJoyList(userId)));
     }
 
@@ -137,7 +186,22 @@ public class BreweryPrivController {
 
     @PostMapping("/joy-update")
     @Operation(summary = "체험 내용 수정", description = "가격, 할인율, 기타 체험 정보, 매진 처리 등")
-    public ResponseEntity<ResponseDataDto<Void>> updateJoy(@LoginUserId Long userId, @Valid @ModelAttribute ReqUpdateJoyDto reqUpdateJoyDto) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 정보 수정 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "체험 수정 입력값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "해당 체험을 수정할 권한이 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> updateJoy(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @Valid @ModelAttribute ReqUpdateJoyDto reqUpdateJoyDto
+    ) {
         joyService.updateJoy(userId, reqUpdateJoyDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험정보가 수정되었습니다."));
     }
@@ -173,55 +237,158 @@ public class BreweryPrivController {
 
     @DeleteMapping("/joy/{joyId}")
     @Operation(summary = "체험 삭제 처리")
-    public ResponseEntity<ResponseDataDto<Void>> deleteJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 삭제 처리 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "해당 체험을 삭제할 권한이 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> deleteJoy(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Long joyId
+    ) {
         joyService.deleteJoy(userId, joyId);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 삭제 처리되었습니다."));
     }
 
     @PostMapping("/joy-restore/{joyId}")
     @Operation(summary = "체험 복구")
-    public ResponseEntity<ResponseDataDto<Void>> restoreJoy(@LoginUserId Long userId, @PathVariable Long joyId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 복구 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "해당 체험을 복구할 권한이 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> restoreJoy(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Long joyId
+    ) {
         joyService.restoreJoy(userId, joyId);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 복구되었습니다."));
     }
 
     @PostMapping("/joy-set-soldout/{joyId}")
     @Operation(summary = "체험 품절처리")
-    public ResponseEntity<ResponseDataDto<Void>> setSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 품절 처리 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "해당 체험을 품절 처리할 권한이 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> setSoldout(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Long joyId
+    ) {
         joyService.setSoldout(userId, joyId);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 처리되었습니다."));
     }
 
     @PostMapping("/joy-unset-soldout/{joyId}")
     @Operation(summary = "체험 품절 상태 복구")
-    public ResponseEntity<ResponseDataDto<Void>> unSetSoldout(@LoginUserId Long userId, @PathVariable Long joyId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 품절 상태 복구 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "403", description = "해당 체험의 품절 상태를 복구할 권한이 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> unSetSoldout(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Long joyId
+    ) {
         joyService.unSetSoldout(userId, joyId);
         return ResponseEntity.ok().body(ResponseDataDto.success("체험이 품절 상태에서 복구되었습니다."));
     }
 
     @PostMapping("/joy-order/change")
     @Operation(summary = "체험 예약 시간대 변경 API", description = "다른 예약과 충돌하지 않으면 수정됩니다.")
-    public ResponseEntity<ResponseDataDto<Void>> changeTime(@LoginUserId Long userId, @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 예약 시간대 변경 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "예약 시간대 변경 요청값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 예약 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "다른 예약과 시간이 충돌함",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> changeTime(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @ModelAttribute @Valid ReqUpdateJoyOrderDto reqUpdateJoyOrderDto
+    ) {
         joyOrderService.updateReservationByBrewery(userId, reqUpdateJoyOrderDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("예약 시간대 수정이 완료되었습니다."));
     }
 
     @DeleteMapping("/joy-order/{joyOrderId}")
     @Operation(summary = "체험 예약 내역 삭제 요청 API")
-    public ResponseEntity<ResponseDataDto<Void>> deleteHistory(@LoginUserId Long userId, @PathVariable Long joyOrderId) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "체험 예약 내역 삭제 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 또는 체험 예약 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> deleteHistory(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Long joyOrderId
+    ) {
         joyOrderService.cancelByBrewery(userId, joyOrderId);
         return ResponseEntity.ok().body(ResponseDataDto.success("해당 체험 예약 삭제가 완료되었습니다."));
     }
 
     @GetMapping("/joy-order/history/{startOffset}")
     @Operation(summary = "자신의 양조장의 체험 예약 현황 및 내역 최신순 확인", description = "페이지 크기: 12")
-    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBrewery(@LoginUserId Long userId, @PathVariable Integer startOffset) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내 양조장 체험 예약 내역 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBrewery(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Integer startOffset
+    ) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBrewery(userId, startOffset)));
     }
 
     @GetMapping("/joy-order/history-date/{startOffset}/{date}")
     @Operation(summary = "자신의 양조장의 특정 날짜의 체험 예약 현황 확인")
-    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBreweryByDate(@LoginUserId Long userId, @PathVariable Integer startOffset, @PathVariable LocalDate date) {
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "내 양조장 특정 날짜 체험 예약 내역 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "날짜 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Page<ResJoyOrderDto>>> getHistoryOfMyBreweryByDate(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @PathVariable Integer startOffset,
+            @PathVariable LocalDate date
+    ) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(joyOrderService.getHistoryOfMyBreweryByDate(userId, startOffset, date)));
     }
 

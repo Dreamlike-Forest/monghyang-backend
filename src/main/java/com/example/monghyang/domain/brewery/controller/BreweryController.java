@@ -35,12 +35,24 @@ public class BreweryController {
 
     @GetMapping("/tag-list/{breweryId}")
     @Operation(summary = "특정 양조장이 가지고 있는 태그 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 태그 목록 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "404", description = "양조장 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<List<ResTagListDto>>> getBreweryTagList(@PathVariable Long breweryId) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryTagService.getBreweryTagsById(breweryId)));
     }
 
     @GetMapping("/search/{startOffset}")
     @Operation(summary = "필터링 검색", description = "keyword: 양조장 이름 키워드, min_price: 체험 최소가격, max_price: 체험 최대가격, tag_id_list: 태그(주종, 배지 등) 식별자, region_id_list: 지역 식별자")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 필터링 검색 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "가격 범위, 태그 또는 지역 필터 값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Page<ResBreweryListDto>>> filteringBreweryList(@PathVariable Integer startOffset,
             @RequestParam(required = false) String keyword, @RequestParam(required = false) Integer min_price, @RequestParam(required = false) Integer max_price,
             @RequestParam(required = false) List<Integer> tag_id_list, @RequestParam(required = false) List<Integer> region_id_list) {
@@ -51,6 +63,12 @@ public class BreweryController {
 
     @GetMapping("/latest/{startOffset}")
     @Operation(summary = "최신순 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 최신순 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "페이지 시작 위치가 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Page<ResBreweryListDto>>> getLatestBreweryList(@PathVariable Integer startOffset) {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getLatest(startOffset)));
     }
@@ -109,6 +127,10 @@ public class BreweryController {
 
     @GetMapping("/regions")
     @Operation(summary = "양조장 지역 리스트 반환")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "양조장 지역 목록 조회 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<List<ResRegionDto>>> getRegionList() {
         return ResponseEntity.ok().body(ResponseDataDto.contentFrom(breweryService.getAllRegions()));
     }

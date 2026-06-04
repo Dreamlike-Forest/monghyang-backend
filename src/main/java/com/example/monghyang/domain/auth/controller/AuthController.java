@@ -6,11 +6,13 @@ import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
 import com.example.monghyang.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +32,12 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "세션 및 토큰 갱신", description = "중복 로그인 감지 시 로그아웃해야 합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "세션 및 토큰 갱신 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "401", description = "갱신 가능한 세션 또는 토큰 정보가 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> tokenRefresh(HttpServletRequest request, HttpServletResponse response) {
         authService.updateRefreshToken(request, response);
         return ResponseEntity.ok().body(ResponseDataDto.success("세션 및 토큰 갱신에 성공하였습니다."));
@@ -37,6 +45,14 @@ public class AuthController {
 
     @PostMapping("/reset-pw")
     @Operation(summary = "비밀번호 초기화", description = "추후 이메일 인증 로직 도입 예정")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "이메일 또는 새 비밀번호 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> resetPw(@Valid @ModelAttribute ReqResetPwDto dto) {
         authService.resetPassword(dto);
         return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 초기화되었습니다. 로그인 해주세요."));
@@ -44,20 +60,49 @@ public class AuthController {
 
     @GetMapping("/check-email/{email}")
     @Operation(summary = "이메일 중복체크")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> checkEmail(@PathVariable String email) {
         authService.checkEmail(email);
         return ResponseEntity.ok().body(ResponseDataDto.success("사용할 수 있는 이메일입니다."));
     }
 
     @PostMapping("/verify-pw")
-    @Operation(summary = "기존 비밀번호 검증 API", description = "정보 수정 등의 동작을 수행하기 전과 같은 상황에서 사용")
-    public ResponseEntity<ResponseDataDto<Void>> checkPassword(@LoginUserId Long userId, @Valid @ModelAttribute VerifyAuthDto verifyAuthDto) {
+    @Operation(
+            summary = "기존 비밀번호 검증 API",
+            description = "정보 수정 등의 동작을 수행하기 전과 같은 상황에서 사용합니다.",
+            security = @SecurityRequirement(name = "SessionID")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 일치",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "비밀번호 입력값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "401", description = "세션 인증 정보가 없거나 비밀번호가 일치하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
+    public ResponseEntity<ResponseDataDto<Void>> checkPassword(
+            @Parameter(hidden = true) @LoginUserId Long userId,
+            @Valid @ModelAttribute VerifyAuthDto verifyAuthDto
+    ) {
         authService.checkPassword(userId, verifyAuthDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 일치합니다."));
     }
 
     @PostMapping(value = "/common-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "일반 회원의 플랫폼 회원가입")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "일반 회원가입 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "회원가입 입력값이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "이메일 중복 또는 약관 미동의로 가입할 수 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> commonJoin(@Valid @ModelAttribute JoinDto joinDto) {
         authService.commonJoin(joinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("회원가입이 완료되었습니다."));
@@ -65,6 +110,14 @@ public class AuthController {
 
     @PostMapping(value = "/seller-join", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "판매자 회원의 회원가입", description = "nickname: 판매자 상호명, name: 판매자 대표자명")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "판매자 회원가입 성공",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDataDto.class))),
+            @ApiResponse(responseCode = "400", description = "판매자 회원가입 입력값 또는 이미지 형식이 올바르지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "409", description = "이메일 중복, 약관 미동의, 이미지 순서 중복 등으로 가입할 수 없음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<ResponseDataDto<Void>> sellerJoin(@Valid @ModelAttribute SellerJoinDto sellerJoinDto) {
         authService.sellerJoin(sellerJoinDto);
         return ResponseEntity.ok().body(ResponseDataDto.success("판매자 회원가입이 완료되었습니다."));
