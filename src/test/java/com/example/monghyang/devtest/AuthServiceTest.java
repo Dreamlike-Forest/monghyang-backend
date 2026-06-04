@@ -4,6 +4,8 @@ import com.example.monghyang.domain.auth.dto.*;
 import com.example.monghyang.domain.auth.service.AuthService;
 import com.example.monghyang.domain.brewery.entity.Brewery;
 import com.example.monghyang.domain.brewery.entity.BreweryImage;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyBreakTime;
+import com.example.monghyang.domain.brewery.entity.BreweryWeeklyOpenTime;
 import com.example.monghyang.domain.brewery.entity.RegionType;
 import com.example.monghyang.domain.brewery.repository.*;
 import com.example.monghyang.domain.global.advice.ApplicationError;
@@ -26,11 +28,11 @@ import com.example.monghyang.domain.util.SessionUtil;
 import com.example.monghyang.domain.util.dto.JwtClaimsDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,8 +40,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +54,14 @@ import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
+    private static final LocalDate FIXED_DATE = LocalDate.of(2026, 6, 1);
+    private static final LocalDateTime FIXED_DATE_TIME = LocalDateTime.of(2026, 6, 1, 9, 30);
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            FIXED_DATE_TIME.atZone(SEOUL_ZONE_ID).toInstant(),
+            SEOUL_ZONE_ID
+    );
+
     @Mock
     UsersRepository usersRepository;
     @Mock
@@ -77,8 +90,29 @@ public class AuthServiceTest {
     BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     @Mock
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
-    @InjectMocks
+
     AuthService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthService(
+                usersRepository,
+                bCryptPasswordEncoder,
+                roleRepository,
+                jwtUtil,
+                redisService,
+                sessionUtil,
+                sellerRepository,
+                breweryRepository,
+                regionTypeRepository,
+                storageService,
+                breweryImageRepository,
+                sellerImageRepository,
+                breweryWeeklyOpenTimeRepository,
+                breweryWeeklyBreakTimeRepository,
+                FIXED_CLOCK
+        );
+    }
 
     @Test
     @DisplayName("commonJoin - 일반 회원 가입 시 ROLE_USER, 인코딩된 비밀번호, gender 매핑이 올바르게 저장되는 경우")
@@ -522,6 +556,8 @@ public class AuthServiceTest {
         ArgumentCaptor<Users> usersCaptor = ArgumentCaptor.forClass(Users.class);
         ArgumentCaptor<Brewery> breweryCaptor = ArgumentCaptor.forClass(Brewery.class);
         ArgumentCaptor<BreweryImage> breweryImageCaptor = ArgumentCaptor.forClass(BreweryImage.class);
+        ArgumentCaptor<BreweryWeeklyOpenTime> openTimeCaptor = ArgumentCaptor.forClass(BreweryWeeklyOpenTime.class);
+        ArgumentCaptor<BreweryWeeklyBreakTime> breakTimeCaptor = ArgumentCaptor.forClass(BreweryWeeklyBreakTime.class);
 
         // when
         authService.breweryJoin(joinDto);
@@ -533,6 +569,8 @@ public class AuthServiceTest {
         verify(usersRepository).save(usersCaptor.capture());
         verify(regionTypeRepository).findById(1);
         verify(breweryRepository).save(breweryCaptor.capture());
+        verify(breweryWeeklyOpenTimeRepository).save(openTimeCaptor.capture());
+        verify(breweryWeeklyBreakTimeRepository).save(breakTimeCaptor.capture());
         verify(breweryImageRepository).save(breweryImageCaptor.capture());
         verify(storageService).upload(imageDto.getImage(), ImageType.BREWERY_IMAGE);
 
@@ -575,6 +613,8 @@ public class AuthServiceTest {
         assertEquals("breweryImageKey", savedBreweryImage.getImageKey());
         assertEquals(1, savedBreweryImage.getSeq());
         assertSame(savedBrewery, savedBreweryImage.getBrewery());
+        assertEquals(FIXED_DATE, openTimeCaptor.getValue().getEffectiveDate());
+        assertEquals(FIXED_DATE, breakTimeCaptor.getValue().getEffectiveDate());
     }
 
     @Test

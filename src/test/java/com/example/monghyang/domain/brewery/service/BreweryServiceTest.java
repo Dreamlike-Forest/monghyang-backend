@@ -23,24 +23,25 @@ import com.example.monghyang.domain.joy.service.JoyOrderService;
 import com.example.monghyang.domain.product.service.ProductService;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -48,6 +49,14 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class BreweryServiceTest {
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
+    private static final LocalDate FIXED_DATE = LocalDate.of(2026, 6, 1);
+    private static final LocalDateTime FIXED_DATE_TIME = LocalDateTime.of(2026, 6, 1, 9, 30);
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            FIXED_DATE_TIME.atZone(SEOUL_ZONE_ID).toInstant(),
+            SEOUL_ZONE_ID
+    );
+
     @Mock
     BreweryRepository breweryRepository;
     @Mock
@@ -80,8 +89,31 @@ class BreweryServiceTest {
     BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     @Mock
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
-    @InjectMocks
+
     BreweryService breweryService;
+
+    @BeforeEach
+    void setUp() {
+        breweryService = new BreweryService(
+                breweryRepository,
+                usersRepository,
+                bCryptPasswordEncoder,
+                breweryImageRepository,
+                storageService,
+                breweryTagRepository,
+                joyRepository,
+                productService,
+                regionTypeRepository,
+                breweryClosedDateRepository,
+                joyOrderRepository,
+                joyStatusHistoryRepository,
+                joyOrderService,
+                joyOrderBatchService,
+                breweryWeeklyOpenTimeRepository,
+                breweryWeeklyBreakTimeRepository,
+                FIXED_CLOCK
+        );
+    }
 
     @Test
     @DisplayName("양조장 탈퇴는 삭제 시점 이후 PAID 체험 예약 환불 요청 처리를 호출한다")
@@ -102,7 +134,7 @@ class BreweryServiceTest {
         breweryService.breweryQuit(userId, dto);
 
         verify(brewery).setDeleted();
-        verify(joyOrderService).setRefundRequestedByBreweryDeletion(eq(breweryId), any(LocalDateTime.class));
+        verify(joyOrderService).setRefundRequestedByBreweryDeletion(breweryId, FIXED_DATE_TIME);
     }
 
     @Test
@@ -164,7 +196,7 @@ class BreweryServiceTest {
         schedule.setClose_time(LocalTime.of(18, 0));
 
         ReqUpdateBreweryScheduleDto dto = new ReqUpdateBreweryScheduleDto();
-        dto.setEffective_date(LocalDate.now().plusDays(1));
+        dto.setEffective_date(FIXED_DATE.plusDays(1));
         dto.setSchedules(List.of(schedule));
         return dto;
     }
