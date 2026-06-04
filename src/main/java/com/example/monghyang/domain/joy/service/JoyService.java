@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,13 +45,14 @@ public class JoyService {
     private final JoyOrderService joyOrderService;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
+    private final Clock clock;
 
     // 체험 등록
     @Transactional
     public void createJoy(Long userId, ReqJoyDto reqJoyDto) {
         Brewery brewery = breweryRepository.findActiveByUserId(userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        LocalDate effectiveDate = LocalDate.now();
+        LocalDate effectiveDate = LocalDate.now(clock);
         validateWithinOpenTimes(brewery, reqJoyDto.getSchedules(), effectiveDate, reqJoyDto.getTime_unit());
         validateNotOverlappingBreakTimes(brewery, reqJoyDto.getSchedules(), effectiveDate, reqJoyDto.getTime_unit());
         String imageKey = null;
@@ -87,7 +89,7 @@ public class JoyService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyIdIncludingDeletedBrewery(brewery.getId(), dto.getJoyId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
-        if(dto.getEffective_date().isBefore(LocalDate.now())) {
+        if(dto.getEffective_date().isBefore(LocalDate.now(clock))) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
         validateScheduleDuplicates(dto.getSchedules());
@@ -112,7 +114,7 @@ public class JoyService {
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
         Joy joy = joyRepository.findActiveByBreweryIdAndJoyId(brewery.getId(), joyId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND));
-        LocalDateTime deletedAt = LocalDateTime.now();
+        LocalDateTime deletedAt = LocalDateTime.now(clock);
         joy.setDeleted();
         joyRepository.save(joy);
         brewery.decreaseJoyCount(); // 양조장의 체험 개수 카운트 1 감소

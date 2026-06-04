@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -36,6 +37,7 @@ public class JoyReviewService {
     private final UsersRepository usersRepository;
     private final JoyReviewLikeHistoryRepository joyReviewLikeHistoryRepository;
     private final JoyOrderRepository joyOrderRepository;
+    private final Clock clock;
 
     /**
      * 별점 값의 유효성 검증
@@ -60,7 +62,7 @@ public class JoyReviewService {
         JoyOrder joyOrder = joyOrderRepository.findByIdAndUserId(dto.getJoy_order_id(), userId).orElseThrow(() ->
                 // 해당 체험 이용 내역이 없으면 리뷰 작성 불가
                 new ApplicationException(ApplicationError.JOY_REVIEW_CREATE_UNQUALIFIED));
-        if(!joyOrder.getJoyPaymentStatus().equals(JoyPaymentStatus.PAID) || LocalDateTime.now().isBefore(joyOrder.getReservation())) {
+        if(!joyOrder.getJoyPaymentStatus().equals(JoyPaymentStatus.PAID) || LocalDateTime.now(clock).isBefore(joyOrder.getReservation())) {
             // 체험 예약이 '결제 완료'상태가 아니거나, '체험 시작 시각' 이전인 경우 리뷰 작성 불가
             throw new ApplicationException(ApplicationError.JOY_REVIEW_CREATE_UNQUALIFIED);
         }

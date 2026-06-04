@@ -32,6 +32,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,6 +56,7 @@ public class AuthService {
     private final SellerImageRepository sellerImageRepository;
     private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    private final Clock clock;
 
 
     public void resetPassword(ReqResetPwDto dto) {
@@ -204,6 +206,7 @@ public class AuthService {
                 .build();
         breweryRepository.save(brewery);
 
+        LocalDate effectiveDate = LocalDate.now(clock);
         for(BreweryScheduleDto schedule : breweryJoinDto.getSchedules()) {
             // 적용 일자: 가입 일자
             // 요일별 양조장 운영시간 insert
@@ -212,7 +215,7 @@ public class AuthService {
                     .dayOfWeek(schedule.getDay_of_week())
                     .openTime(schedule.getOpen_time())
                     .closeTime(schedule.getClose_time())
-                    .effectiveDate(LocalDate.now())
+                    .effectiveDate(effectiveDate)
                     .build());
             // 요일별 양조장 휴게시간 insert
             if(schedule.getBreak_start() != null && schedule.getBreak_end() != null) {
@@ -221,7 +224,7 @@ public class AuthService {
                         .dayOfWeek(schedule.getDay_of_week())
                         .breakStart(schedule.getBreak_start())
                         .breakEnd(schedule.getBreak_end())
-                        .effectiveDate(LocalDate.now())
+                        .effectiveDate(effectiveDate)
                         .build());
             }
         }

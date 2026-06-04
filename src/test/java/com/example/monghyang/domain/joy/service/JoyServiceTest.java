@@ -22,19 +22,21 @@ import com.example.monghyang.domain.joy.repository.JoyWeeklyStartTimeRepository;
 import com.example.monghyang.domain.users.entity.Role;
 import com.example.monghyang.domain.users.entity.RoleType;
 import com.example.monghyang.domain.users.entity.Users;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +51,14 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class JoyServiceTest {
+    private static final ZoneId SEOUL_ZONE_ID = ZoneId.of("Asia/Seoul");
+    private static final LocalDate FIXED_DATE = LocalDate.of(2026, 6, 1);
+    private static final LocalDateTime FIXED_DATE_TIME = LocalDateTime.of(2026, 6, 1, 9, 30);
+    private static final Clock FIXED_CLOCK = Clock.fixed(
+            FIXED_DATE_TIME.atZone(SEOUL_ZONE_ID).toInstant(),
+            SEOUL_ZONE_ID
+    );
+
     @Mock
     JoyRepository joyRepository;
     @Mock
@@ -63,8 +73,22 @@ class JoyServiceTest {
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     @Mock
     BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
-    @InjectMocks
+
     JoyService joyService;
+
+    @BeforeEach
+    void setUp() {
+        joyService = new JoyService(
+                joyRepository,
+                breweryRepository,
+                storageService,
+                joyWeeklyStartTimeRepository,
+                joyOrderService,
+                breweryWeeklyBreakTimeRepository,
+                breweryWeeklyOpenTimeRepository,
+                FIXED_CLOCK
+        );
+    }
 
     @Test
     @DisplayName("내 체험 목록 조회는 삭제되지 않은 체험만 반환한다")
@@ -116,7 +140,7 @@ class JoyServiceTest {
         verify(joy).setDeleted();
         verify(joyRepository).save(joy);
         verify(brewery).decreaseJoyCount();
-        verify(joyOrderService).setRefundRequestedByJoyDeletion(eq(joyId), any(LocalDateTime.class));
+        verify(joyOrderService).setRefundRequestedByJoyDeletion(joyId, FIXED_DATE_TIME);
     }
 
     @Test
@@ -163,9 +187,9 @@ class JoyServiceTest {
         given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         givenOpenTimes(
                 5L,
-                LocalDate.now(),
-                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0)),
-                openTime(DayOfWeek.Tue, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+                FIXED_DATE,
+                openTime(DayOfWeek.Mon, FIXED_DATE, LocalTime.of(9, 0), LocalTime.of(18, 0)),
+                openTime(DayOfWeek.Tue, FIXED_DATE, LocalTime.of(9, 0), LocalTime.of(18, 0))
         );
 
         joyService.createJoy(userId, dto);
@@ -174,7 +198,7 @@ class JoyServiceTest {
         verify(joyWeeklyStartTimeRepository).saveAll(captor.capture());
         List<JoyWeeklyStartTime> saved = captor.getValue();
         assertEquals(3, saved.size());
-        assertEquals(LocalDate.now(), saved.getFirst().getEffectiveDate());
+        assertEquals(FIXED_DATE, saved.getFirst().getEffectiveDate());
         assertEquals(DayOfWeek.Mon, saved.getFirst().getDayOfWeek());
         assertEquals(LocalTime.of(10, 0), saved.getFirst().getStartTime());
     }
@@ -185,7 +209,7 @@ class JoyServiceTest {
     void update_joy_schedule_allows_deleted_brewery_owner() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         Joy joy = joy(brewery);
         ReflectionTestUtils.setField(brewery, "id", 5L);
@@ -213,7 +237,7 @@ class JoyServiceTest {
     void update_joy_schedule_replaces_snapshot_and_requests_refund() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         Joy joy = joy(brewery);
         ReflectionTestUtils.setField(brewery, "id", 5L);
@@ -240,7 +264,7 @@ class JoyServiceTest {
     void update_joy_schedule_rejects_duplicate_day_of_week() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         ReflectionTestUtils.setField(brewery, "id", 5L);
         ReqUpdateJoyScheduleDto dto = reqUpdateJoyScheduleDto(joyId, effectiveDate);
@@ -270,10 +294,10 @@ class JoyServiceTest {
         given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         givenOpenTimes(
                 5L,
-                LocalDate.now(),
-                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+                FIXED_DATE,
+                openTime(DayOfWeek.Mon, FIXED_DATE, LocalTime.of(9, 0), LocalTime.of(18, 0))
         );
-        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, LocalDate.now(), DayOfWeek.Mon))
+        given(breweryWeeklyBreakTimeRepository.findActiveBreakTimesByBreweryIdAndDate(5L, FIXED_DATE, DayOfWeek.Mon))
                 .willReturn(List.of(breakTime(LocalTime.of(12, 0), LocalTime.of(13, 0))));
 
         ApplicationException exception = assertThrows(
@@ -289,7 +313,7 @@ class JoyServiceTest {
     void update_joy_schedule_rejects_start_time_overlapping_break_time() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         ReflectionTestUtils.setField(brewery, "id", 5L);
         Joy joy = joy(brewery);
@@ -324,8 +348,8 @@ class JoyServiceTest {
         given(breweryRepository.findActiveByUserId(userId)).willReturn(Optional.of(brewery));
         givenOpenTimes(
                 5L,
-                LocalDate.now(),
-                openTime(DayOfWeek.Mon, LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(18, 0))
+                FIXED_DATE,
+                openTime(DayOfWeek.Mon, FIXED_DATE, LocalTime.of(9, 0), LocalTime.of(18, 0))
         );
 
         ApplicationException exception = assertThrows(
@@ -342,7 +366,7 @@ class JoyServiceTest {
     void update_joy_schedule_rejects_start_time_outside_brewery_open_time() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         ReflectionTestUtils.setField(brewery, "id", 5L);
         Joy joy = joy(brewery);
@@ -371,7 +395,7 @@ class JoyServiceTest {
     void update_joy_schedule_rejects_day_missing_from_latest_brewery_open_time_version() {
         Long userId = 1L;
         Long joyId = 10L;
-        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate effectiveDate = FIXED_DATE.plusDays(1);
         Brewery brewery = brewery();
         ReflectionTestUtils.setField(brewery, "id", 5L);
         Joy joy = joy(brewery);
@@ -492,7 +516,7 @@ class JoyServiceTest {
                 .dayOfWeek(DayOfWeek.Mon)
                 .breakStart(breakStart)
                 .breakEnd(breakEnd)
-                .effectiveDate(LocalDate.now())
+                .effectiveDate(FIXED_DATE)
                 .build();
     }
 }

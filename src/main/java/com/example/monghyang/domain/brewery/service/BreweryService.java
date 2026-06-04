@@ -50,6 +50,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -78,6 +79,7 @@ public class BreweryService {
     private final JoyOrderBatchService joyOrderBatchService;
     private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    private final Clock clock;
 
     /**
      * 양조장 지역 종류 전체를 반환
@@ -226,7 +228,7 @@ public class BreweryService {
         }
         Brewery brewery = breweryRepository.findByUserId(users.getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.BREWERY_NOT_FOUND));
-        LocalDateTime deletedAt = LocalDateTime.now();
+        LocalDateTime deletedAt = LocalDateTime.now(clock);
         brewery.setDeleted();
         joyOrderService.setRefundRequestedByBreweryDeletion(brewery.getId(), deletedAt);
     }
@@ -318,7 +320,7 @@ public class BreweryService {
      * @param dto ReqClosedDateDto
      */
     public void deleteClosedDate(Long userId, ReqClosedDateTimeDto dto) {
-        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+        if(dto.getClosed_date().isBefore(LocalDate.now(clock))) {
             // 휴무 지정일은 과거일 수 없습니다.
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
@@ -337,7 +339,7 @@ public class BreweryService {
      * @param dto ReqClosedDateDto
      */
     public void addClosedDateTry(Long userId, ReqClosedDateTimeDto dto) {
-        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+        if(dto.getClosed_date().isBefore(LocalDate.now(clock))) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
@@ -351,7 +353,7 @@ public class BreweryService {
 
     @Transactional
     public void addClosedDateConfirmed(Long userId, ReqClosedDateTimeDto dto) {
-        if(dto.getClosed_date().isBefore(LocalDate.now())) {
+        if(dto.getClosed_date().isBefore(LocalDate.now(clock))) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
         Brewery brewery = breweryRepository.findByUserId(userId).orElseThrow(() ->
@@ -385,7 +387,7 @@ public class BreweryService {
 
         // 2. effective_date 과거 날짜 여부 검증
         //    (@FutureOrPresent로 1차 검증되나 서비스 레이어에서 명시적 재검증)
-        if (dto.getEffective_date().isBefore(LocalDate.now())) {
+        if (dto.getEffective_date().isBefore(LocalDate.now(clock))) {
             throw new ApplicationException(ApplicationError.INVALID_TIME);
         }
 
