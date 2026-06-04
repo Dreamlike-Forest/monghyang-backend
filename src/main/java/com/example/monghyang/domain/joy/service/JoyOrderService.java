@@ -37,6 +37,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -61,6 +62,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     private final JoyOrderRefundService joyOrderRefundService;
     private final JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    private final Clock clock;
 
     /**
      * 체험 시간대 유효성 검증
@@ -86,7 +88,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         // 5. 체험 진행 시간이 양조장 휴게시간과 겹치는지
         // 6. 예약 일시가 확정된 별도 휴무일/휴무 시간대에 포함되는지
         // 7. 예약일에 활성화된 체험 시작 시간 스냅샷에 요청 시간이 존재하는지 검증
-        if(LocalDateTime.of(reservationDate, reservationTime).isBefore(LocalDateTime.now())
+        if(LocalDateTime.of(reservationDate, reservationTime).isBefore(LocalDateTime.now(clock))
                 || reservationTime.isBefore(joyInfoDto.breweryStartTime())
                 || reservationTime.plusMinutes(joyInfoDto.timeUnit()).isAfter(joyInfoDto.breweryEndTime())
                 || minDiff % joyInfoDto.timeUnit() != 0) {
@@ -248,7 +250,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         if(!joyOrder.getUsers().getId().equals(userId)) {
             throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
         }
-        if(ChronoUnit.DAYS.between(LocalDate.now(), joyOrder.getReservation().toLocalDate()) < 1) {
+        if(ChronoUnit.DAYS.between(LocalDate.now(clock), joyOrder.getReservation().toLocalDate()) < 1) {
             // 체험 일자 하루 전날까지만 시간대 변경 가능
             throw new ApplicationException(ApplicationError.JOY_ORDER_TIME_UPDATE_ERROR);
         }
@@ -302,7 +304,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
     public void cancel(Long userId, Long joyOrderId) {
         JoyOrder joyOrder = joyOrderRepository.findByIdAndUserId(joyOrderId, userId).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_ORDER_NOT_FOUND));
-        LocalDate now = LocalDate.now();
+        LocalDate now = LocalDate.now(clock);
         if(ChronoUnit.DAYS.between(now, joyOrder.getReservation().toLocalDate()) < 1) {
             // 체험 일자 하루 전날까지만 취소 가능
             throw new ApplicationException(ApplicationError.JOY_ORDER_CANCEL_ERROR);
@@ -353,7 +355,7 @@ public class JoyOrderService implements PaymentManager<ReqJoyPreOrderDto> {
         }
         Integer timeUnit = joyRepository.findTimeUnitByJoyId(joyOrder.getJoy().getId()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.JOY_NOT_FOUND)); // 체험의 시간 단위 조회
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if(now.isBefore(joyOrder.getReservation().plusMinutes(timeUnit))) {
             throw new ApplicationException(ApplicationError.JOY_ORDER_DELETE_ERROR);
         }

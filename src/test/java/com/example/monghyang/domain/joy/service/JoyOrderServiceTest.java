@@ -23,17 +23,20 @@ import com.example.monghyang.domain.joy.repository.JoyStatusHistoryRepository;
 import com.example.monghyang.domain.joy.repository.JoyWeeklyStartTimeRepository;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.repository.UsersRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,8 +71,28 @@ class JoyOrderServiceTest {
     JoyWeeklyStartTimeRepository joyWeeklyStartTimeRepository;
     @Mock
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
-    @InjectMocks
     JoyOrderService joyOrderService;
+
+    @BeforeEach
+    void setUp() {
+        Clock clock = Clock.fixed(
+                Instant.parse("2026-05-31T00:00:00Z"),
+                ZoneId.of("Asia/Seoul")
+        );
+        joyOrderService = new JoyOrderService(
+                joyOrderRepository,
+                usersRepository,
+                joyRepository,
+                breweryRepository,
+                joyStatusHistoryRepository,
+                joySlotService,
+                joyOrderBatchService,
+                joyOrderRefundService,
+                joyWeeklyStartTimeRepository,
+                breweryWeeklyBreakTimeRepository,
+                clock
+        );
+    }
 
     @Test
     @DisplayName("예약 슬롯 증가는 탈퇴한 양조장 소속 체험이면 슬롯을 증가시키지 않는다")
