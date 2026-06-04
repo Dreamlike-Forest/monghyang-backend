@@ -1,9 +1,14 @@
 package com.example.monghyang.domain.image.controller;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +45,14 @@ public class ImageController {
      */
     @GetMapping("/{imageFullName}")
     @Operation(summary = "실제 이미지 파일 요청 API", description = "확장자명을 포함한 이미지 전체 이름을 파라메터에 넣어주세요.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "이미지 스트리밍 성공",
+                    content = @Content(mediaType = "image/*")),
+            @ApiResponse(responseCode = "404", description = "이미지 파일이 존재하지 않음",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class))),
+            @ApiResponse(responseCode = "500", description = "이미지 파일 타입 확인 또는 로드 실패",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
+    })
     public ResponseEntity<StreamingResponseBody> loadImage(@PathVariable String imageFullName, HttpServletRequest request) {
         try {
             Resource image = storageService.load(imageFullName);
