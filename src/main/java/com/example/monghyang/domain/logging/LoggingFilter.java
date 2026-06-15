@@ -35,9 +35,16 @@ public class LoggingFilter extends OncePerRequestFilter {
             long duration = System.currentTimeMillis() - startTime;
             MDC.put("durationMs", String.valueOf(duration));
             MDC.put("status", String.valueOf(response.getStatus()));
-            log.info("RES_RESULT");
+            if (shouldWriteFallbackErrorLog(request, response)) {
+                log.error("RES_ERROR");
+            }
 
             MDC.clear();
         }
+    }
+
+    private boolean shouldWriteFallbackErrorLog(HttpServletRequest request, HttpServletResponse response) {
+        return response.getStatus() >= 500
+                && !Boolean.TRUE.equals(request.getAttribute(AuditLogger.OPERATIONAL_ERROR_LOGGED_ATTRIBUTE));
     }
 }

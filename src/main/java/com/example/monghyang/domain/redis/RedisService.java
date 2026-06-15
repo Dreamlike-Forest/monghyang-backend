@@ -68,7 +68,7 @@ public class RedisService {
         try {
             sessionRepository.deleteById(sessionId);
         } catch (Exception e) {
-            log.warn("세션 삭제 중 예외 발생. sessionId={}", sessionId, e);
+            log.warn("세션 삭제 중 예외 발생", e);
         }
     }
 

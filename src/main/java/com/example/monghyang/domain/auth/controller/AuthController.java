@@ -53,8 +53,8 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않음",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApplicationErrorDto.class)))
     })
-    public ResponseEntity<ResponseDataDto<Void>> resetPw(@Valid @ModelAttribute ReqResetPwDto dto) {
-        authService.resetPassword(dto);
+    public ResponseEntity<ResponseDataDto<Void>> resetPw(@Valid @ModelAttribute ReqResetPwDto dto, HttpServletRequest request) {
+        authService.resetPassword(dto, request);
         return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 초기화되었습니다. 로그인 해주세요."));
     }
 
@@ -87,9 +87,10 @@ public class AuthController {
     })
     public ResponseEntity<ResponseDataDto<Void>> checkPassword(
             @Parameter(hidden = true) @LoginUserId Long userId,
-            @Valid @ModelAttribute VerifyAuthDto verifyAuthDto
+            @Valid @ModelAttribute VerifyAuthDto verifyAuthDto,
+            HttpServletRequest request
     ) {
-        authService.checkPassword(userId, verifyAuthDto);
+        authService.checkPassword(userId, verifyAuthDto, request);
         return ResponseEntity.ok().body(ResponseDataDto.success("비밀번호가 일치합니다."));
     }
 

@@ -1,5 +1,6 @@
 package com.example.monghyang.domain.oauth2.handler;
 
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.oauth2.details.CustomOAuth2UserDetails;
 import com.example.monghyang.domain.users.entity.Users;
 import com.example.monghyang.domain.users.service.UsersService;
@@ -28,12 +29,14 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
     private final String clientUrl;
     private final UsersService usersService;
     private final SessionUtil sessionUtil;
+    private final AuditLogger auditLogger;
 
-    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl, UsersService usersService, SessionUtil sessionUtil) {
+    public CustomOAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, @Value("${app.client-url}") String clientUrl, UsersService usersService, SessionUtil sessionUtil, AuditLogger auditLogger) {
         this.jwtUtil = jwtUtil;
         this.clientUrl = clientUrl;
         this.usersService = usersService;
         this.sessionUtil = sessionUtil;
+        this.auditLogger = auditLogger;
     }
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -45,6 +48,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         // 가입절차가 완료되지 않은 경우 분기처리(전화번호 컬럼 값 존재 유무로 판단)
         if(user.getPhone() == null) {
             request.getSession().setAttribute("incompleteUserId", user.getId());
+            auditLogger.logSecuritySuccess("OAUTH2_LOGIN_INCOMPLETE", request, user.getId(), null);
             response.sendRedirect(clientUrl + "/auth/complete"); // 나머지 유저 정보를 입력하는 창으로 리다이렉션
         } else {
             Long userId = user.getId();
@@ -54,6 +58,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             GrantedAuthority grantedAuthority = iterator.next();
             String role = grantedAuthority.getAuthority();
             sessionUtil.createNewAuthInfo(request, response, userId, role);
+            auditLogger.logSecuritySuccess("OAUTH2_LOGIN_SUCCESS", request, userId, role);
         }
     }
 }

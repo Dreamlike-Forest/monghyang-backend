@@ -2,6 +2,7 @@ package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.util.SecurityFilterExceptionResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +18,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     private final SecurityFilterExceptionResponseWriter writer;
+    private final AuditLogger auditLogger;
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
 //        throw new ApplicationException(ApplicationError.REQUEST_FORBIDDEN);
+        auditLogger.logSecurityFailure("AUTHORIZATION_DENIED", request, null, null, ApplicationError.REQUEST_FORBIDDEN);
         writer.setApplicationErrorResponse(request, response, new ApplicationException(ApplicationError.REQUEST_FORBIDDEN));
     }
 }

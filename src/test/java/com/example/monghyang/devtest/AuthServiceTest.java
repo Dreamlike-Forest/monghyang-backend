@@ -13,6 +13,7 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.entity.SellerImage;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -90,6 +92,8 @@ public class AuthServiceTest {
     BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     @Mock
     BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
+    @Mock
+    AuditLogger auditLogger;
 
     AuthService authService;
 
@@ -110,7 +114,8 @@ public class AuthServiceTest {
                 sellerImageRepository,
                 breweryWeeklyOpenTimeRepository,
                 breweryWeeklyBreakTimeRepository,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                auditLogger
         );
     }
 
@@ -364,7 +369,8 @@ public class AuthServiceTest {
                 .willReturn(user);
 
         ArgumentCaptor<Users> usersCaptor = ArgumentCaptor.forClass(Users.class);
-        authService.resetPassword(dto);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/reset-pw");
+        authService.resetPassword(dto, request);
         verify(bCryptPasswordEncoder).encode("newPW");
         verify(usersRepository).findByEmail("test@example.com");
         verify(usersRepository).save(usersCaptor.capture());
@@ -419,7 +425,8 @@ public class AuthServiceTest {
                 .willReturn(true);
 
         // when & then (예외 없어야 함)
-        authService.checkPassword(userId, dto);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/verify-pw");
+        authService.checkPassword(userId, dto, request);
 
         verify(usersRepository).findById(userId);
         verify(bCryptPasswordEncoder).matches("rawPw", "PW");
@@ -438,7 +445,7 @@ public class AuthServiceTest {
         // when
         ApplicationException ex = assertThrows(
                 ApplicationException.class,
-                () -> authService.checkPassword(userId, dto)
+                () -> authService.checkPassword(userId, dto, new MockHttpServletRequest("POST", "/api/auth/verify-pw"))
         );
 
         // then
@@ -465,7 +472,7 @@ public class AuthServiceTest {
         // when
         ApplicationException ex = assertThrows(
                 ApplicationException.class,
-                () -> authService.checkPassword(userId, dto)
+                () -> authService.checkPassword(userId, dto, new MockHttpServletRequest("POST", "/api/auth/verify-pw"))
         );
 
         // then

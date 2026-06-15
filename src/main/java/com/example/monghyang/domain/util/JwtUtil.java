@@ -8,7 +8,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,6 @@ import java.util.Date;
 import java.util.UUID;
 
 @Component
-@Slf4j
 public class JwtUtil {
     // jwt 토큰 생성 및 파싱을 담당하는 유틸 클래스
     private final SecretKey refreshKey; // refresh token 암호화 키
@@ -56,8 +54,7 @@ public class JwtUtil {
             return JwtClaimsDto.tidUserIdDeviceTypeRoleOf(tid, userId, role);
         } catch (JwtException | IllegalArgumentException e) {
             // 토큰 파싱 예외 처리
-            log.error("토큰 훼손: {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.TOKEN_IMPAIRED);
+            throw new ApplicationException(ApplicationError.TOKEN_IMPAIRED, e);
         }
     }
 

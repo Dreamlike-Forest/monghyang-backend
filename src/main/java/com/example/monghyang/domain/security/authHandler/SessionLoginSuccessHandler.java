@@ -2,6 +2,7 @@ package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.security.dto.LoginDto;
 import com.example.monghyang.domain.auth.details.LoginUserDetails;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.util.SessionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import java.util.Iterator;
 public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final ObjectMapper objectMapper;
     private final SessionUtil sessionUtil;
+    private final AuditLogger auditLogger;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
@@ -34,6 +36,7 @@ public class SessionLoginSuccessHandler implements AuthenticationSuccessHandler 
 
         // 새로운 세션 & 리프레시 토큰 생성
         sessionUtil.createNewAuthInfo(request, response, userId, role);
+        auditLogger.logSecuritySuccess("LOGIN_SUCCESS", request, userId, role);
 
         // 응답 http body 작성
         response.setContentType("application/json;charset=utf-8");

@@ -4,7 +4,6 @@ import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -27,7 +26,6 @@ import java.time.Duration;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @Profile({"prod", "test"}) // 운영 환경에서 사용되는 스토리지 서비스
 public class AwsStorageService implements StorageService {
     private final S3Client s3Client;
@@ -71,11 +69,9 @@ public class AwsStorageService implements StorageService {
             s3Client.putObject(put, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
             return key;
         } catch (IOException e) {
-            log.error("AWS S3 PUT IOExcption! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR, e);
         } catch (S3Exception e) {
-            log.error("AWS S3 PUT S3Excption! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_UPLOAD_ERROR, e);
         }
     }
 
@@ -95,19 +91,16 @@ public class AwsStorageService implements StorageService {
             URI uri = presigned.url().toURI();
             return new UrlResource(uri);
         } catch (NoSuchKeyException e) {
-            throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND);
+            throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND, e);
         } catch (S3Exception e) {
             if(e.statusCode() == 404) {
-                throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND);
+                throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND, e);
             }
-            log.error("AWS S3 Load S3Excption! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR, e);
         } catch (MalformedURLException e) {
-            log.error("AWS S3 Load MalformedURLException! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR, e);
         } catch (Exception e) {
-            log.error("AWS S3 Load Exception! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_LOAD_ERROR, e);
         }
     }
 
@@ -118,10 +111,9 @@ public class AwsStorageService implements StorageService {
             s3Client.deleteObject(delete); // 존재하지 않는 파일을 삭제해도 204/200 리턴됨.
         } catch (S3Exception e) {
             if(e.statusCode() == 404) {
-                throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND);
+                throw new ApplicationException(ApplicationError.IMAGE_NOT_FOUND, e);
             }
-            log.error("AWS S3 Delete S3Excption! {}", e.getMessage());
-            throw new ApplicationException(ApplicationError.IMAGE_REMOVE_ERROR);
+            throw new ApplicationException(ApplicationError.IMAGE_REMOVE_ERROR, e);
         }
     }
 }

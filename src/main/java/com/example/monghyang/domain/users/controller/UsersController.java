@@ -4,6 +4,7 @@ import com.example.monghyang.domain.global.annotation.auth.LoginUserId;
 import com.example.monghyang.domain.global.annotation.auth.LoginUserRole;
 import com.example.monghyang.domain.global.advice.ApplicationErrorDto;
 import com.example.monghyang.domain.global.response.ResponseDataDto;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.users.dto.ReqUsersDto;
 import com.example.monghyang.domain.users.dto.ResUsersDto;
@@ -39,6 +40,7 @@ public class UsersController {
     private final UsersService usersService;
     private final RedisService redisService;
     private final SecurityContextLogoutHandler securityContextLogoutHandler; // 스프링 세션 표준 로그아웃 핸들러
+    private final AuditLogger auditLogger;
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Email로 회원을 조회합니다.")
@@ -141,6 +143,7 @@ public class UsersController {
         // 해당 유저의 나머지 모든 세션 정보 제거
         redisService.deleteAllInfoByUserId(userId);
 
+        auditLogger.logSecuritySuccess("USER_UPDATE_SUCCESS", request, userId, userRole);
         return ResponseEntity.ok().body(ResponseDataDto.success("회원 수정이 완료되었습니다. 다시 로그인 해주세요."));
     }
 
@@ -174,6 +177,7 @@ public class UsersController {
         }
         // 해당 유저의 나머지 모든 세션 정보 및 refresh token 정보를 제거
         redisService.deleteAllInfoByUserId(userId);
+        auditLogger.logSecuritySuccess("USER_WITHDRAWAL_SUCCESS", request, userId, userRole);
         return ResponseEntity.ok().body(ResponseDataDto.success("회원 탈퇴가 완료되었습니다."));
     }
 }

@@ -17,14 +17,21 @@
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <timestamp timeZone="Asia/Seoul"/>
+                <logLevel>
+                    <fieldName>severity</fieldName>
+                </logLevel>
                 <loggerName/>
                 <threadName/>
+                <message/>
 
                 <!-- MDC: traceId, userId, roles 등 자동으로 포함 -->
                 <mdc/>
 
                 <!-- HTTP 서블릿 정보(있으면 포함) -->
-                <arguments/> <!-- 로그 메시지에 전달된 {} 인자값 정보 -->
+                <arguments>
+                    <includeStructuredArguments>true</includeStructuredArguments>
+                    <includeNonStructuredArguments>false</includeNonStructuredArguments>
+                </arguments> <!-- 로그 메시지에 전달된 {} 인자값 정보 -->
                 <stackTrace/> <!-- 로그 메시지의 {} 인자로 예외 객체 자체를 넘기면 스택 트레이스 값 json으로 변환 -->
             </providers>
         </encoder>

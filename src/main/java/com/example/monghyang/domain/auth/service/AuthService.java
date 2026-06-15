@@ -9,6 +9,7 @@ import com.example.monghyang.domain.global.advice.ApplicationException;
 import com.example.monghyang.domain.image.dto.AddImageDto;
 import com.example.monghyang.domain.image.service.ImageType;
 import com.example.monghyang.domain.image.service.StorageService;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.redis.RedisService;
 import com.example.monghyang.domain.seller.entity.Seller;
 import com.example.monghyang.domain.seller.entity.SellerImage;
@@ -57,14 +58,16 @@ public class AuthService {
     private final BreweryWeeklyOpenTimeRepository breweryWeeklyOpenTimeRepository;
     private final BreweryWeeklyBreakTimeRepository breweryWeeklyBreakTimeRepository;
     private final Clock clock;
+    private final AuditLogger auditLogger;
 
 
-    public void resetPassword(ReqResetPwDto dto) {
+    public void resetPassword(ReqResetPwDto dto, HttpServletRequest request) {
         String password = bCryptPasswordEncoder.encode(dto.getNewPassword());
         Users users = usersRepository.findByEmail(dto.getEmail()).orElseThrow(() ->
                 new ApplicationException(ApplicationError.USER_NOT_FOUND));
         users.updatePassword(password);
         usersRepository.save(users);
+        auditLogger.logSecuritySuccess("PASSWORD_RESET_SUCCESS", request, users.getId(), roleNameOf(users));
     }
 
     public void checkEmail(String email) {
@@ -73,12 +76,16 @@ public class AuthService {
         }
     }
 
-    public void checkPassword(Long userId, VerifyAuthDto verifyAuthDto) {
-        Users users = usersRepository.findById(userId).orElseThrow(() ->
-                new ApplicationException(ApplicationError.USER_NOT_FOUND));
+    public void checkPassword(Long userId, VerifyAuthDto verifyAuthDto, HttpServletRequest request) {
+        Users users = usersRepository.findById(userId).orElseThrow(() -> {
+            auditLogger.logSecurityFailure("PASSWORD_VERIFY_FAILURE", request, userId, null, ApplicationError.USER_NOT_FOUND);
+            return new ApplicationException(ApplicationError.USER_NOT_FOUND);
+        });
         if(!bCryptPasswordEncoder.matches(verifyAuthDto.getPassword(), users.getPassword())) {
+            auditLogger.logSecurityFailure("PASSWORD_VERIFY_FAILURE", request, userId, roleNameOf(users), ApplicationError.NOT_MATCH_CUR_PASSWORD);
             throw new ApplicationException(ApplicationError.NOT_MATCH_CUR_PASSWORD);
         }
+        auditLogger.logSecuritySuccess("PASSWORD_VERIFY_SUCCESS", request, userId, roleNameOf(users));
     }
 
     // RT을 이용한 세션 및 RT 갱신
@@ -87,19 +94,33 @@ public class AuthService {
         // 토큰에서 userid, devicetype 추출해서 세션 및 토큰 갱신에 사용
         String refreshToken = request.getHeader("X-Refresh-Token");
         if(refreshToken == null || refreshToken.isEmpty()) {
+            auditLogger.logSecurityFailure("TOKEN_REFRESH_FAILURE", request, null, null, ApplicationError.TOKEN_EXPIRED);
             throw new ApplicationException(ApplicationError.TOKEN_EXPIRED);
         }
 
-        JwtClaimsDto jwtClaimsDto = jwtUtil.parseRefreshToken(refreshToken);
-        Long userId = jwtClaimsDto.getUserId();
-        String tid = jwtClaimsDto.getTid();
-        String role = jwtClaimsDto.getRole();
+        try {
+            JwtClaimsDto jwtClaimsDto = jwtUtil.parseRefreshToken(refreshToken);
+            Long userId = jwtClaimsDto.getUserId();
+            String tid = jwtClaimsDto.getTid();
+            String role = jwtClaimsDto.getRole();
 
-        // 갱신 전의 refresh token, session 제거
-        redisService.deleteRefreshTokenAndSession(userId, tid);
+            // 갱신 전의 refresh token, session 제거
+            redisService.deleteRefreshTokenAndSession(userId, tid);
 
-        // 세션 및 토큰 갱신
-        sessionUtil.createNewAuthInfo(request, response, userId, role);
+            // 세션 및 토큰 갱신
+            sessionUtil.createNewAuthInfo(request, response, userId, role);
+            auditLogger.logSecuritySuccess("TOKEN_REFRESH_SUCCESS", request, userId, role);
+        } catch (ApplicationException e) {
+            auditLogger.logSecurityFailure("TOKEN_REFRESH_FAILURE", request, null, null, e.getApplicationError());
+            throw e;
+        }
+    }
+
+    private String roleNameOf(Users users) {
+        if (users.getRole() == null || users.getRole().getName() == null) {
+            return null;
+        }
+        return users.getRole().getName().name();
     }
 
     private Users createUser(JoinDto joinDto, RoleType roleType) {

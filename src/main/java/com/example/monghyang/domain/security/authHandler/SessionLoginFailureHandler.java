@@ -2,6 +2,7 @@ package com.example.monghyang.domain.security.authHandler;
 
 import com.example.monghyang.domain.global.advice.ApplicationError;
 import com.example.monghyang.domain.global.advice.ApplicationException;
+import com.example.monghyang.domain.logging.AuditLogger;
 import com.example.monghyang.domain.util.SecurityFilterExceptionResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +18,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SessionLoginFailureHandler implements AuthenticationFailureHandler {
     private final SecurityFilterExceptionResponseWriter writer;
+    private final AuditLogger auditLogger;
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
 //        throw new ApplicationException(ApplicationError.USER_UNAUTHORIZED);
+        auditLogger.logSecurityFailure("LOGIN_FAILURE", request, null, null, ApplicationError.USER_UNAUTHORIZED);
         writer.setApplicationErrorResponse(request, response, new ApplicationException(ApplicationError.USER_UNAUTHORIZED));
     }
 }

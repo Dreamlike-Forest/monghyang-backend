@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.logging.MDC;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,11 +24,6 @@ public class SecurityFilterExceptionResponseWriter {
      * @param e ApplicationException
      */
     public void setApplicationErrorResponse(HttpServletRequest request, HttpServletResponse response, ApplicationException e) {
-        MDC.put("level", e.getLogLevel().toString());
-        MDC.put("message", e.getMessage());
-        if(e.getLogStackTrace() == true) {
-            log.warn("stackTrace", e);
-        }
         response.setStatus(e.getHttpStatus().value());
         response.setContentType("application/json;charset=utf-8");
         // 필터 레벨의 json 직렬화를 위해 objectMapper 이용
@@ -37,7 +31,7 @@ public class SecurityFilterExceptionResponseWriter {
             objectMapper.writeValue(response.getWriter(), ApplicationErrorDto.requestStatusMessageOf(request, e.getHttpStatus(), e.getMessage()));
         } catch (IOException ex) {
             // 응답 객체 작성 실패 시 로깅
-            log.error(ex.getMessage(), ex);
+            log.error("SECURITY_ERROR_RESPONSE_WRITE_FAILED", ex);
         }
     }
 }

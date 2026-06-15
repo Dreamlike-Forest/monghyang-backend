@@ -1,10 +1,11 @@
 package com.example.monghyang.domain.oauth2.handler;
 
+import com.example.monghyang.domain.global.advice.ApplicationError;
+import com.example.monghyang.domain.logging.AuditLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,13 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @Component
+@RequiredArgsConstructor
 public class CustomOAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
+    private final AuditLogger auditLogger;
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2AuthenticationFailureHandler.class);
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        logger.error("OAuth2 authentication failed: {}", exception.getMessage());
+        auditLogger.logSecurityFailure("OAUTH2_LOGIN_FAILURE", request, null, null, ApplicationError.USER_UNAUTHORIZED);
         String errorMsg = URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
         response.setContentType("/login?error="+errorMsg);
     }
